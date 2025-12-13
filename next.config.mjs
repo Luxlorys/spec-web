@@ -11,6 +11,13 @@ jiti('./src/env');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Turbopack configuration for Next.js 16+
+  turbopack: {
+    resolveAlias: {
+      entities: path.resolve(__dirname, 'src/entities'),
+    },
+  },
+  // Keep webpack config for backwards compatibility when using --webpack flag
   webpack(config) {
     // Grab the existing rule that handles SVG imports
     const fileLoaderRule = config.module.rules.find(rule =>

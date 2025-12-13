@@ -3,7 +3,6 @@ import { ReactNode } from 'react';
 import type { Metadata } from 'next';
 import { Urbanist } from 'next/font/google';
 
-import { Header } from 'features';
 import { cn } from 'shared/lib';
 import { TanStackQueryProvider } from 'shared/providers';
 
@@ -16,9 +15,9 @@ const urbanist = Urbanist({
 });
 
 export const metadata: Metadata = {
-  title: 'Lumitech | Next.js Template',
+  title: 'SpecFlow | Feature Specification Tool',
   description:
-    "This Next.js template provides a ready-to-use setup for building fast, scalable web apps. It's recommended for all web projects, even if SEO isn't a priority, as Next.js offers many valuable built-in tools.",
+    'Transform your feature requests into comprehensive specifications with AI-powered assistance.',
 };
 
 type Props = {
@@ -30,14 +29,11 @@ const RootLayout = ({ children }: Props) => {
     <html lang="en">
       <body
         className={cn(
-          'bg-white text-gray-600 transition-all duration-1000 ease-in-out dark:bg-gray-600 dark:text-white',
+          'min-h-screen bg-background text-foreground antialiased',
           urbanist.className,
         )}
       >
-        <TanStackQueryProvider>
-          <Header />
-          {children}
-        </TanStackQueryProvider>
+        <TanStackQueryProvider>{children}</TanStackQueryProvider>
       </body>
     </html>
   );
