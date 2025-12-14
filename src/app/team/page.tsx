@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { AuthGuard } from 'shared/lib/auth-guard';
+import Link from 'next/link';
 import { Button, Input, Card, Avatar, Badge, EmptyState } from 'shared/ui';
 import { mockUsers } from 'shared/lib/mock-data';
 import { useAuthStore } from 'shared/store';
@@ -115,9 +115,11 @@ function TeamContent() {
                   </Badge>
 
                   {member.id !== currentUser?.id && (
-                    <Button variant="outline" size="sm">
-                      Manage
-                    </Button>
+                    <Link href={`/team/${member.id}`}>
+                      <Button variant="outline" size="sm">
+                        Manage
+                      </Button>
+                    </Link>
                   )}
                 </div>
               </div>
@@ -137,9 +139,5 @@ function TeamContent() {
 }
 
 export default function TeamPage() {
-  return (
-    <AuthGuard>
-      <TeamContent />
-    </AuthGuard>
-  );
+  return <TeamContent />;
 }

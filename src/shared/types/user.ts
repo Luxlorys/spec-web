@@ -10,6 +10,7 @@ export interface IUser {
   organizationId: string;
   avatarUrl?: string;
   createdAt: Date;
+  canCreateFeatures: boolean;
 }
 
 export interface ILoginRequest {

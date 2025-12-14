@@ -5,7 +5,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import { useMutation } from '@tanstack/react-query';
-import { AuthGuard } from 'shared/lib/auth-guard';
 import { Button, Input, Textarea, Card } from 'shared/ui';
 import { createFeatureSchema, CreateFeatureInput } from 'features/feature-requests/lib';
 import { featureRequestsApi } from 'shared/api/feature-requests';
@@ -118,9 +117,5 @@ function NewFeatureContent() {
 }
 
 export default function NewFeaturePage() {
-  return (
-    <AuthGuard>
-      <NewFeatureContent />
-    </AuthGuard>
-  );
+  return <NewFeatureContent />;
 }

@@ -70,6 +70,7 @@ export const authApi = {
       role: 'founder' as const,
       organizationId,
       createdAt: new Date(),
+      canCreateFeatures: true,
     };
 
     mockUsers.push(newUser);
@@ -103,11 +104,12 @@ export const authApi = {
     // Create new user as founder
     const newUser = {
       id: userId,
-      email: data.email,
       name: data.name,
+      email: data.email,
       role: 'founder' as const,
       organizationId,
       createdAt: new Date(),
+      canCreateFeatures: true,
     };
 
     mockUsers.push(newUser);
@@ -160,6 +162,7 @@ export const authApi = {
       role: data.role,
       organizationId: inviteCode.organizationId,
       createdAt: new Date(),
+      canCreateFeatures: true,
     };
 
     mockUsers.push(newUser);

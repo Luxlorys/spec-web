@@ -1,11 +1,9 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import {
   Bell,
-  Check,
   CheckCheck,
   MessageSquare,
   FileText,
@@ -13,22 +11,21 @@ import {
   RefreshCw,
   ArrowRight,
 } from 'lucide-react';
-import { AuthGuard } from 'shared/lib/auth-guard';
-import { Button, Card, Badge } from 'shared/ui';
+import {
+  Button,
+  Card,
+  Badge,
+  TabsRoot,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from 'shared/ui';
 import { mockNotifications } from 'shared/lib/mock-data';
 import { useAuthStore } from 'shared/store';
 import { QueryKeys } from 'shared/constants';
 import { formatRelativeTime } from 'shared/lib';
 import { cn } from 'shared/lib';
 import { NotificationType, INotification } from 'shared/types';
-
-type TabFilter = 'all' | 'unread' | 'read';
-
-const tabs: { id: TabFilter; label: string }[] = [
-  { id: 'all', label: 'All' },
-  { id: 'unread', label: 'Unread' },
-  { id: 'read', label: 'Read' },
-];
 
 const getNotificationIcon = (type: NotificationType) => {
   switch (type) {
@@ -75,7 +72,7 @@ function NotificationCard({ notification }: { notification: INotification }) {
     <Card
       className={cn(
         'border transition-all hover:shadow-md',
-        !notification.read && 'border-l-4 border-l-primary bg-primary/5',
+        !notification.read && 'border-l-4 border-l-primary bg-primary/5'
       )}
       padding="md"
     >
@@ -87,15 +84,10 @@ function NotificationCard({ notification }: { notification: INotification }) {
         <div className="min-w-0 flex-1">
           <div className="mb-1 flex items-start justify-between gap-2">
             <div className="flex items-center gap-2">
-              <Badge
-                variant={notification.read ? 'gray' : 'blue'}
-                size="sm"
-              >
+              <Badge variant={notification.read ? 'gray' : 'blue'} size="sm">
                 {getNotificationTypeLabel(notification.type)}
               </Badge>
-              {!notification.read && (
-                <span className="h-2 w-2 rounded-full bg-primary" />
-              )}
+              {!notification.read && <span className="h-2 w-2 rounded-full bg-primary" />}
             </div>
             <span className="shrink-0 text-xs text-muted-foreground">
               {formatRelativeTime(notification.createdAt)}
@@ -120,31 +112,47 @@ function NotificationCard({ notification }: { notification: INotification }) {
   );
 }
 
+function NotificationsList({
+  notifications,
+  emptyMessage,
+}: {
+  notifications: INotification[];
+  emptyMessage: string;
+}) {
+  if (notifications.length === 0) {
+    return (
+      <Card className="border py-12 text-center">
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+          <Bell className="h-6 w-6 text-muted-foreground" />
+        </div>
+        <h3 className="mb-1 font-medium text-foreground">No notifications</h3>
+        <p className="text-sm text-muted-foreground">{emptyMessage}</p>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {notifications.map((notification) => (
+        <NotificationCard key={notification.id} notification={notification} />
+      ))}
+    </div>
+  );
+}
+
 function NotificationsContent() {
   const { user } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<TabFilter>('all');
 
   const { data: notifications = [] } = useQuery({
     queryKey: [QueryKeys.NOTIFICATIONS],
     queryFn: async () => {
-      return mockNotifications.filter(n => n.userId === user?.id);
+      return mockNotifications.filter((n) => n.userId === user?.id);
     },
     enabled: !!user,
   });
 
-  const filteredNotifications = notifications.filter(n => {
-    if (activeTab === 'unread') return !n.read;
-    if (activeTab === 'read') return n.read;
-    return true;
-  });
-
-  const unreadCount = notifications.filter(n => !n.read).length;
-
-  const getTabCount = (tab: TabFilter): number => {
-    if (tab === 'all') return notifications.length;
-    if (tab === 'unread') return notifications.filter(n => !n.read).length;
-    return notifications.filter(n => n.read).length;
-  };
+  const unreadNotifications = notifications.filter((n) => !n.read);
+  const unreadCount = unreadNotifications.length;
 
   return (
     <main className="p-6">
@@ -164,7 +172,7 @@ function NotificationsContent() {
       </div>
 
       {/* Stats */}
-      <div className="mb-6 grid gap-4 sm:grid-cols-3">
+      <div className="mb-6 grid gap-4 sm:grid-cols-2">
         <Card padding="sm" className="border">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
@@ -187,71 +195,37 @@ function NotificationsContent() {
             </div>
           </div>
         </Card>
-        <Card padding="sm" className="border">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
-              <Check className="h-5 w-5 text-green-500" />
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-green-600">
-                {notifications.length - unreadCount}
-              </div>
-              <div className="text-xs text-muted-foreground">Read</div>
-            </div>
-          </div>
-        </Card>
       </div>
 
       {/* Tabs */}
-      <div className="mb-6">
-        <div className="flex items-center gap-1 rounded-lg border bg-muted/50 p-1 w-fit">
-          {tabs.map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={cn(
-                'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
-                activeTab === tab.id
-                  ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground',
-              )}
-            >
-              {tab.label} ({getTabCount(tab.id)})
-            </button>
-          ))}
-        </div>
-      </div>
+      <TabsRoot defaultValue="all">
+        <TabsList className="mb-6">
+          <TabsTrigger value="all" badge={notifications.length}>
+            All
+          </TabsTrigger>
+          <TabsTrigger value="unread" badge={unreadCount}>
+            Unread
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Notifications List */}
-      {filteredNotifications.length > 0 ? (
-        <div className="space-y-3">
-          {filteredNotifications.map(notification => (
-            <NotificationCard key={notification.id} notification={notification} />
-          ))}
-        </div>
-      ) : (
-        <Card className="border py-12 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-            <Bell className="h-6 w-6 text-muted-foreground" />
-          </div>
-          <h3 className="mb-1 font-medium text-foreground">No notifications</h3>
-          <p className="text-sm text-muted-foreground">
-            {activeTab === 'unread'
-              ? "You're all caught up!"
-              : activeTab === 'read'
-                ? 'No read notifications yet'
-                : 'No notifications to show'}
-          </p>
-        </Card>
-      )}
+        <TabsContent value="all">
+          <NotificationsList
+            notifications={notifications}
+            emptyMessage="No notifications to show"
+          />
+        </TabsContent>
+
+        <TabsContent value="unread">
+          <NotificationsList
+            notifications={unreadNotifications}
+            emptyMessage="You're all caught up!"
+          />
+        </TabsContent>
+      </TabsRoot>
     </main>
   );
 }
 
 export default function NotificationsPage() {
-  return (
-    <AuthGuard>
-      <NotificationsContent />
-    </AuthGuard>
-  );
+  return <NotificationsContent />;
 }

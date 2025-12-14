@@ -13,7 +13,6 @@ import {
   LogOut,
   ChevronRight,
 } from 'lucide-react';
-import { AuthGuard } from 'shared/lib/auth-guard';
 import { useAuthStore } from 'shared/store';
 import { Card, Button, Input, Avatar } from 'shared/ui';
 import { cn } from 'shared/lib';
@@ -97,7 +96,7 @@ function ProfileSettings() {
 
       <Card className="border" padding="lg">
         <div className="flex items-start gap-6">
-          <Avatar name={user?.name || ''} size="xl" />
+          <Avatar alt={user?.name || 'User'} size="xl" />
           <div className="flex-1 space-y-4">
             <div>
               <Button variant="outline" size="sm">
@@ -193,7 +192,7 @@ function ProjectSettings() {
                 Permanently delete this project and all its data
               </p>
             </div>
-            <Button variant="destructive" size="sm">
+            <Button variant="danger" size="sm">
               Delete Project
             </Button>
           </div>
@@ -269,7 +268,7 @@ function TeamSettings() {
                 className="flex items-center justify-between rounded-lg border p-3"
               >
                 <div className="flex items-center gap-3">
-                  <Avatar name={member.name} size="sm" />
+                  <Avatar alt={member.name} size="sm" />
                   <div>
                     <p className="font-medium text-sm">{member.name}</p>
                     <p className="text-xs text-muted-foreground">{member.email}</p>
@@ -424,7 +423,7 @@ function SecuritySettings() {
               Sign out from your account on this device
             </p>
           </div>
-          <Button variant="destructive" size="sm" onClick={clearAuth}>
+          <Button variant="danger" size="sm" onClick={clearAuth}>
             <LogOut className="mr-2 h-4 w-4" />
             Sign Out
           </Button>
@@ -626,7 +625,7 @@ function IntegrationsSettings() {
                 </p>
               </div>
               <Button
-                variant={integration.connected ? 'outline' : 'default'}
+                variant={integration.connected ? 'outline' : 'primary'}
                 size="sm"
               >
                 {integration.connected ? 'Disconnect' : 'Connect'}
@@ -692,9 +691,5 @@ function SettingsContent() {
 }
 
 export default function SettingsPage() {
-  return (
-    <AuthGuard>
-      <SettingsContent />
-    </AuthGuard>
-  );
+  return <SettingsContent />;
 }

@@ -28,4 +28,7 @@ export enum QueryKeys {
   // Team
   TEAM_MEMBERS = 'teamMembers',
   TEAM_INVITES = 'teamInvites',
+
+  // Users
+  USERS = 'users',
 }

@@ -3,7 +3,6 @@
 import { use } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { AuthGuard } from 'shared/lib/auth-guard';
 import { ChatInterface } from 'features/ai-conversation';
 import { featureRequestsApi } from 'shared/api/feature-requests';
 import { QueryKeys } from 'shared/constants';
@@ -78,9 +77,5 @@ interface IProps {
 
 export default function ConversationPage({ params }: IProps) {
   const { id } = use(params);
-  return (
-    <AuthGuard>
-      <ConversationContent featureId={id} />
-    </AuthGuard>
-  );
+  return <ConversationContent featureId={id} />;
 }

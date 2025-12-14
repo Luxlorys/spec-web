@@ -8,6 +8,7 @@ export const mockUsers: IUser[] = [
     role: 'founder',
     organizationId: 'org-1',
     createdAt: new Date('2024-01-15'),
+    canCreateFeatures: true,
   },
   {
     id: 'user-2',
@@ -16,6 +17,7 @@ export const mockUsers: IUser[] = [
     role: 'developer',
     organizationId: 'org-1',
     createdAt: new Date('2024-01-20'),
+    canCreateFeatures: false,
   },
   {
     id: 'user-3',
@@ -24,6 +26,7 @@ export const mockUsers: IUser[] = [
     role: 'founder',
     organizationId: 'org-2',
     createdAt: new Date('2024-02-01'),
+    canCreateFeatures: true,
   },
   {
     id: 'user-4',
@@ -32,6 +35,7 @@ export const mockUsers: IUser[] = [
     role: 'developer',
     organizationId: 'org-1',
     createdAt: new Date('2024-02-10'),
+    canCreateFeatures: true,
   },
 ];
 
