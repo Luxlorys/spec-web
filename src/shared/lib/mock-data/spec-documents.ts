@@ -1,4 +1,59 @@
-import { ISpecDocument } from 'shared/types';
+import { ISpecDocument, ISpecVersion } from 'shared/types';
+
+// Version history storage for spec regeneration
+export const mockSpecVersionHistory: ISpecVersion[] = [
+  // Version 1 of Advanced Search Filters spec
+  {
+    id: 'version-4-1',
+    specDocumentId: 'spec-4',
+    version: 1,
+    snapshot: {
+      overview:
+        'Add filtering capabilities to the search feature to help users find content more quickly.',
+      problemStatement:
+        'Users currently have basic search that returns too many results, making it hard to find specific items.',
+      userStories: [
+        'As a user, I want to filter by date range so that I can find recent content',
+        'As a user, I want to filter by tags so that I can narrow down results',
+      ],
+      acceptanceCriteria: [
+        {
+          id: 'ac-20',
+          description: 'Given search results, when I apply a date filter, then only matching items show',
+          completed: false,
+        },
+        {
+          id: 'ac-21',
+          description: 'Given search results, when I apply a tag filter, then only tagged items show',
+          completed: false,
+        },
+      ],
+      scopeIncluded: ['Date range filter', 'Tag filter', 'Basic UI for filters'],
+      scopeExcluded: ['Advanced query builder', 'Saved search filters', 'Export filtered results'],
+      technicalConsiderations: ['Database query optimization', 'Filter UI component design'],
+      openQuestions: [
+        {
+          id: 'oq-10',
+          question: 'Should filters be AND or OR logic?',
+          askedBy: 'user-2',
+          resolved: false,
+        },
+      ],
+      edgeCases: [
+        {
+          scenario: 'User selects invalid date range',
+          expectedBehavior: 'Show validation error',
+        },
+      ],
+      assumptions: ['Users understand how filters work', 'Search index supports filtering'],
+      generatedAt: new Date('2024-12-01T09:00:00'),
+      updatedAt: new Date('2024-12-01T09:00:00'),
+    },
+    changeDescription: 'Initial spec generation',
+    createdBy: 'user-1',
+    createdAt: new Date('2024-12-01T09:00:00'),
+  },
+];
 
 export const mockSpecDocuments: ISpecDocument[] = [
   {
@@ -168,5 +223,143 @@ export const mockSpecDocuments: ISpecDocument[] = [
     version: 1,
     generatedAt: new Date('2024-11-25T15:00:00'),
     updatedAt: new Date('2024-11-25T15:00:00'),
+  },
+  {
+    id: 'spec-4',
+    featureRequestId: 'feat-4',
+    overview:
+      'Add comprehensive filtering capabilities to the search feature, including date range, tags, and status filters, to help users find content more efficiently and reduce information overload.',
+    problemStatement:
+      'Users currently have basic keyword search that returns too many results, making it hard to find specific items. With hundreds of items in the system, users spend too much time scrolling through irrelevant results. We need advanced filters to help them narrow down results quickly.',
+    userStories: [
+      'As a user, I want to filter by date range so that I can find recent content',
+      'As a user, I want to filter by tags so that I can narrow down results by category',
+      'As a user, I want to filter by status so that I can see only active or archived items',
+      'As a user, I want to combine multiple filters so that I can be very specific in my search',
+      'As a user, I want to see filter results instantly so that I get immediate feedback',
+    ],
+    acceptanceCriteria: [
+      {
+        id: 'ac-20',
+        description:
+          'Given search results exist, when I apply a date range filter, then only items within that date range are displayed',
+        completed: false,
+      },
+      {
+        id: 'ac-21',
+        description:
+          'Given search results exist, when I apply a tag filter, then only items with that tag are displayed',
+        completed: false,
+      },
+      {
+        id: 'ac-22',
+        description:
+          'Given search results exist, when I apply a status filter, then only items with that status are displayed',
+        completed: false,
+      },
+      {
+        id: 'ac-23',
+        description:
+          'Given multiple filters are applied, when results update, then items must match ALL filters (AND logic)',
+        completed: false,
+      },
+      {
+        id: 'ac-24',
+        description:
+          'Given filters are applied, when I clear all filters, then all search results are shown again',
+        completed: false,
+      },
+      {
+        id: 'ac-25',
+        description:
+          'Given no results match the filters, when filters are applied, then an empty state is shown with clear messaging',
+        completed: false,
+      },
+    ],
+    scopeIncluded: [
+      'Date range filter with calendar picker',
+      'Multi-select tag filter',
+      'Status filter (dropdown)',
+      'Clear all filters button',
+      'Active filter badges showing current selections',
+      'Result count updates as filters change',
+      'Empty state when no results match',
+      'Debounced filter updates for performance',
+    ],
+    scopeExcluded: [
+      'Advanced query builder interface',
+      'Saved search filters',
+      'Export filtered results to CSV',
+      'Filter presets or templates',
+      'Keyboard shortcuts for filters',
+      'URL parameters for shareable filtered searches',
+    ],
+    technicalConsiderations: [
+      'Database query optimization with composite indexes on date, tags, and status',
+      'Elasticsearch for fast full-text search with filtering',
+      'Debounce filter changes to reduce API calls',
+      'Pagination must work correctly with filters applied',
+      'Cache invalidation when underlying data changes',
+      'Mobile-responsive filter UI that works well on small screens',
+    ],
+    openQuestions: [
+      {
+        id: 'oq-10',
+        question: 'Should filters be AND or OR logic when multiple are selected?',
+        answer: 'AND logic - users want to narrow down results, not expand them',
+        askedBy: 'user-2',
+        answeredBy: 'user-1',
+        resolved: true,
+      },
+      {
+        id: 'oq-11',
+        question: 'Should we show filter options that would result in zero results?',
+        answer: 'Yes, but disable them visually and show count (0) to set expectations',
+        askedBy: 'user-4',
+        answeredBy: 'user-1',
+        resolved: true,
+      },
+      {
+        id: 'oq-12',
+        question: 'What date range presets should we include (last 7 days, last month, etc.)?',
+        answer: 'Last 7 days, Last 30 days, Last 90 days, Custom range',
+        askedBy: 'user-2',
+        answeredBy: 'user-1',
+        resolved: true,
+      },
+    ],
+    edgeCases: [
+      {
+        scenario: 'User selects end date before start date',
+        expectedBehavior: 'Automatically swap dates or show validation error with helpful message',
+      },
+      {
+        scenario: 'User applies filters that result in zero matches',
+        expectedBehavior:
+          'Show empty state with clear message and suggestion to remove some filters',
+      },
+      {
+        scenario: 'Tag is deleted while user has it selected as filter',
+        expectedBehavior: 'Remove the filter automatically and show notification to user',
+      },
+      {
+        scenario: 'Very large number of tags (100+) in filter dropdown',
+        expectedBehavior: 'Implement search within tags and virtual scrolling for performance',
+      },
+      {
+        scenario: 'Network error while applying filters',
+        expectedBehavior: 'Show error toast, keep previous results visible, allow retry',
+      },
+    ],
+    assumptions: [
+      'Users understand how filters work and expect AND logic by default',
+      'Search index supports filtering without significant performance degradation',
+      'Date range is stored in UTC and displayed in user local timezone',
+      'Maximum 1000 results per page even with filters applied',
+      'Tag taxonomy is flat (no nested tags) for v1',
+    ],
+    version: 2,
+    generatedAt: new Date('2024-12-01T09:00:00'),
+    updatedAt: new Date('2024-12-08T14:30:00'),
   },
 ];

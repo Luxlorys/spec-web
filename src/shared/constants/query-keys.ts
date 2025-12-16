@@ -17,6 +17,8 @@ export enum QueryKeys {
 
   // Specs
   SPEC_BY_FEATURE = 'specByFeature',
+  SPEC_REGENERATION_PREVIEW = 'specRegenerationPreview',
+  SPEC_VERSION_HISTORY = 'specVersionHistory',
 
   // Comments
   COMMENTS_BY_SPEC = 'commentsBySpec',

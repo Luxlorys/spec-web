@@ -49,3 +49,34 @@ export interface IUpdateSpecSection {
   >;
   value: string | string[];
 }
+
+// Version history types for spec regeneration
+export interface ISpecVersion {
+  id: string;
+  specDocumentId: string;
+  version: number;
+  snapshot: Omit<ISpecDocument, 'id' | 'featureRequestId' | 'version'>;
+  changeDescription: string;
+  createdBy: string;
+  createdAt: Date;
+}
+
+export interface IProposedChange {
+  section: string;
+  currentValue: string | string[] | IAcceptanceCriteria[] | IEdgeCase[] | any;
+  proposedValue: string | string[] | IAcceptanceCriteria[] | IEdgeCase[] | any;
+  changeType: 'modified' | 'added' | 'removed' | 'unchanged';
+  reason: string;
+}
+
+export interface IRegenerationPreview {
+  currentVersion: number;
+  nextVersion: number;
+  contextSummary: {
+    resolvedCommentsCount: number;
+    answeredQuestionsCount: number;
+    sectionsWithFeedback: string[];
+  };
+  proposedChanges: IProposedChange[];
+  fullProposedSpec: ISpecDocument;
+}

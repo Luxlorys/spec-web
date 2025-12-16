@@ -17,6 +17,17 @@ export const useGetCommentsBySection = (specDocumentId: string, section: string)
 };
 
 /**
+ * Hook to fetch all comments for a spec document
+ */
+export const useGetCommentsBySpec = (specDocumentId: string) => {
+  return useQuery({
+    queryKey: [QueryKeys.COMMENTS_BY_SPEC, specDocumentId, 'all'],
+    queryFn: () => commentsApi.getAllCommentsBySpec(specDocumentId),
+    enabled: !!specDocumentId,
+  });
+};
+
+/**
  * Hook to fetch comment counts for all sections in a spec
  */
 export const useGetCommentCounts = (specDocumentId: string) => {

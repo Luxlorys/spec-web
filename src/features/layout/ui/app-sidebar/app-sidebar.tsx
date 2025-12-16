@@ -8,10 +8,9 @@ import {
   Home,
   Bell,
   Users,
-  Settings,
-  Plus,
-  LogOut,
+  Settings, LogOut,
   ChevronUp,
+  Sparkles
 } from 'lucide-react';
 
 import {
@@ -99,9 +98,9 @@ export const AppSidebar: FC = () => {
         </Link>
 
         <Link href="/features/new" className="mt-4">
-          <Button className="w-full justify-start gap-2">
-            <Plus className="h-4 w-4" />
-            New Feature Request
+          <Button className="items-center justify-start gap-2">
+            <Sparkles className="h-4 w-4 text-white" />
+            Feature Request
           </Button>
         </Link>
       </SidebarHeader>

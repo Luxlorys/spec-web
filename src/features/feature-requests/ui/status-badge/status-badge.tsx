@@ -14,12 +14,11 @@ const statusConfig: Record<
   }
 > = {
   draft: { label: 'Draft', variant: 'gray' },
-  intake_in_progress: { label: 'In Progress', variant: 'blue' },
   spec_generated: { label: 'Spec Generated', variant: 'purple' },
-  under_review: { label: 'Under Review', variant: 'yellow' },
   ready_to_build: { label: 'Ready to Build', variant: 'green' },
-  in_progress: { label: 'Building', variant: 'cyan' },
-  complete: { label: 'Complete', variant: 'green' },
+  in_progress: { label: 'In Progress', variant: 'blue' },
+  review: { label: 'Review', variant: 'yellow' },
+  ready: { label: 'Ready', variant: 'cyan' },
 };
 
 export const StatusBadge: FC<IProps> = ({ status }) => {

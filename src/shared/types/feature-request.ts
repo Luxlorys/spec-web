@@ -1,11 +1,10 @@
 export type FeatureStatus =
   | 'draft'
-  | 'intake_in_progress'
   | 'spec_generated'
-  | 'under_review'
   | 'ready_to_build'
   | 'in_progress'
-  | 'complete';
+  | 'review'
+  | 'ready';
 
 export interface IFeatureRequest {
   id: string;

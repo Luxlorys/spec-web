@@ -2,9 +2,9 @@
 
 import { FC } from 'react';
 import Link from 'next/link';
-import { Calendar, User } from 'lucide-react';
+import { Calendar, User, UserCheck } from 'lucide-react';
 import { IFeatureRequest } from 'shared/types';
-import { Card, Badge } from 'shared/ui';
+import { Card, Badge, Avatar } from 'shared/ui';
 import { formatRelativeTime } from 'shared/lib';
 import { cn } from 'shared/lib';
 import { StatusBadge } from '../status-badge';
@@ -17,6 +17,9 @@ interface IProps {
 
 export const FeatureCard: FC<IProps> = ({ feature, variant = 'grid' }) => {
   const creator = mockUsers.find(u => u.id === feature.createdBy);
+  const assignee = feature.assignedTo
+    ? mockUsers.find(u => u.id === feature.assignedTo)
+    : null;
 
   if (variant === 'list') {
     return (
@@ -41,11 +44,13 @@ export const FeatureCard: FC<IProps> = ({ feature, variant = 'grid' }) => {
                   {feature.openQuestionsCount} Q
                 </Badge>
               )}
-              {creator && (
-                <div className="flex items-center gap-1">
-                  <User className="h-3 w-3" />
-                  <span>{creator.name}</span>
+              {assignee ? (
+                <div className="flex items-center gap-1.5">
+                  <Avatar src={assignee.avatarUrl} alt={assignee.name} size="xs" />
+                  <span>{assignee.name}</span>
                 </div>
+              ) : (
+                <span className="text-muted-foreground/60">Unassigned</span>
               )}
               <div className="flex items-center gap-1">
                 <Calendar className="h-3 w-3" />
@@ -88,11 +93,13 @@ export const FeatureCard: FC<IProps> = ({ feature, variant = 'grid' }) => {
 
         {/* Footer */}
         <div className="flex items-center justify-between border-t pt-3 text-xs text-muted-foreground">
-          {creator && (
+          {assignee ? (
             <div className="flex items-center gap-1.5">
-              <User className="h-3 w-3" />
-              <span>{creator.name}</span>
+              <Avatar src={assignee.avatarUrl} alt={assignee.name} size="xs" />
+              <span>{assignee.name}</span>
             </div>
+          ) : (
+            <span className="text-muted-foreground/60">Unassigned</span>
           )}
           <div className="flex items-center gap-1.5">
             <Calendar className="h-3 w-3" />

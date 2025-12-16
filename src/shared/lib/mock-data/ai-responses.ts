@@ -109,3 +109,151 @@ ${responses[5] ? `Technical considerations: ${responses[5]}` : ''}
 
 Does this match your vision? Should I proceed with generating the specification document?`;
 };
+
+// Mock AI regeneration logic
+import type { ISpecDocument, IComment, IOpenQuestion, IProposedChange } from 'shared/types';
+
+/**
+ * Mock function that simulates AI regenerating a spec from discussions
+ * In production, this would be replaced with actual Claude/OpenAI API call
+ */
+export const generateRegeneratedSpec = (
+  currentSpec: ISpecDocument,
+  resolvedComments: IComment[],
+  answeredQuestions: IOpenQuestion[]
+): IProposedChange[] => {
+  const changes: IProposedChange[] = [];
+
+  // Group comments by section
+  const commentsBySection: Record<string, IComment[]> = {};
+  resolvedComments.forEach(comment => {
+    if (!commentsBySection[comment.section]) {
+      commentsBySection[comment.section] = [];
+    }
+    commentsBySection[comment.section].push(comment);
+  });
+
+  // Check technical considerations section for comments
+  if (commentsBySection['technical'] || commentsBySection['technical-considerations']) {
+    const techComments = [
+      ...(commentsBySection['technical'] || []),
+      ...(commentsBySection['technical-considerations'] || []),
+    ];
+
+    const newConsiderations = [...currentSpec.technicalConsiderations];
+
+    techComments.forEach(comment => {
+      // Extract technical decisions from comments
+      if (comment.content.toLowerCase().includes('should use') ||
+          comment.content.toLowerCase().includes('need to') ||
+          comment.content.toLowerCase().includes('must')) {
+        newConsiderations.push(comment.content);
+      }
+    });
+
+    if (newConsiderations.length > currentSpec.technicalConsiderations.length) {
+      changes.push({
+        section: 'technicalConsiderations',
+        currentValue: currentSpec.technicalConsiderations,
+        proposedValue: newConsiderations,
+        changeType: 'modified',
+        reason: `Incorporated ${techComments.length} technical decisions from resolved comment discussions`,
+      });
+    }
+  }
+
+  // Check for scope clarifications
+  if (commentsBySection['scope'] || commentsBySection['scope-included'] || commentsBySection['scope-excluded']) {
+    const scopeComments = [
+      ...(commentsBySection['scope'] || []),
+      ...(commentsBySection['scope-included'] || []),
+      ...(commentsBySection['scope-excluded'] || []),
+    ];
+
+    const newExcluded = [...currentSpec.scopeExcluded];
+
+    scopeComments.forEach(comment => {
+      if (comment.content.toLowerCase().includes('not include') ||
+          comment.content.toLowerCase().includes('out of scope') ||
+          comment.content.toLowerCase().includes('future version')) {
+        // Extract what should be excluded
+        const extracted = comment.content.replace(/.*?(not include|out of scope|future version):?\s*/i, '');
+        if (extracted && extracted.length > 10) {
+          newExcluded.push(extracted);
+        }
+      }
+    });
+
+    if (newExcluded.length > currentSpec.scopeExcluded.length) {
+      changes.push({
+        section: 'scopeExcluded',
+        currentValue: currentSpec.scopeExcluded,
+        proposedValue: newExcluded,
+        changeType: 'modified',
+        reason: `Clarified scope boundaries based on ${scopeComments.length} discussion comments`,
+      });
+    }
+  }
+
+  // Incorporate answered open questions into assumptions
+  if (answeredQuestions.length > 0) {
+    const newAssumptions = [...currentSpec.assumptions];
+
+    answeredQuestions.forEach(q => {
+      if (q.answer && q.answer.trim().length > 0) {
+        const assumption = `${q.question} - Decision: ${q.answer}`;
+        newAssumptions.push(assumption);
+      }
+    });
+
+    if (newAssumptions.length > currentSpec.assumptions.length) {
+      changes.push({
+        section: 'assumptions',
+        currentValue: currentSpec.assumptions,
+        proposedValue: newAssumptions,
+        changeType: 'modified',
+        reason: `Added ${answeredQuestions.length} resolved decisions from open questions`,
+      });
+    }
+  }
+
+  // Check for problem statement clarifications
+  if (commentsBySection['problem-statement']) {
+    const problemComments = commentsBySection['problem-statement'];
+    if (problemComments.length > 0) {
+      // In a real implementation, AI would synthesize comments into updated text
+      // For mock, we'll append the first substantive comment
+      const substantiveComment = problemComments.find(c => c.content.length > 50);
+      if (substantiveComment) {
+        const proposedStatement = `${currentSpec.problemStatement} ${substantiveComment.content}`;
+
+        changes.push({
+          section: 'problemStatement',
+          currentValue: currentSpec.problemStatement,
+          proposedValue: proposedStatement,
+          changeType: 'modified',
+          reason: 'Enhanced problem statement with clarifications from team discussion',
+        });
+      }
+    }
+  }
+
+  // Mark unchanged sections
+  const changedSections = new Set(changes.map(c => c.section));
+  const allSections = ['overview', 'problemStatement', 'userStories', 'scopeIncluded',
+                       'scopeExcluded', 'technicalConsiderations', 'assumptions'];
+
+  allSections.forEach(section => {
+    if (!changedSections.has(section)) {
+      changes.push({
+        section,
+        currentValue: (currentSpec as any)[section],
+        proposedValue: (currentSpec as any)[section],
+        changeType: 'unchanged',
+        reason: 'No changes needed based on discussions',
+      });
+    }
+  });
+
+  return changes;
+};

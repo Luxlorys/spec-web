@@ -37,13 +37,12 @@ export const conversationsApi = {
 
     mockConversations.push(newConversation);
 
-    // Update feature request
+    // Update feature request (stays in draft during conversation)
     const featureIndex = mockFeatureRequests.findIndex(f => f.id === featureId);
     if (featureIndex !== -1) {
       mockFeatureRequests[featureIndex] = {
         ...mockFeatureRequests[featureIndex],
         conversationId,
-        status: 'intake_in_progress',
         updatedAt: new Date(),
         lastActivityAt: new Date(),
       };

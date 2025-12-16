@@ -21,6 +21,19 @@ export const commentsApi = {
   },
 
   /**
+   * Get all comments for a spec document (across all sections)
+   * @param specDocumentId - The spec document ID
+   * @returns Promise<IComment[]>
+   */
+  getAllCommentsBySpec: async (specDocumentId: string): Promise<IComment[]> => {
+    await delay(300);
+
+    return mockComments
+      .filter(c => c.specDocumentId === specDocumentId)
+      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+  },
+
+  /**
    * Get comment count by section for a spec document
    * Used for displaying badges on section headers
    * @param specDocumentId - The spec document ID

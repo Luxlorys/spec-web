@@ -1,27 +1,75 @@
 'use client';
 
-import { FC, useState } from 'react';
-import { ISpecDocument } from 'shared/types';
+import { FC, useState, useEffect } from 'react';
+import { Sparkles, History } from 'lucide-react';
+import { ISpecDocument, IUpdateSpecSection } from 'shared/types';
 import { formatDate } from 'shared/lib';
-import { useGetCommentCounts } from 'shared/hooks';
+import {
+  useGetCommentCounts,
+  useUpdateSpecSection,
+  usePreviewRegeneration,
+  useCommitRegeneration,
+  useGetVersionHistory,
+  useRollbackSpec,
+  useGetCommentsBySpec,
+} from 'shared/hooks';
+import { useAuthStore } from 'shared/store';
 import { SpecSection } from '../spec-section';
-import { Badge, Card } from 'shared/ui';
+import { Badge, Card, Button } from 'shared/ui';
 import { CommentsSidebar } from '../comments-sidebar';
 import { OpenQuestionItem } from '../open-question-item';
 import { OpenQuestionForm } from '../open-question-form';
+import { GeneratePromptButton } from '../generate-prompt-button';
+import { RegenerationModal } from '../regeneration-modal';
+import { VersionHistorySidebar } from '../version-history-sidebar';
 
 interface IProps {
   spec: ISpecDocument;
 }
 
 export const SpecView: FC<IProps> = ({ spec }) => {
-  // Sidebar state
+  // Auth state
+  const { user } = useAuthStore();
+  const isFounder = true;
+
+  // Comments sidebar state
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
   const [activeSectionTitle, setActiveSectionTitle] = useState<string>('');
 
+  // Regeneration modal state
+  const [isRegenerationModalOpen, setIsRegenerationModalOpen] = useState(false);
+
+  // Version history sidebar state
+  const [isVersionHistoryOpen, setIsVersionHistoryOpen] = useState(false);
+
   // Fetch comment counts for all sections
   const { data: commentCounts = {} } = useGetCommentCounts(spec.id);
+
+  // Fetch all comments for regeneration
+  const { data: allComments = [] } = useGetCommentsBySpec(spec.id);
+
+  // Update section mutation
+  const updateSectionMutation = useUpdateSpecSection();
+
+  // Regeneration hooks
+  const {
+    data: regenerationPreview,
+    refetch: fetchPreview,
+    isLoading: isLoadingPreview,
+    error: previewError,
+  } = usePreviewRegeneration(spec.id);
+
+  const commitRegenerationMutation = useCommitRegeneration();
+
+  // Version history hooks
+  const { data: versionHistory = [], isLoading: isLoadingHistory } = useGetVersionHistory(spec.id);
+  const rollbackMutation = useRollbackSpec();
+
+  // Calculate if regeneration should be enabled
+  const resolvedCommentsCount = allComments.filter(c => c.resolved).length;
+  const answeredQuestionsCount = spec.openQuestions.filter(q => q.answer && q.answer.trim().length > 0).length;
+  const canRegenerate = resolvedCommentsCount > 0 || answeredQuestionsCount > 0;
 
   // Handler for opening sidebar
   const handleCommentClick = (sectionId: string, sectionTitle: string) => {
@@ -39,6 +87,59 @@ export const SpecView: FC<IProps> = ({ spec }) => {
     }, 300);
   };
 
+  // Handler for saving section edits
+  const handleSaveSection = (section: IUpdateSpecSection['section'], value: string | string[]) => {
+    updateSectionMutation.mutate({
+      specId: spec.id,
+      update: { section, value },
+    });
+  };
+
+  // Handler for opening regeneration modal
+  const handleRegenerateClick = () => {
+    setIsRegenerationModalOpen(true);
+    fetchPreview(); // Trigger preview generation
+  };
+
+  // Handler for closing regeneration modal
+  const handleCloseRegenerationModal = () => {
+    setIsRegenerationModalOpen(false);
+  };
+
+  // Handler for approving regeneration
+  const handleApproveRegeneration = (proposedSpec: ISpecDocument) => {
+    commitRegenerationMutation.mutate(
+      { specId: spec.id, proposedSpec },
+      {
+        onSuccess: () => {
+          // Modal will auto-close after showing success state
+        },
+      }
+    );
+  };
+
+  // Handler for opening version history
+  const handleVersionHistoryClick = () => {
+    setIsVersionHistoryOpen(true);
+  };
+
+  // Handler for closing version history
+  const handleCloseVersionHistory = () => {
+    setIsVersionHistoryOpen(false);
+  };
+
+  // Handler for rollback
+  const handleRollback = (targetVersion: number) => {
+    rollbackMutation.mutate(
+      { specId: spec.id, targetVersion },
+      {
+        onSuccess: () => {
+          // Sidebar will stay open to show updated history
+        },
+      }
+    );
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -52,7 +153,39 @@ export const SpecView: FC<IProps> = ({ spec }) => {
               Version {spec.version} • Generated on {formatDate(spec.generatedAt)}
             </p>
           </div>
-          <Badge variant="purple">v{spec.version}</Badge>
+          <div className="flex items-center gap-2">
+            {/* Founder-only buttons */}
+            {isFounder && (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleVersionHistoryClick}
+                  className="text-xs"
+                >
+                  <History className="h-3.5 w-3.5 mr-1.5" />
+                  History
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={handleRegenerateClick}
+                  disabled={!canRegenerate}
+                  title={
+                    !canRegenerate
+                      ? 'No resolved comments or answered questions to incorporate'
+                      : 'Regenerate spec from discussions'
+                  }
+                  className="text-xs"
+                >
+                  <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+                  Regenerate
+                </Button>
+              </>
+            )}
+            <GeneratePromptButton spec={spec} />
+            <Badge variant="purple">v{spec.version}</Badge>
+          </div>
         </div>
       </Card>
 
@@ -64,6 +197,10 @@ export const SpecView: FC<IProps> = ({ spec }) => {
         specDocumentId={spec.id}
         commentCount={commentCounts['overview'] || 0}
         onCommentClick={sectionId => handleCommentClick(sectionId, 'Overview')}
+        editable={isFounder}
+        editValue={spec.overview}
+        onSave={(value) => handleSaveSection('overview', value)}
+        isSaving={updateSectionMutation.isPending}
       >
         <p>{spec.overview}</p>
       </SpecSection>
@@ -76,6 +213,10 @@ export const SpecView: FC<IProps> = ({ spec }) => {
         specDocumentId={spec.id}
         commentCount={commentCounts['problem-statement'] || 0}
         onCommentClick={sectionId => handleCommentClick(sectionId, 'Problem Statement')}
+        editable={isFounder}
+        editValue={spec.problemStatement}
+        onSave={(value) => handleSaveSection('problemStatement', value)}
+        isSaving={updateSectionMutation.isPending}
       >
         <p>{spec.problemStatement}</p>
       </SpecSection>
@@ -88,6 +229,11 @@ export const SpecView: FC<IProps> = ({ spec }) => {
         specDocumentId={spec.id}
         commentCount={commentCounts['user-stories'] || 0}
         onCommentClick={sectionId => handleCommentClick(sectionId, 'User Stories')}
+        editable={isFounder}
+        editValue={spec.userStories}
+        onSave={(value) => handleSaveSection('userStories', value)}
+        isSaving={updateSectionMutation.isPending}
+        isArrayField
       >
         <ul className="space-y-2">
           {spec.userStories.map((story, index) => (
@@ -99,7 +245,7 @@ export const SpecView: FC<IProps> = ({ spec }) => {
         </ul>
       </SpecSection>
 
-      {/* Acceptance Criteria */}
+      {/* Acceptance Criteria - Not editable (complex structure) */}
       <SpecSection
         title="Acceptance Criteria"
         id="acceptance-criteria"
@@ -125,43 +271,50 @@ export const SpecView: FC<IProps> = ({ spec }) => {
         </ul>
       </SpecSection>
 
-      {/* Scope */}
+      {/* Scope - Included */}
       <SpecSection
-        title="Scope"
-        id="scope"
-        sectionId="scope"
+        title="Scope: Included"
+        id="scope-included"
+        sectionId="scope-included"
         specDocumentId={spec.id}
         commentCount={commentCounts['scope'] || 0}
-        onCommentClick={sectionId => handleCommentClick(sectionId, 'Scope')}
+        onCommentClick={() => handleCommentClick('scope', 'Scope')}
+        editable={isFounder}
+        editValue={spec.scopeIncluded}
+        onSave={(value) => handleSaveSection('scopeIncluded', value)}
+        isSaving={updateSectionMutation.isPending}
+        isArrayField
       >
-        <div className="grid gap-6 md:grid-cols-2">
-          <div>
-            <h4 className="mb-3 font-semibold text-green-700 dark:text-green-400">
-              ✓ Included in This Version
-            </h4>
-            <ul className="space-y-2">
-              {spec.scopeIncluded.map((item, index) => (
-                <li key={index} className="flex items-start gap-2">
-                  <span className="text-green-600 dark:text-green-400">✓</span>
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <h4 className="mb-3 font-semibold text-red-700 dark:text-red-400">
-              ✗ Explicitly Excluded
-            </h4>
-            <ul className="space-y-2">
-              {spec.scopeExcluded.map((item, index) => (
-                <li key={index} className="flex items-start gap-2">
-                  <span className="text-red-600 dark:text-red-400">✗</span>
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
+        <ul className="space-y-2">
+          {spec.scopeIncluded.map((item, index) => (
+            <li key={index} className="flex items-start gap-2">
+              <span className="text-green-600 dark:text-green-400">✓</span>
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
+      </SpecSection>
+
+      {/* Scope - Excluded */}
+      <SpecSection
+        title="Scope: Excluded"
+        id="scope-excluded"
+        sectionId="scope-excluded"
+        specDocumentId={spec.id}
+        editable={isFounder}
+        editValue={spec.scopeExcluded}
+        onSave={(value) => handleSaveSection('scopeExcluded', value)}
+        isSaving={updateSectionMutation.isPending}
+        isArrayField
+      >
+        <ul className="space-y-2">
+          {spec.scopeExcluded.map((item, index) => (
+            <li key={index} className="flex items-start gap-2">
+              <span className="text-red-600 dark:text-red-400">✗</span>
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
       </SpecSection>
 
       {/* Technical Considerations */}
@@ -172,6 +325,11 @@ export const SpecView: FC<IProps> = ({ spec }) => {
         specDocumentId={spec.id}
         commentCount={commentCounts['technical'] || 0}
         onCommentClick={sectionId => handleCommentClick(sectionId, 'Technical Considerations')}
+        editable={isFounder}
+        editValue={spec.technicalConsiderations}
+        onSave={(value) => handleSaveSection('technicalConsiderations', value)}
+        isSaving={updateSectionMutation.isPending}
+        isArrayField
       >
         <ul className="space-y-2">
           {spec.technicalConsiderations.map((item, index) => (
@@ -183,7 +341,7 @@ export const SpecView: FC<IProps> = ({ spec }) => {
         </ul>
       </SpecSection>
 
-      {/* Edge Cases */}
+      {/* Edge Cases - Not editable (complex structure) */}
       <SpecSection
         title="Edge Cases"
         id="edge-cases"
@@ -220,7 +378,7 @@ export const SpecView: FC<IProps> = ({ spec }) => {
         </div>
       </SpecSection>
 
-      {/* Open Questions */}
+      {/* Open Questions - Has dedicated edit UI */}
       <SpecSection
         title="Open Questions"
         id="open-questions"
@@ -252,6 +410,11 @@ export const SpecView: FC<IProps> = ({ spec }) => {
         specDocumentId={spec.id}
         commentCount={commentCounts['assumptions'] || 0}
         onCommentClick={sectionId => handleCommentClick(sectionId, 'Assumptions')}
+        editable={isFounder}
+        editValue={spec.assumptions}
+        onSave={(value) => handleSaveSection('assumptions', value)}
+        isSaving={updateSectionMutation.isPending}
+        isArrayField
       >
         <ul className="space-y-2">
           {spec.assumptions.map((assumption, index) => (
@@ -273,6 +436,30 @@ export const SpecView: FC<IProps> = ({ spec }) => {
           sectionTitle={activeSectionTitle}
         />
       )}
+
+      {/* Regeneration Modal */}
+      <RegenerationModal
+        isOpen={isRegenerationModalOpen}
+        onClose={handleCloseRegenerationModal}
+        specId={spec.id}
+        preview={regenerationPreview || null}
+        isLoadingPreview={isLoadingPreview}
+        previewError={previewError as Error | null}
+        onApprove={handleApproveRegeneration}
+        isCommitting={commitRegenerationMutation.isPending}
+        commitSuccess={commitRegenerationMutation.isSuccess}
+      />
+
+      {/* Version History Sidebar */}
+      <VersionHistorySidebar
+        isOpen={isVersionHistoryOpen}
+        onClose={handleCloseVersionHistory}
+        currentVersion={spec.version}
+        versions={versionHistory}
+        isLoading={isLoadingHistory}
+        onRollback={handleRollback}
+        isRollingBack={rollbackMutation.isPending}
+      />
     </div>
   );
 };

@@ -23,10 +23,10 @@ type TabFilter = 'all' | 'in_progress' | 'generated' | 'review' | 'ready';
 
 const tabToStatuses: Record<TabFilter, FeatureStatus[] | null> = {
   all: null,
-  in_progress: ['intake_in_progress', 'in_progress'],
+  in_progress: ['in_progress'],
   generated: ['spec_generated'],
-  review: ['under_review'],
-  ready: ['ready_to_build'],
+  review: ['review'],
+  ready: ['ready_to_build', 'ready'],
 };
 
 function FeaturesList({
@@ -140,15 +140,15 @@ function DashboardContent() {
           </div>
         </Card>
         <Card padding="sm" className="border">
-          <div className="text-sm text-muted-foreground">Under Review</div>
+          <div className="text-sm text-muted-foreground">In Review</div>
           <div className="text-2xl font-bold text-yellow-600">
-            {statsCounts?.['under_review'] || 0}
+            {statsCounts?.['review'] || 0}
           </div>
         </Card>
         <Card padding="sm" className="border">
           <div className="text-sm text-muted-foreground">In Progress</div>
           <div className="text-2xl font-bold text-blue-600">
-            {(statsCounts?.['in_progress'] || 0) + (statsCounts?.['intake_in_progress'] || 0)}
+            {statsCounts?.['in_progress'] || 0}
           </div>
         </Card>
       </div>

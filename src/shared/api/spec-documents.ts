@@ -1,6 +1,15 @@
-import { ISpecDocument, IUpdateSpecSection, IOpenQuestion } from 'shared/types';
+import {
+  ISpecDocument,
+  IUpdateSpecSection,
+  IOpenQuestion,
+  IRegenerationPreview,
+  ISpecVersion,
+  IProposedChange,
+} from 'shared/types';
 import { delay, generateId } from 'shared/lib';
-import { mockSpecDocuments, mockFeatureRequests } from 'shared/lib/mock-data';
+import { mockSpecDocuments, mockFeatureRequests, mockSpecVersionHistory } from 'shared/lib/mock-data';
+import { mockComments } from 'shared/lib/mock-data/comments';
+import { generateRegeneratedSpec } from 'shared/lib/mock-data/ai-responses';
 
 export interface ICreateOpenQuestionRequest {
   question: string;
@@ -165,5 +174,178 @@ export const specDocumentsApi = {
 
     mockSpecDocuments[specIndex].openQuestions.splice(questionIndex, 1);
     mockSpecDocuments[specIndex].updatedAt = new Date();
+  },
+
+  /**
+   * Preview what changes would be made if spec is regenerated from discussions
+   */
+  previewRegeneration: async (specId: string): Promise<IRegenerationPreview> => {
+    await delay(1500); // Simulate AI processing
+
+    const spec = mockSpecDocuments.find(s => s.id === specId);
+    if (!spec) throw new Error('Spec not found');
+
+    // Gather resolved comments and answered questions
+    const resolvedComments = mockComments.filter(
+      c => c.specDocumentId === specId && c.resolved
+    );
+
+    const answeredQuestions = spec.openQuestions.filter(
+      q => q.answer && q.answer.trim().length > 0
+    );
+
+    // Get unique sections with feedback
+    const sectionsWithFeedback = [...new Set(resolvedComments.map(c => c.section))];
+
+    // Generate proposed changes using mock AI
+    const proposedChanges = generateRegeneratedSpec(spec, resolvedComments, answeredQuestions);
+
+    // Build full proposed spec by applying changes
+    const fullProposedSpec: ISpecDocument = { ...spec };
+    proposedChanges.forEach(change => {
+      if (change.changeType !== 'unchanged') {
+        (fullProposedSpec as any)[change.section] = change.proposedValue;
+      }
+    });
+
+    return {
+      currentVersion: spec.version,
+      nextVersion: spec.version + 1,
+      contextSummary: {
+        resolvedCommentsCount: resolvedComments.length,
+        answeredQuestionsCount: answeredQuestions.length,
+        sectionsWithFeedback,
+      },
+      proposedChanges,
+      fullProposedSpec,
+    };
+  },
+
+  /**
+   * Commit the regeneration and create new version
+   */
+  commitRegeneration: async (
+    specId: string,
+    proposedSpec: ISpecDocument
+  ): Promise<ISpecDocument> => {
+    await delay(800);
+
+    const index = mockSpecDocuments.findIndex(s => s.id === specId);
+    if (index === -1) throw new Error('Spec not found');
+
+    const currentSpec = mockSpecDocuments[index];
+
+    // Create version snapshot of current state
+    const versionSnapshot: ISpecVersion = {
+      id: generateId(),
+      specDocumentId: specId,
+      version: currentSpec.version,
+      snapshot: {
+        overview: currentSpec.overview,
+        problemStatement: currentSpec.problemStatement,
+        userStories: currentSpec.userStories,
+        acceptanceCriteria: currentSpec.acceptanceCriteria,
+        scopeIncluded: currentSpec.scopeIncluded,
+        scopeExcluded: currentSpec.scopeExcluded,
+        technicalConsiderations: currentSpec.technicalConsiderations,
+        openQuestions: currentSpec.openQuestions,
+        edgeCases: currentSpec.edgeCases,
+        assumptions: currentSpec.assumptions,
+        generatedAt: currentSpec.generatedAt,
+        updatedAt: currentSpec.updatedAt,
+      },
+      changeDescription: 'Regenerated from discussions',
+      createdBy: 'user-1', // Mock current user
+      createdAt: new Date(),
+    };
+
+    mockSpecVersionHistory.push(versionSnapshot);
+
+    // Update spec with new content
+    const updated: ISpecDocument = {
+      ...proposedSpec,
+      id: specId,
+      featureRequestId: currentSpec.featureRequestId,
+      version: currentSpec.version + 1,
+      updatedAt: new Date(),
+    };
+
+    mockSpecDocuments[index] = updated;
+
+    // Mark answered questions as resolved
+    updated.openQuestions.forEach(q => {
+      if (q.answer && q.answer.trim().length > 0) {
+        q.resolved = true;
+      }
+    });
+
+    return updated;
+  },
+
+  /**
+   * Get version history for a spec
+   */
+  getVersionHistory: async (specId: string): Promise<ISpecVersion[]> => {
+    await delay(300);
+
+    return mockSpecVersionHistory
+      .filter(v => v.specDocumentId === specId)
+      .sort((a, b) => b.version - a.version); // Newest first
+  },
+
+  /**
+   * Rollback to a previous version
+   */
+  rollbackToVersion: async (specId: string, targetVersion: number): Promise<ISpecDocument> => {
+    await delay(500);
+
+    const index = mockSpecDocuments.findIndex(s => s.id === specId);
+    if (index === -1) throw new Error('Spec not found');
+
+    const versionSnapshot = mockSpecVersionHistory.find(
+      v => v.specDocumentId === specId && v.version === targetVersion
+    );
+    if (!versionSnapshot) throw new Error('Version not found');
+
+    const currentSpec = mockSpecDocuments[index];
+
+    // Create snapshot of current state before rollback
+    const rollbackSnapshot: ISpecVersion = {
+      id: generateId(),
+      specDocumentId: specId,
+      version: currentSpec.version,
+      snapshot: {
+        overview: currentSpec.overview,
+        problemStatement: currentSpec.problemStatement,
+        userStories: currentSpec.userStories,
+        acceptanceCriteria: currentSpec.acceptanceCriteria,
+        scopeIncluded: currentSpec.scopeIncluded,
+        scopeExcluded: currentSpec.scopeExcluded,
+        technicalConsiderations: currentSpec.technicalConsiderations,
+        openQuestions: currentSpec.openQuestions,
+        edgeCases: currentSpec.edgeCases,
+        assumptions: currentSpec.assumptions,
+        generatedAt: currentSpec.generatedAt,
+        updatedAt: currentSpec.updatedAt,
+      },
+      changeDescription: `Rolled back to v${targetVersion}`,
+      createdBy: 'user-1',
+      createdAt: new Date(),
+    };
+
+    mockSpecVersionHistory.push(rollbackSnapshot);
+
+    // Restore from snapshot with incremented version
+    const restored: ISpecDocument = {
+      id: specId,
+      featureRequestId: currentSpec.featureRequestId,
+      ...versionSnapshot.snapshot,
+      version: currentSpec.version + 1,
+      updatedAt: new Date(),
+    };
+
+    mockSpecDocuments[index] = restored;
+
+    return restored;
   },
 };

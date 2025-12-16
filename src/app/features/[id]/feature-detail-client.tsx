@@ -4,19 +4,40 @@ import Link from 'next/link';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { featureRequestsApi } from 'shared/api/feature-requests';
 import { specDocumentsApi } from 'shared/api/spec-documents';
+import { usersApi } from 'shared/api/users';
 import { QueryKeys } from 'shared/constants';
-import { Button, Tabs, Card, EmptyState } from 'shared/ui';
+import { Button, Tabs, Card, EmptyState, Avatar } from 'shared/ui';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from 'shared/ui/select';
 import { StatusBadge } from 'features/feature-requests';
 import { SpecView } from 'features/spec-document';
 import { queryClient } from 'shared/lib';
 import { mockUsers } from 'shared/lib/mock-data';
 import { formatRelativeTime } from 'shared/lib';
+import { FeatureStatus } from 'shared/types';
+import { useAuthStore } from 'shared/store';
+
+const statusOptions: { value: FeatureStatus; label: string }[] = [
+  { value: 'draft', label: 'Draft' },
+  { value: 'spec_generated', label: 'Spec Generated' },
+  { value: 'ready_to_build', label: 'Ready to Build' },
+  { value: 'in_progress', label: 'In Progress' },
+  { value: 'review', label: 'Review' },
+  { value: 'ready', label: 'Ready' },
+];
 
 interface IProps {
   featureId: string;
 }
 
 export function FeatureDetailClient({ featureId }: IProps) {
+  const { user: currentUser } = useAuthStore();
+
   const { data: feature, isLoading: featureLoading } = useQuery({
     queryKey: [QueryKeys.FEATURE_REQUEST_BY_ID, featureId],
     queryFn: () => featureRequestsApi.getById(featureId),
@@ -28,9 +49,28 @@ export function FeatureDetailClient({ featureId }: IProps) {
     enabled: !!feature?.specDocumentId,
   });
 
+  const { data: teamMembers } = useQuery({
+    queryKey: [QueryKeys.USERS, feature?.organizationId],
+    queryFn: () => usersApi.getByOrganization(feature!.organizationId),
+    enabled: !!feature?.organizationId,
+  });
+
   const updateStatusMutation = useMutation({
-    mutationFn: (status: string) =>
-      featureRequestsApi.update(featureId, { status: status as any }),
+    mutationFn: (status: FeatureStatus) =>
+      featureRequestsApi.update(featureId, { status }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [QueryKeys.FEATURE_REQUEST_BY_ID, featureId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QueryKeys.FEATURE_REQUESTS],
+      });
+    },
+  });
+
+  const updateAssigneeMutation = useMutation({
+    mutationFn: (assignedTo: string | undefined) =>
+      featureRequestsApi.update(featureId, { assignedTo }),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: [QueryKeys.FEATURE_REQUEST_BY_ID, featureId],
@@ -80,13 +120,67 @@ export function FeatureDetailClient({ featureId }: IProps) {
             </h3>
             <dl className="grid gap-4 sm:grid-cols-2">
               <div>
-                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                <dt className="mb-1 text-sm font-medium text-gray-500 dark:text-gray-400">
                   Status
                 </dt>
-                <dd className="mt-1">
-                  <StatusBadge status={feature.status} />
+                <dd>
+                  <Select
+                    value={feature.status}
+                    onValueChange={(value) =>
+                      updateStatusMutation.mutate(value as FeatureStatus)
+                    }
+                    disabled={updateStatusMutation.isPending}
+                  >
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {statusOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </dd>
               </div>
+
+              <div>
+                <dt className="mb-1 text-sm font-medium text-gray-500 dark:text-gray-400">
+                  Assigned To
+                </dt>
+                <dd>
+                  <Select
+                    value={feature.assignedTo || 'unassigned'}
+                    onValueChange={(value) =>
+                      updateAssigneeMutation.mutate(
+                        value === 'unassigned' ? undefined : value
+                      )
+                    }
+                    disabled={updateAssigneeMutation.isPending}
+                  >
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Select assignee" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="unassigned">Unassigned</SelectItem>
+                      {teamMembers?.map((member) => (
+                        <SelectItem key={member.id} value={member.id}>
+                          <div className="flex items-center gap-2">
+                            <Avatar
+                              src={member.avatarUrl}
+                              alt={member.name}
+                              size="xs"
+                            />
+                            <span>{member.name}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </dd>
+              </div>
+
               <div>
                 <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
                   Created By
@@ -95,17 +189,6 @@ export function FeatureDetailClient({ featureId }: IProps) {
                   {creator?.name || 'Unknown'}
                 </dd>
               </div>
-
-              {assignee && (
-                <div>
-                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                    Assigned To
-                  </dt>
-                  <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                    {assignee.name}
-                  </dd>
-                </div>
-              )}
 
               <div>
                 <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
@@ -142,36 +225,6 @@ export function FeatureDetailClient({ featureId }: IProps) {
                 <Link href={`/features/${featureId}/conversation`}>
                   <Button>Start AI Conversation</Button>
                 </Link>
-              )}
-
-              {feature.status === 'under_review' && (
-                <Button
-                  variant="primary"
-                  onClick={() => updateStatusMutation.mutate('ready_to_build')}
-                  isLoading={updateStatusMutation.isPending}
-                >
-                  Mark as Ready to Build
-                </Button>
-              )}
-
-              {feature.status === 'ready_to_build' && (
-                <Button
-                  variant="primary"
-                  onClick={() => updateStatusMutation.mutate('in_progress')}
-                  isLoading={updateStatusMutation.isPending}
-                >
-                  Start Building
-                </Button>
-              )}
-
-              {feature.status === 'in_progress' && (
-                <Button
-                  variant="primary"
-                  onClick={() => updateStatusMutation.mutate('complete')}
-                  isLoading={updateStatusMutation.isPending}
-                >
-                  Mark as Complete
-                </Button>
               )}
             </div>
           </Card>
