@@ -78,7 +78,7 @@ export const LoginForm: FC = () => {
 
       <div className="text-center text-sm text-gray-600 dark:text-gray-400">
         Don't have an account?{' '}
-        <Link href="/signup" className="font-medium text-blue-600 hover:text-blue-700">
+        <Link href="/signup" className="font-medium text-primary hover:text-primary/80">
           Sign up
         </Link>
       </div>

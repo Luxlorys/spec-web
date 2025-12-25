@@ -98,7 +98,7 @@ export const CommentItem: FC<ICommentItemProps> = ({ comment, onReply, isReply =
             <textarea
               value={editContent}
               onChange={e => setEditContent(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 p-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+              className="w-full rounded-lg border border-gray-300 p-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
               rows={3}
               autoFocus
             />
@@ -120,7 +120,7 @@ export const CommentItem: FC<ICommentItemProps> = ({ comment, onReply, isReply =
           <div className="mt-2 flex gap-2 opacity-0 transition-opacity group-hover:opacity-100">
             <button
               onClick={() => onReply(comment.id)}
-              className="flex items-center gap-1 text-sm text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400"
+              className="flex items-center gap-1 text-sm text-gray-600 hover:text-purple-600 dark:text-gray-400 dark:hover:text-purple-400"
             >
               <Reply size={14} />
               Reply
@@ -130,7 +130,7 @@ export const CommentItem: FC<ICommentItemProps> = ({ comment, onReply, isReply =
               <>
                 <button
                   onClick={handleEdit}
-                  className="flex items-center gap-1 text-sm text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400"
+                  className="flex items-center gap-1 text-sm text-gray-600 hover:text-purple-600 dark:text-gray-400 dark:hover:text-purple-400"
                 >
                   <Edit2 size={14} />
                   Edit

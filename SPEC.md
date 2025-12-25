@@ -1,10 +1,12 @@
-# SpecFlow — Product Requirements Document
+# SpecFlow — Product Specification
 
 ## Executive Summary
 
 SpecFlow is an AI-powered tool that helps early-stage startups translate founder intent into developer-ready specifications. It acts as an intelligent layer between non-technical or semi-technical founders and their development team, reducing communication overhead, eliminating misunderstandings, and enabling small teams to move faster without hiring additional coordination roles (PM, BA).
 
 **One-liner:** "Turn your feature ideas into clear specs through AI conversation — no PM required."
+
+> **Note:** This document reflects the current implementation of SpecFlow as of the latest build.
 
 ---
 
@@ -23,16 +25,6 @@ Early-stage startups (3-15 people) waste significant time and resources on the g
 5. **Founders become bottlenecks** — they're the only ones who know the full picture
 6. **Can't afford a PM** — but desperately need the function a PM serves
 
-### Current Solutions (Competitors)
-
-| Solution | Why It Falls Short |
-|----------|-------------------|
-| Notion/Google Docs | Blank page problem; still requires founder to write everything |
-| Linear/Jira | Task tracking, not spec creation; assumes requirements exist |
-| Meetings | Expensive, unscalable, information gets lost |
-| Hire a PM | $80-150k/year; overkill for early stage |
-| Loom videos | One-way; no structure; hard to reference later |
-
 ---
 
 ## Solution Overview
@@ -42,8 +34,9 @@ SpecFlow provides a conversational AI interface that:
 1. **Guides founders** through structured intake to capture feature requirements
 2. **Asks intelligent follow-up questions** to fill gaps and surface edge cases
 3. **Generates comprehensive specs** with user stories, acceptance criteria, and scope boundaries
-4. **Enables developer feedback** through the same conversational interface
-5. **Maintains living documentation** that evolves as understanding improves
+4. **Enables developer feedback** through section-level commenting
+5. **Maintains living documentation** that evolves through spec regeneration from discussions
+6. **Exports AI-ready prompts** for coding assistants like Claude, Cursor, and Copilot
 
 ### Key Value Propositions
 
@@ -70,12 +63,6 @@ SpecFlow provides a conversational AI interface that:
 - Spend less time on coordination, more on strategy
 - Enable team to work more independently
 
-**Frustrations:**
-- Meetings consume their calendar
-- Features ship "off" from original intent
-- Feel like they're the bottleneck
-- Can't afford specialized roles yet
-
 ### Secondary: Startup Developers
 
 **Profile:**
@@ -90,268 +77,453 @@ SpecFlow provides a conversational AI interface that:
 - Written reference to check against
 - Way to ask questions without scheduling meetings
 
-**Frustrations:**
-- Ambiguous requirements
-- Scope changes mid-development
-- "That's not what I meant" moments
-- Context buried in Slack threads
-
 ---
 
 ## Feature Specifications
 
-### Feature 1: Project Setup
+### Feature 1: Authentication & Project Setup
 
-**Description:** Founder creates a new project/workspace for their startup.
+**Description:** Complete authentication system with role-based access and invite code team management.
 
-**User Flow:**
-1. Founder signs up (email or Google OAuth)
-2. Creates organization (startup name)
-3. Invites team members (email invite)
-4. Team members accept invite and join
+#### Login
+- Email and password authentication
+- Demo credentials: `sarah.founder@example.com` / `password`
+- Automatic redirect to dashboard on success
+- Form validation with error feedback
 
-**Data Captured:**
-- Organization name
-- Founder profile (name, email, role)
-- Team member profiles
-- Basic context (what does the startup do — used by AI for context)
+#### Signup (Two Paths)
 
-**Screens Needed:**
-- Sign up / Login
-- Create organization
-- Organization settings
-- Team management (invite, remove, roles)
+**Admin Signup (Create Project):**
+1. Select "Create a new project"
+2. Enter name, email, password, and project name
+3. Creates organization with user as founder
+4. Automatic login and redirect to dashboard
 
----
+**Member Signup (Join Project):**
+1. Select "Join an existing project"
+2. Enter invite code and click "Verify"
+3. System validates code (checks expiry, usage limits)
+4. On success, shows organization name and unlocks remaining fields
+5. Enter name, email, password, select role
+6. Creates account linked to organization
 
-### Feature 2: Feature Request Creation (Founder Side)
+#### User Roles & Permissions
 
-**Description:** Founder initiates a new feature request through AI-guided conversation.
+| Role | Description | Permissions |
+|------|-------------|-------------|
+| Founder | Organization owner | Full access, cannot be removed or demoted |
+| Admin | Team administrator | Manage team, settings, all features |
+| PM | Project Manager | Manage features and specifications |
+| BA | Business Analyst | Create and edit specifications |
+| Developer | Engineer | View specs, add comments |
+| Designer | Designer | View specs, add comments |
 
-**User Flow:**
-1. Founder clicks "New Feature Request"
-2. Optionally adds initial context (rough notes, voice memo transcript, or just a title)
-3. Enters conversational interface with AI
-4. AI asks structured questions to understand:
-   - What problem this solves (the "why")
-   - Who it's for (user type)
-   - What success looks like
-   - Known constraints (timeline, technical, business)
-   - Initial scope thoughts
-5. Founder answers in natural language
-6. AI asks follow-up questions based on gaps detected
-7. AI surfaces edge cases: "What should happen if...?"
-8. AI summarizes understanding for confirmation
-9. Founder approves or corrects
-10. AI generates structured spec document
+#### Invite Code System
+- Codes have expiration dates
+- Usage limits (e.g., max 10 uses)
+- Track usage count
+- Revoke active codes from Settings → Team
 
-**AI Question Categories:**
+#### Protected Routes
+Middleware protects: `/dashboard`, `/features/*`, `/settings`, `/notifications`
 
-*Problem & Context:*
-- "What problem does this feature solve?"
-- "Who is experiencing this problem?"
-- "How are users solving this today?"
-- "Why is this important to build now?"
-
-*Desired Outcome:*
-- "What does success look like for this feature?"
-- "Walk me through what a user would do with this feature"
-- "What should the user be able to accomplish that they can't today?"
-
-*Scope & Boundaries:*
-- "What's explicitly NOT included in this feature?"
-- "Is this a v1 that will be expanded later? What would v2 include?"
-- "Are there related features this depends on or connects to?"
-
-*Constraints:*
-- "Any technical constraints I should know about?"
-- "Target timeline or deadline?"
-- "Any design/UX preferences or existing patterns to follow?"
-
-*Edge Cases (AI-generated based on context):*
-- "What happens if [user does X]?"
-- "How should this behave for [edge case]?"
-- "What if [external dependency] fails?"
-
-**Screens Needed:**
-- Feature request list (dashboard)
-- New feature request (initial context input)
-- AI conversation interface (chat-like)
-- Conversation history/transcript view
+Public routes: `/`, `/login`, `/signup`
 
 ---
 
-### Feature 3: Spec Document Generation
+### Feature 2: Feature Request Creation
 
-**Description:** AI generates a structured specification document from the conversation.
+**Description:** Create new feature requests with optional context, then refine through AI conversation.
 
-**Document Structure:**
+#### New Feature Form
+**Route:** `/features/new`
 
+1. Enter feature title (required, 3-100 characters)
+2. Optionally add initial context (rough notes, ideas)
+3. Submit creates feature in `draft` status
+4. Auto-redirect to AI conversation
+
+#### AI Conversation Interface
+**Route:** `/features/[id]/conversation`
+
+**UI Components:**
+- Chat-like message interface
+- User messages: Blue, right-aligned
+- AI messages: Gray, left-aligned with avatar
+- Thinking indicator during AI processing
+- Auto-scroll to latest message
+- Enter to send, Shift+Enter for new line
+
+**Conversation Flow:**
+1. AI initiates with greeting and first question
+2. Questions cover:
+   - Problem & context ("What problem does this solve?")
+   - Target users ("Who will use this feature?")
+   - Desired outcome ("What does success look like?")
+   - Scope boundaries ("What's NOT included?")
+   - Technical constraints
+3. AI asks edge case questions based on context
+4. AI summarizes understanding for confirmation
+5. On completion, generates spec document
+6. Feature status updated to `spec_generated`
+
+**Completion State:**
+- Green success card displayed
+- "View Specification" button
+- Input area disabled
+
+---
+
+### Feature 3: Spec Document Generation & Management
+
+**Description:** AI generates structured specification from conversation with full editing and commenting capabilities.
+
+#### Document Structure
+
+| Section | Description | Editable |
+|---------|-------------|----------|
+| Overview | 2-3 sentence summary | Yes |
+| Problem Statement | What problem this solves | Yes |
+| User Stories | "As a [user], I want to [action]..." format | Yes (array) |
+| Acceptance Criteria | Checkbox list of criteria | No |
+| Scope: Included | What's in scope | Yes (array) |
+| Scope: Excluded | What's explicitly out | Yes (array) |
+| Technical Considerations | Technical requirements | Yes (array) |
+| Edge Cases | Scenario/behavior table | No |
+| Open Questions | Questions needing answers | Special UI |
+| Assumptions | What was assumed | Yes (array) |
+
+#### Spec Header
+- Document title "Specification Document"
+- Version number and generation date
+- History button (circle icon, opens version sidebar)
+- "Update Specification" button (when feedback exists)
+- "Generate Prompt" button
+- Version badge
+
+#### Section Editing (Founder-only)
+- Pencil icon on hover
+- Click to enter edit mode
+- Textarea for single/multiple values
+- Array fields: one item per line
+- Save/Cancel buttons
+- Loading state during save
+
+#### Section Commenting
+- Comment count badge per section
+- Click opens comments sidebar
+- Threaded replies supported
+- Mark comments as resolved
+- Resolution status visible
+
+---
+
+### Feature 4: Spec Regeneration & Version History
+
+**Description:** Update specifications based on team feedback with full version tracking.
+
+#### Update Specification
+**Trigger:** "Update Specification" button (enabled when resolved comments > 0 OR answered questions > 0)
+
+**Workflow:**
+1. Click button to open regeneration modal
+2. System generates preview (analyzes feedback)
+3. Preview shows:
+   - Summary view: Changes grouped by type (Modified, Added, Removed)
+   - Diff view: Side-by-side comparison with reasoning
+   - Context summary: Resolved comments count, answered questions count
+4. Review proposed changes with AI reasoning
+5. Click "Approve & Apply Changes"
+6. Version incremented, old version saved to history
+
+#### Version History Sidebar
+- Accessed via History button (circle icon)
+- Lists all versions (newest first)
+- Current version highlighted
+- Each entry shows:
+  - Version number
+  - Change description
+  - Date and creator
+- Rollback button for previous versions
+- Confirmation dialog before rollback
+- Rollback creates new version (preserves history)
+
+---
+
+### Feature 5: Generate Prompt
+
+**Description:** Export specification as AI-ready prompt for coding assistants.
+
+#### Generated Prompt Structure (Markdown)
 ```
-# Feature: [Name]
+# Feature Implementation Request: [Title]
 
-## Overview
-[2-3 sentence summary]
+## Context
+[Overview text]
 
 ## Problem Statement
-[What problem this solves and for whom]
+[Problem description]
 
-## User Stories
-- As a [user type], I want to [action] so that [benefit]
-- ...
+## User Requirements
+[Numbered user stories]
 
 ## Acceptance Criteria
-- [ ] Given [context], when [action], then [result]
-- [ ] ...
+[Numbered criteria]
 
-## Scope
-### Included
-- ...
-### Explicitly Excluded
-- ...
+## Constraints & Technical Considerations
+### Out of Scope
+[Excluded items]
 
-## Technical Considerations
-[Flags, dependencies, suggestions from AI]
+### Technical Requirements
+[Technical considerations]
 
-## Open Questions
-- [ ] [Question that needs team discussion]
-- ...
+### Assumptions
+[List of assumptions]
 
-## Edge Cases
-| Scenario | Expected Behavior |
-|----------|------------------|
-| ... | ... |
+## Edge Cases to Handle
+[Scenario: Expected behavior format]
 
-## Assumptions
-[What AI assumed to be true — founder should validate]
+## Design Notes & Decisions
+[Answered questions in Q&A format]
+[Resolved comments grouped by section]
 
-## Appendix
-### Original Conversation
-[Link to or embed of intake conversation]
-
-### Revision History
-[Track changes over time]
+## Implementation Notes
+- Spec Version: [version]
+- Last Updated: [date]
+- Feature ID: [id]
 ```
 
-**Screens Needed:**
-- Spec document view (read mode)
-- Spec document edit mode (manual edits)
-- Version history / diff view
-- Export options (PDF, Markdown, Notion)
+#### Usage
+1. Click "Generate Prompt" button
+2. Preview sheet opens with generated markdown
+3. Click "Copy to Clipboard"
+4. Paste into Claude, Cursor, GitHub Copilot, etc.
 
 ---
 
-### Feature 4: Developer Review & Feedback
+### Feature 6: Open Questions Management
 
-**Description:** Developer reviews spec and can ask questions or flag issues through AI-mediated conversation.
+**Description:** Track and resolve questions within the specification.
 
-**User Flow:**
-1. Developer receives notification of new/updated spec
-2. Opens spec document
-3. Can highlight any section and ask a question
-4. AI attempts to answer from existing context
-5. If AI can't answer confidently, routes to founder
-6. Founder responds (async)
-7. AI incorporates answer into spec
-8. Developer marks spec as "Ready to Build" when satisfied
+#### Add Question
+- "Add New Question" button in Open Questions section
+- Enter question text
+- Automatically records who asked
 
-**Question Types:**
-- Clarification: "What does 'seamless' mean here specifically?"
-- Technical: "How should this interact with [existing system]?"
-- Scope: "Is [scenario] in scope or out?"
-- Suggestion: "Would it make sense to also include [X]?"
+#### Question Item Display
+- Question text with edit/delete buttons
+- Answer section (or "Awaiting Answer" badge)
+- Edit/add answer buttons
+- "Mark as resolved" checkbox
+- Color-coded borders:
+  - Yellow/orange: Unresolved
+  - Green: Resolved
+- Shows askedBy/answeredBy metadata
 
-**Screens Needed:**
-- Spec view with highlight-to-comment functionality
-- Comment thread view (per section)
-- Notification center
-- "Ready to Build" confirmation flow
+#### Integration with Regeneration
+- Answered questions automatically considered when regenerating spec
+- AI incorporates answers into relevant sections
 
 ---
 
-### Feature 5: Feature Request Dashboard
+### Feature 7: Dashboard
 
-**Description:** Central view of all feature requests and their status.
+**Description:** Central view of all feature requests with filtering and multiple view options.
 
-**Status Flow:**
-```
-Draft → Intake In Progress → Spec Generated → Under Review → Ready to Build → In Progress → Complete
-```
+**Route:** `/dashboard`
 
-**Dashboard Views:**
-- All features (filterable by status)
-- My features (for individual user)
-- Ready for review (for devs)
-- Needs input (blocked on someone)
+#### Tab-based Filtering
+| Tab | Shows |
+|-----|-------|
+| All | All features with total count |
+| Draft | Features in initial state |
+| Spec Generated | Specs created, awaiting review |
+| Ready to Build | Specs approved for implementation |
+| Completed | Finished features |
 
-**Information Shown Per Feature:**
-- Title
-- Status
-- Owner (who created it)
-- Assignee (who's building it)
-- Last activity
-- Open questions count
-- Target date (if set)
+#### View Modes
+- **Grid View:** 3-column card layout (default)
+- **List View:** Single-column compact display
 
-**Screens Needed:**
-- Dashboard with list/card view toggle
-- Filter and search functionality
-- Quick status update actions
+#### Feature Card Information
+- Status badge (color-coded)
+- Feature title (links to detail page)
+- Initial context excerpt (2-line truncate)
+- Open questions count (if any)
+- Assignee with avatar
+- Last activity (relative time)
 
----
-
-### Feature 6: Notifications & Activity
-
-**Description:** Keep team informed of updates without requiring constant checking.
-
-**Notification Triggers:**
-- New feature request created
-- Spec ready for review
-- New question asked on spec
-- Question answered
-- Spec updated
-- Status changed
-
-**Channels (MVP):**
-- In-app notifications
-- Email digest (configurable frequency)
-
-**Channels (Post-MVP):**
-- Slack integration
-- Linear/Jira integration (create task from spec)
-
-**Screens Needed:**
-- Notification center
-- Notification preferences
+#### Empty States
+- Helpful guidance when no features exist
+- Prompts to create first feature
 
 ---
 
-## User Flows Summary
+### Feature 8: Feature Detail Page
+
+**Description:** Comprehensive view of a single feature request with tabs.
+
+**Route:** `/features/[id]`
+
+#### Header
+- Breadcrumb navigation (Dashboard / Feature Title)
+- Feature title and context
+- "Back to Dashboard" button
+
+#### Tabs
+
+**Overview Tab:**
+- Status dropdown (change status)
+- Assignee dropdown (assign team member)
+- Created by information
+- Last activity timestamp
+- Initial context card
+- Quick actions: View/Start Conversation
+
+**Specification Tab:**
+- Full SpecView component (if spec exists)
+- Empty state with prompt to complete conversation (if no spec)
+
+**Comments Tab:**
+- Placeholder for future team discussion feature
+- Shows open questions count
+
+**Activity Tab:**
+- Timeline of feature lifecycle
+- Creation event with creator avatar
+- Status change events
+- Relative timestamps
+
+---
+
+### Feature 9: Notifications
+
+**Description:** Keep team informed of updates across the application.
+
+#### Notification Types
+| Type | Icon Color | Description |
+|------|------------|-------------|
+| feature_created | Purple | New feature created |
+| spec_generated | Green | Specification ready |
+| question_asked | Orange | New question on spec |
+| question_answered | Blue | Question answered |
+| status_changed | Yellow | Feature status updated |
+| spec_updated | Indigo | Specification modified |
+
+#### Notification Center (Header Dropdown)
+- Bell icon with unread count badge
+- Recent notifications preview (max 5)
+- "Mark all as read" button
+- Links to related content
+
+#### Notifications Page
+**Route:** `/notifications`
+
+- Tabs: All / Unread
+- Statistics cards (Total, Unread counts)
+- Notification cards with:
+  - Icon with color-coded background
+  - Type badge
+  - Title and message
+  - Relative time
+  - Link to related content
+  - Unread indicator
+
+---
+
+### Feature 10: Settings
+
+**Description:** Comprehensive settings page with role-based section visibility.
+
+**Route:** `/settings`
+
+#### Available to All Users
+
+**Profile Settings:**
+- Avatar display
+- Name, email, role fields
+- Save changes functionality
+
+**Notification Settings:**
+- Email notifications toggles:
+  - New feature requests
+  - Spec generated
+  - Questions & answers
+  - Status changes
+- In-app notification options:
+  - Desktop notifications
+  - Sound alerts
+
+**Security Settings:**
+- Password change (current, new, confirm)
+- Active sessions list
+- Sign out functionality
+
+**Appearance Settings:**
+- Theme: Light, Dark, System
+- Density: Compact, Default, Comfortable
+
+**Integrations:**
+- Slack (connected status)
+- GitHub (connect available)
+- Jira (connect available)
+- Linear (connect available)
+
+#### Admin-Only Sections
+
+**Project Settings:**
+- Project name and description
+- Website URL
+- Danger zone: Delete project
+
+**Team Settings:**
+- Generate new invite code
+- Active invite codes table:
+  - Code value
+  - Expiry date
+  - Usage (used/max)
+  - Revoke button
+- Team members list:
+  - Avatar, name, email
+  - Role badge
+  - Remove button (founder protected)
+
+**Billing Settings:**
+- Current plan display (Pro Plan - $29/month)
+- Change plan button
+- Payment method (card ending in ...)
+- Billing history with invoice downloads
+
+---
+
+## User Flows
 
 ### Flow 1: Founder Creates Feature Request
 ```
-Dashboard → "New Feature" → Add initial context → AI conversation → 
-Review AI questions → Answer questions → Confirm understanding → 
-Generate spec → Review spec → Share with team
+Dashboard → "Feature Request" button → Enter title & context →
+Submit → AI Conversation → Answer questions →
+Conversation completes → Spec generated → Review spec
 ```
 
 ### Flow 2: Developer Reviews Spec
 ```
-Notification → Open spec → Read through → Highlight unclear section → 
-Ask question → Receive answer (AI or founder) → 
-Mark "Ready to Build" → Assign to self
+Notification (spec ready) → Open feature → Specification tab →
+Read through sections → Add comment on unclear section →
+Wait for resolution → Mark spec as "Ready to Build"
 ```
 
-### Flow 3: Founder Responds to Developer Question
+### Flow 3: Team Provides Feedback & Spec Updates
 ```
-Notification → Open spec → View question → Respond → 
-AI incorporates into spec → Developer notified
+Developer adds comments → Founder answers open questions →
+Founder clicks "Update Specification" → Review proposed changes →
+Approve changes → New spec version created
 ```
 
-### Flow 4: Team Views Progress
+### Flow 4: Export Spec for AI Coding
 ```
-Dashboard → Filter by status → View feature details → 
-Check open questions → Update status
+Open feature → Specification tab → Click "Generate Prompt" →
+Review generated markdown → Copy to clipboard →
+Paste into Claude/Cursor/Copilot
 ```
 
 ---
@@ -361,167 +533,142 @@ Check open questions → Update status
 ```
 SpecFlow
 ├── Dashboard
-│   ├── All Features
-│   ├── My Features
-│   ├── Needs Review
-│   └── Needs Input
+│   ├── Tab Filters (All, Draft, Spec Generated, Ready to Build, Completed)
+│   ├── Grid/List View Toggle
+│   └── Feature Cards
 ├── Feature Detail
-│   ├── Spec Document
-│   ├── Conversation History
-│   ├── Comments/Questions
-│   └── Activity Log
+│   ├── Overview Tab
+│   │   ├── Status & Assignment
+│   │   └── Quick Actions
+│   ├── Specification Tab
+│   │   ├── Spec Sections (editable)
+│   │   ├── Comments Sidebar
+│   │   ├── Version History
+│   │   └── Generate Prompt
+│   ├── Comments Tab (placeholder)
+│   └── Activity Tab
 ├── New Feature
-│   ├── Initial Context
-│   └── AI Conversation
-├── Team
-│   ├── Members
-│   └── Invite
-├── Settings
-│   ├── Organization
-│   ├── Profile
-│   └── Notifications
-└── Notifications
+│   ├── Title & Context Form
+│   └── AI Conversation Interface
+├── Notifications
+│   ├── All/Unread Tabs
+│   └── Notification Cards
+└── Settings
+    ├── Profile
+    ├── Notifications
+    ├── Security
+    ├── Appearance
+    ├── Integrations
+    ├── Project (admin)
+    ├── Team (admin)
+    └── Billing (admin)
 ```
 
 ---
 
-## Design Requirements
+## Feature Status Flow
 
-### Overall Aesthetic
-- **Clean and minimal** — founders are overwhelmed, don't add visual noise
-- **Professional but warm** — not sterile enterprise, not cutesy startup
-- **Content-first** — specs are the star, UI should recede
-- **High information density** — power users, not consumers
+```
+draft → spec_generated → ready_to_build → completed
+```
 
-### Design Principles
-1. **Reduce friction** — fewest clicks to accomplish tasks
-2. **Progressive disclosure** — show complexity only when needed
-3. **Async-first** — design for people not working same hours
-4. **Context preservation** — always show where you are and why
-
-### Key UI Components
-
-**AI Conversation Interface:**
-- Chat-like but not iMessage clone
-- Clear distinction between AI and human messages
-- Show "thinking" state when AI is processing
-- Easy to reference previous messages
-- Ability to edit previous responses to refine
-
-**Spec Document:**
-- Clean typography, optimized for reading
-- Clear section hierarchy
-- Inline commenting (like Google Docs)
-- Status indicators for each section (confirmed, needs review, etc.)
-- Sticky table of contents for navigation
-
-**Dashboard:**
-- Card or list view (user preference)
-- Clear visual status indicators
-- Quick actions without opening full detail
-- Good empty states with guidance
-
-### Responsive Requirements
-- **Primary:** Desktop (where work happens)
-- **Secondary:** Tablet (for reviewing on the go)
-- **Tertiary:** Mobile (notifications and quick responses only)
-
-### Accessibility
-- WCAG 2.1 AA compliance
-- Keyboard navigation for power users
-- High contrast text
-- Screen reader compatible
+| Status | Description |
+|--------|-------------|
+| draft | Feature created, conversation not complete |
+| spec_generated | AI conversation complete, spec document generated |
+| ready_to_build | Team reviewed and approved spec |
+| completed | Feature implemented |
 
 ---
 
-## Technical Context (for AI design tools)
+## Technical Implementation
 
-### Tech Stack (Planned)
-- **Frontend:** React (Next.js) with TypeScript
+### Tech Stack
+- **Framework:** Next.js 16 with App Router
+- **Language:** TypeScript
 - **Styling:** Tailwind CSS
-- **Components:** shadcn/ui as base
-- **Backend:** Node.js
-- **Database:** PostgreSQL
-- **AI:** Claude API for conversation and spec generation
-- **Auth:** Clerk or Auth0
-- **Hosting:** Vercel (frontend), Railway or Render (backend)
+- **UI Components:** shadcn/ui + Radix UI primitives
+- **State Management:**
+  - Zustand (auth state with localStorage persistence)
+  - TanStack React Query (server state and caching)
+- **Forms:** React Hook Form + Zod validation
+- **Icons:** Lucide React
+- **Authentication:** Cookie-based with middleware protection
+- **Data Layer:** Mock API (designed for easy backend replacement)
 
-### Design System Foundation
-- Use shadcn/ui components as starting point
-- Extend with custom components as needed
-- Tailwind for styling consistency
-- Dark mode support (post-MVP)
+### Key Files
+
+**Types:**
+- `src/shared/types/user.ts` - User and role types
+- `src/shared/types/feature-request.ts` - Feature request types
+- `src/shared/types/spec-document.ts` - Spec document types
+- `src/shared/types/conversation.ts` - Conversation types
+- `src/shared/types/comment.ts` - Comment types
+- `src/shared/types/notification.ts` - Notification types
+
+**API Layer:**
+- `src/shared/api/auth.ts` - Authentication
+- `src/shared/api/feature-requests.ts` - Feature CRUD
+- `src/shared/api/conversations.ts` - AI conversations
+- `src/shared/api/spec-documents.ts` - Spec management
+- `src/shared/api/comments.ts` - Comments
+- `src/shared/api/users.ts` - User management
+- `src/shared/api/notifications.ts` - Notifications
+
+**Features:**
+- `src/features/auth/` - Login, signup forms
+- `src/features/feature-requests/` - Dashboard cards, status badges
+- `src/features/ai-conversation/` - Chat interface
+- `src/features/spec-document/` - Spec view, editing, comments, regeneration
+- `src/features/notifications/` - Notification center
+- `src/features/layout/` - Sidebar, header
 
 ---
 
-## MVP Scope (8-10 Weeks)
+## Implementation Status
 
-### Must Have
-- [ ] User authentication (founder + team members)
-- [ ] Organization/team setup
-- [ ] AI-guided feature intake conversation
-- [ ] Spec document generation
-- [ ] Basic spec editing
-- [ ] Developer commenting on specs
-- [ ] Simple dashboard with status tracking
+### Completed Features
+- [x] User authentication (login, signup)
+- [x] Role-based access control
+- [x] Invite code team management
+- [x] Organization/workspace setup
+- [x] Feature request creation
+- [x] AI-guided conversation interface
+- [x] Spec document generation
+- [x] Section-level spec editing
+- [x] Section commenting with threads
+- [x] Comment resolution tracking
+- [x] Open questions management
+- [x] Spec regeneration from discussions
+- [x] Version history with rollback
+- [x] Generate prompt for AI assistants
+- [x] Dashboard with tab filtering
+- [x] Grid/list view toggle
+- [x] In-app notifications
+- [x] Notification center dropdown
+- [x] Settings (profile, notifications, security, appearance)
+- [x] Admin settings (project, team, billing)
+- [x] Integration placeholders (Slack, GitHub, Jira, Linear)
+
+### Future Enhancements
+- [ ] Real backend API integration
 - [ ] Email notifications
-
-### Nice to Have
-- [ ] Spec export (PDF, Markdown)
-- [ ] Conversation branching (explore alternatives)
-- [ ] Spec templates by feature type
-- [ ] Activity timeline per feature
-
-### Post-MVP
-- [ ] Slack integration
+- [ ] Slack integration (real)
 - [ ] Linear/Jira integration
-- [ ] Voice input for founders
-- [ ] Spec comparison (v1 vs v2)
-- [ ] Analytics (cycle time, questions per spec, etc.)
+- [ ] Spec export (PDF, Markdown download)
+- [ ] Voice input for conversations
+- [ ] Analytics dashboard
 - [ ] Custom AI training on company context
 
 ---
 
-## Success Metrics
+## Appendix: Demo Credentials
 
-**North Star:** Time from feature idea to "Ready to Build" status
+For testing the application:
+- **Email:** sarah.founder@example.com
+- **Password:** password
 
-**Supporting Metrics:**
-- Specs created per week per org
-- Questions asked per spec (lower = clearer specs)
-- Revision cycles before "Ready to Build"
-- User activation (created first spec within 7 days)
-- Team adoption (% of invited members active)
-
----
-
-## Appendix: Sample AI Conversation
-
-**Founder initiates:** "I want to add a way for users to invite their teammates"
-
-**AI:** "Got it — a team invitation feature. Let me understand this better. First, who would be able to send these invitations? Any user, or only certain roles like admins or account owners?"
-
-**Founder:** "Only admins for now, we can expand later"
-
-**AI:** "Makes sense. And when someone receives an invitation, what's their experience? Do they need to create a new account, or could they also sign in with an existing account if they have one?"
-
-**Founder:** "They'd get an email with a link, click it, and create an account. If they already have an account maybe we just add them to the team? Not sure."
-
-**AI:** "That's a good question to resolve. Let me flag that as an open item. Now, is there a limit to how many people can be on a team, or how many invitations can be pending at once?"
-
-**Founder:** "No limit for now. Keep it simple."
-
-**AI:** "Got it. A few edge cases to consider:
-- What if someone is invited to multiple teams?
-- What if an invitation email bounces or goes to spam?
-- Should invitations expire after a certain time?
-- Can an admin revoke a pending invitation?
-
-Which of these should we handle in v1?"
-
-**Founder:** "Multi-team yes, that should work. Expiration yes, maybe 7 days? Revoke yes. Bounced emails we can ignore for now."
-
-**AI:** "Perfect. Let me summarize what I understand so far..."
+This logs in as Sarah Chen, Founder at TechStart Inc.
 
 ---
 

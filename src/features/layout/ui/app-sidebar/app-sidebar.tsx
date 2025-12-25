@@ -7,8 +7,8 @@ import { useQuery } from '@tanstack/react-query';
 import {
   Home,
   Bell,
-  Users,
-  Settings, LogOut,
+  Settings,
+  LogOut,
   ChevronUp,
   Sparkles
 } from 'lucide-react';
@@ -48,11 +48,6 @@ const navItems = [
     url: '/notifications',
     icon: Bell,
     hasBadge: true,
-  },
-  {
-    title: 'Team',
-    url: '/team',
-    icon: Users,
   },
   {
     title: 'Settings',

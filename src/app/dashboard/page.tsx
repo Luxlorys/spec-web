@@ -19,14 +19,14 @@ import { FeatureCard } from 'features/feature-requests';
 import { FeatureStatus } from 'shared/types';
 import { cn } from 'shared/lib';
 
-type TabFilter = 'all' | 'in_progress' | 'generated' | 'review' | 'ready';
+type TabFilter = 'all' | 'draft' | 'spec_generated' | 'ready_to_build' | 'completed';
 
 const tabToStatuses: Record<TabFilter, FeatureStatus[] | null> = {
   all: null,
-  in_progress: ['in_progress'],
-  generated: ['spec_generated'],
-  review: ['review'],
-  ready: ['ready_to_build', 'ready'],
+  draft: ['draft'],
+  spec_generated: ['spec_generated'],
+  ready_to_build: ['ready_to_build'],
+  completed: ['completed'],
 };
 
 function FeaturesList({
@@ -99,14 +99,6 @@ function DashboardContent() {
     queryFn: () => featureRequestsApi.getAll({}),
   });
 
-  const statsCounts = features?.reduce(
-    (acc, f) => {
-      acc[f.status] = (acc[f.status] || 0) + 1;
-      return acc;
-    },
-    {} as Record<string, number>
-  );
-
   const getFilteredFeatures = (tab: TabFilter) => {
     if (!features) return [];
     const statuses = tabToStatuses[tab];
@@ -127,32 +119,6 @@ function DashboardContent() {
         </p>
       </div>
 
-      {/* Stats */}
-      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card padding="sm" className="border">
-          <div className="text-sm text-muted-foreground">Total Features</div>
-          <div className="text-2xl font-bold">{features?.length || 0}</div>
-        </Card>
-        <Card padding="sm" className="border">
-          <div className="text-sm text-muted-foreground">Ready to Build</div>
-          <div className="text-2xl font-bold text-green-600">
-            {statsCounts?.['ready_to_build'] || 0}
-          </div>
-        </Card>
-        <Card padding="sm" className="border">
-          <div className="text-sm text-muted-foreground">In Review</div>
-          <div className="text-2xl font-bold text-yellow-600">
-            {statsCounts?.['review'] || 0}
-          </div>
-        </Card>
-        <Card padding="sm" className="border">
-          <div className="text-sm text-muted-foreground">In Progress</div>
-          <div className="text-2xl font-bold text-blue-600">
-            {statsCounts?.['in_progress'] || 0}
-          </div>
-        </Card>
-      </div>
-
       {/* Tabs and View Toggle */}
       <TabsRoot defaultValue="all">
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -160,17 +126,17 @@ function DashboardContent() {
             <TabsTrigger value="all" badge={getTabCount('all')}>
               All
             </TabsTrigger>
-            <TabsTrigger value="in_progress" badge={getTabCount('in_progress')}>
-              In Progress
+            <TabsTrigger value="draft" badge={getTabCount('draft')}>
+              Draft
             </TabsTrigger>
-            <TabsTrigger value="generated" badge={getTabCount('generated')}>
-              Generated
+            <TabsTrigger value="spec_generated" badge={getTabCount('spec_generated')}>
+              Spec Generated
             </TabsTrigger>
-            <TabsTrigger value="review" badge={getTabCount('review')}>
-              Review
+            <TabsTrigger value="ready_to_build" badge={getTabCount('ready_to_build')}>
+              Ready to Build
             </TabsTrigger>
-            <TabsTrigger value="ready" badge={getTabCount('ready')}>
-              Ready
+            <TabsTrigger value="completed" badge={getTabCount('completed')}>
+              Completed
             </TabsTrigger>
           </TabsList>
 
@@ -214,36 +180,36 @@ function DashboardContent() {
           />
         </TabsContent>
 
-        <TabsContent value="in_progress">
+        <TabsContent value="draft">
           <FeaturesList
-            features={getFilteredFeatures('in_progress')}
+            features={getFilteredFeatures('draft')}
             viewMode={viewMode}
             isLoading={isLoading}
             showCreateButton={false}
           />
         </TabsContent>
 
-        <TabsContent value="generated">
+        <TabsContent value="spec_generated">
           <FeaturesList
-            features={getFilteredFeatures('generated')}
+            features={getFilteredFeatures('spec_generated')}
             viewMode={viewMode}
             isLoading={isLoading}
             showCreateButton={false}
           />
         </TabsContent>
 
-        <TabsContent value="review">
+        <TabsContent value="ready_to_build">
           <FeaturesList
-            features={getFilteredFeatures('review')}
+            features={getFilteredFeatures('ready_to_build')}
             viewMode={viewMode}
             isLoading={isLoading}
             showCreateButton={false}
           />
         </TabsContent>
 
-        <TabsContent value="ready">
+        <TabsContent value="completed">
           <FeaturesList
-            features={getFilteredFeatures('ready')}
+            features={getFilteredFeatures('completed')}
             viewMode={viewMode}
             isLoading={isLoading}
             showCreateButton={false}

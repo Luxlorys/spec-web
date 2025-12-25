@@ -19,7 +19,7 @@ export const Message: FC<IProps> = ({ message }) => {
           className={cn(
             'rounded-2xl px-4 py-3',
             isUser
-              ? 'bg-blue-600 text-white'
+              ? 'bg-primary text-primary-foreground'
               : 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100',
           )}
         >

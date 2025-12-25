@@ -28,8 +28,6 @@ interface IProps {
 }
 
 export const SpecView: FC<IProps> = ({ spec }) => {
-  // Auth state
-  const { user } = useAuthStore();
   const isFounder = true;
 
   // Comments sidebar state
@@ -145,43 +143,39 @@ export const SpecView: FC<IProps> = ({ spec }) => {
       {/* Header */}
       <Card>
         <div className="mb-4 flex items-start justify-between">
-          <div>
-            <h2 className="mb-2 text-2xl font-bold text-gray-900 dark:text-gray-100">
-              Specification Document
-            </h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Version {spec.version} • Generated on {formatDate(spec.generatedAt)}
-            </p>
+          <div className="flex items-start gap-3">
+            {/* History button - icon only circle */}
+            {isFounder && (
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleVersionHistoryClick}
+                title="Version History"
+                className="h-9 w-9 rounded-full"
+              >
+                <History className="h-4 w-4" />
+              </Button>
+            )}
+            <div>
+              <h2 className="mb-2 text-2xl font-bold text-gray-900 dark:text-gray-100">
+                Specification Document
+              </h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Version {spec.version} • Generated on {formatDate(spec.generatedAt)}
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             {/* Founder-only buttons */}
             {isFounder && (
-              <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleVersionHistoryClick}
-                  className="text-xs"
-                >
-                  <History className="h-3.5 w-3.5 mr-1.5" />
-                  History
-                </Button>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={handleRegenerateClick}
-                  disabled={!canRegenerate}
-                  title={
-                    !canRegenerate
-                      ? 'No resolved comments or answered questions to incorporate'
-                      : 'Regenerate spec from discussions'
-                  }
-                  className="text-xs"
-                >
-                  <Sparkles className="h-3.5 w-3.5 mr-1.5" />
-                  Regenerate
-                </Button>
-              </>
+              <Button
+                variant="primary"
+                onClick={handleRegenerateClick}
+                disabled={!canRegenerate}
+              >
+                <Sparkles className="h-4 w-4 mr-2" />
+                Update Specification
+              </Button>
             )}
             <GeneratePromptButton spec={spec} />
             <Badge variant="purple">v{spec.version}</Badge>
@@ -238,7 +232,7 @@ export const SpecView: FC<IProps> = ({ spec }) => {
         <ul className="space-y-2">
           {spec.userStories.map((story, index) => (
             <li key={index} className="flex items-start gap-2">
-              <span className="text-blue-600 dark:text-blue-400">•</span>
+              <span className="text-purple-600 dark:text-purple-400">•</span>
               <span>{story}</span>
             </li>
           ))}
@@ -261,7 +255,7 @@ export const SpecView: FC<IProps> = ({ spec }) => {
                 type="checkbox"
                 checked={criteria.completed}
                 readOnly
-                className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                className="mt-1 h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
               />
               <span className={criteria.completed ? 'line-through opacity-60' : ''}>
                 {criteria.description}

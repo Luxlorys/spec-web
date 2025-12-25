@@ -10,15 +10,13 @@ const statusConfig: Record<
   FeatureStatus,
   {
     label: string;
-    variant: 'gray' | 'blue' | 'purple' | 'yellow' | 'green' | 'cyan';
+    variant: 'gray' | 'blue' | 'purple' | 'green';
   }
 > = {
   draft: { label: 'Draft', variant: 'gray' },
   spec_generated: { label: 'Spec Generated', variant: 'purple' },
-  ready_to_build: { label: 'Ready to Build', variant: 'green' },
-  in_progress: { label: 'In Progress', variant: 'blue' },
-  review: { label: 'Review', variant: 'yellow' },
-  ready: { label: 'Ready', variant: 'cyan' },
+  ready_to_build: { label: 'Ready to Build', variant: 'blue' },
+  completed: { label: 'Completed', variant: 'green' },
 };
 
 export const StatusBadge: FC<IProps> = ({ status }) => {

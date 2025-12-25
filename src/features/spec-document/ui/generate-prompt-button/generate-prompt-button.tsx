@@ -40,7 +40,6 @@ export const GeneratePromptButton: FC<IProps> = ({ spec, featureTitle }) => {
     <>
       <Button
         variant="outline"
-        size="sm"
         onClick={handleGeneratePrompt}
         disabled={isLoadingComments}
       >

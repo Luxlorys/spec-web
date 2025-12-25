@@ -18,7 +18,7 @@ export function DiffView({ changes }: IProps) {
   const getChangeTypeBadge = (type: string) => {
     switch (type) {
       case 'modified':
-        return <Badge variant="blue">Modified</Badge>;
+        return <Badge variant="purple">Modified</Badge>;
       case 'added':
         return <Badge variant="green">Added</Badge>;
       case 'removed':
@@ -118,7 +118,7 @@ export function DiffView({ changes }: IProps) {
                 change.changeType === 'added'
                   ? 'bg-green-50'
                   : change.changeType === 'modified'
-                    ? 'bg-blue-50'
+                    ? 'bg-purple-50'
                     : 'bg-gray-50'
               }`}
             >

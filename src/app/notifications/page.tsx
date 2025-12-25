@@ -36,7 +36,7 @@ const getNotificationIcon = (type: NotificationType) => {
     case 'question_asked':
       return { icon: MessageSquare, color: 'text-orange-500', bg: 'bg-orange-100 dark:bg-orange-900/30' };
     case 'question_answered':
-      return { icon: MessageSquare, color: 'text-blue-500', bg: 'bg-blue-100 dark:bg-blue-900/30' };
+      return { icon: MessageSquare, color: 'text-purple-500', bg: 'bg-purple-100 dark:bg-purple-900/30' };
     case 'status_changed':
       return { icon: RefreshCw, color: 'text-yellow-500', bg: 'bg-yellow-100 dark:bg-yellow-900/30' };
     case 'spec_updated':
@@ -186,11 +186,11 @@ function NotificationsContent() {
         </Card>
         <Card padding="sm" className="border">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
-              <MessageSquare className="h-5 w-5 text-blue-500" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/30">
+              <MessageSquare className="h-5 w-5 text-purple-500" />
             </div>
             <div>
-              <div className="text-2xl font-bold text-blue-600">{unreadCount}</div>
+              <div className="text-2xl font-bold text-purple-600">{unreadCount}</div>
               <div className="text-xs text-muted-foreground">Unread</div>
             </div>
           </div>

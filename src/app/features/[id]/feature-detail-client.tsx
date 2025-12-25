@@ -26,9 +26,7 @@ const statusOptions: { value: FeatureStatus; label: string }[] = [
   { value: 'draft', label: 'Draft' },
   { value: 'spec_generated', label: 'Spec Generated' },
   { value: 'ready_to_build', label: 'Ready to Build' },
-  { value: 'in_progress', label: 'In Progress' },
-  { value: 'review', label: 'Review' },
-  { value: 'ready', label: 'Ready' },
+  { value: 'completed', label: 'Completed' },
 ];
 
 interface IProps {
@@ -84,7 +82,7 @@ export function FeatureDetailClient({ featureId }: IProps) {
   if (featureLoading) {
     return (
       <div className="flex h-96 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
     );
   }
@@ -237,7 +235,7 @@ export function FeatureDetailClient({ featureId }: IProps) {
       label: 'Specification',
       content: specLoading ? (
         <div className="flex h-64 items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
         </div>
       ) : hasSpec && spec ? (
         <SpecView spec={spec} />
@@ -274,8 +272,8 @@ export function FeatureDetailClient({ featureId }: IProps) {
           <div className="space-y-4">
             <div className="flex gap-3">
               <div className="flex-shrink-0">
-                <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center dark:bg-blue-900">
-                  <span className="text-blue-600 dark:text-blue-300 text-sm">
+                <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center dark:bg-purple-900/50">
+                  <span className="text-purple-600 dark:text-purple-300 text-sm">
                     📝
                   </span>
                 </div>

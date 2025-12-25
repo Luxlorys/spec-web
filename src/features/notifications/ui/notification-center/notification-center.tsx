@@ -106,7 +106,7 @@ export const NotificationCenter: FC = () => {
                     href={notification.link || '#'}
                     onClick={() => setIsOpen(false)}
                     className={`block px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 ${
-                      !notification.read ? 'bg-blue-50 dark:bg-blue-900/10' : ''
+                      !notification.read ? 'bg-purple-50 dark:bg-purple-900/10' : ''
                     }`}
                   >
                     <div className="flex gap-3">
@@ -124,7 +124,7 @@ export const NotificationCenter: FC = () => {
                       </div>
                       {!notification.read && (
                         <div className="flex-shrink-0">
-                          <div className="h-2 w-2 rounded-full bg-blue-600" />
+                          <div className="h-2 w-2 rounded-full bg-purple-600" />
                         </div>
                       )}
                     </div>

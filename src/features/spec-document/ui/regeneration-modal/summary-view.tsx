@@ -16,7 +16,7 @@ export function SummaryView({ changes }: IProps) {
   const getChangeTypeBadge = (type: string) => {
     switch (type) {
       case 'modified':
-        return <Badge variant="blue">Modified</Badge>;
+        return <Badge variant="purple">Modified</Badge>;
       case 'added':
         return <Badge variant="green">Added</Badge>;
       case 'removed':
@@ -39,20 +39,20 @@ export function SummaryView({ changes }: IProps) {
       {modified.length > 0 && (
         <div>
           <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-            <Badge variant="blue">Modified</Badge>
+            <Badge variant="purple">Modified</Badge>
             <span>{modified.length} section{modified.length !== 1 ? 's' : ''}</span>
           </h3>
           <div className="space-y-3">
             {modified.map((change, index) => (
               <div
                 key={`modified-${index}`}
-                className="bg-blue-50 border border-blue-200 rounded-lg p-4"
+                className="bg-purple-50 border border-purple-200 rounded-lg p-4"
               >
                 <div className="flex items-start justify-between mb-2">
-                  <h4 className="font-medium text-blue-900">{formatSectionName(change.section)}</h4>
+                  <h4 className="font-medium text-purple-900">{formatSectionName(change.section)}</h4>
                   {getChangeTypeBadge(change.changeType)}
                 </div>
-                <p className="text-sm text-blue-800">{change.reason}</p>
+                <p className="text-sm text-purple-800">{change.reason}</p>
               </div>
             ))}
           </div>
