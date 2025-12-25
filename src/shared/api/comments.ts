@@ -1,6 +1,10 @@
-import { IComment, ICreateCommentRequest, IUpdateCommentRequest } from 'shared/types';
 import { delay, generateId } from 'shared/lib';
 import { mockComments } from 'shared/lib/mock-data';
+import {
+  IComment,
+  ICreateCommentRequest,
+  IUpdateCommentRequest,
+} from 'shared/types';
 
 export const commentsApi = {
   /**
@@ -39,7 +43,9 @@ export const commentsApi = {
    * @param specDocumentId - The spec document ID
    * @returns Promise<Record<string, number>>
    */
-  getCommentCountsBySpec: async (specDocumentId: string): Promise<Record<string, number>> => {
+  getCommentCountsBySpec: async (
+    specDocumentId: string,
+  ): Promise<Record<string, number>> => {
     await delay(200);
 
     const counts: Record<string, number> = {};
@@ -67,7 +73,9 @@ export const commentsApi = {
 
     // Get current user from localStorage (matching auth pattern)
     const authData = localStorage.getItem('auth-storage');
-    const currentUserId = authData ? JSON.parse(authData).state.user?.id || 'user-1' : 'user-1';
+    const currentUserId = authData
+      ? JSON.parse(authData).state.user?.id || 'user-1'
+      : 'user-1';
 
     const newComment: IComment = {
       id: generateId(),
@@ -92,11 +100,17 @@ export const commentsApi = {
    * @param data - Updated data (content)
    * @returns Promise<IComment>
    */
-  updateComment: async (commentId: string, data: IUpdateCommentRequest): Promise<IComment> => {
+  updateComment: async (
+    commentId: string,
+    data: IUpdateCommentRequest,
+  ): Promise<IComment> => {
     await delay(300);
 
     const index = mockComments.findIndex(c => c.id === commentId);
-    if (index === -1) throw new Error('Comment not found');
+
+    if (index === -1) {
+      throw new Error('Comment not found');
+    }
 
     const updated: IComment = {
       ...mockComments[index],
@@ -119,7 +133,10 @@ export const commentsApi = {
     await delay(300);
 
     const index = mockComments.findIndex(c => c.id === commentId);
-    if (index === -1) throw new Error('Comment not found');
+
+    if (index === -1) {
+      throw new Error('Comment not found');
+    }
 
     mockComments.splice(index, 1);
   },

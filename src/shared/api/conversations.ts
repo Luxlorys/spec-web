@@ -1,13 +1,26 @@
-import { IAIConversation, IConversationMessage, ISendMessageRequest } from 'shared/types';
 import { delay, generateId } from 'shared/lib';
 import { mockConversations, mockFeatureRequests } from 'shared/lib/mock-data';
-import { aiQuestionFlow, generateEdgeCaseQuestions, generateSummary } from 'shared/lib/mock-data/ai-responses';
+import {
+  aiQuestionFlow,
+  generateEdgeCaseQuestions,
+  generateSummary,
+} from 'shared/lib/mock-data/ai-responses';
+import {
+  IAIConversation,
+  IConversationMessage,
+  ISendMessageRequest,
+} from 'shared/types';
 
 export const conversationsApi = {
-  getByFeatureId: async (featureId: string): Promise<IAIConversation | null> => {
+  getByFeatureId: async (
+    featureId: string,
+  ): Promise<IAIConversation | null> => {
     await delay(300);
 
-    const conversation = mockConversations.find(c => c.featureRequestId === featureId);
+    const conversation = mockConversations.find(
+      c => c.featureRequestId === featureId,
+    );
+
     return conversation || null;
   },
 
@@ -15,7 +28,10 @@ export const conversationsApi = {
     await delay(400);
 
     const feature = mockFeatureRequests.find(f => f.id === featureId);
-    if (!feature) throw new Error('Feature not found');
+
+    if (!feature) {
+      throw new Error('Feature not found');
+    }
 
     const conversationId = generateId();
 
@@ -39,6 +55,7 @@ export const conversationsApi = {
 
     // Update feature request (stays in draft during conversation)
     const featureIndex = mockFeatureRequests.findIndex(f => f.id === featureId);
+
     if (featureIndex !== -1) {
       mockFeatureRequests[featureIndex] = {
         ...mockFeatureRequests[featureIndex],
@@ -58,10 +75,18 @@ export const conversationsApi = {
     await delay(800);
 
     const conversation = mockConversations.find(c => c.id === conversationId);
-    if (!conversation) throw new Error('Conversation not found');
 
-    const feature = mockFeatureRequests.find(f => f.id === conversation.featureRequestId);
-    if (!feature) throw new Error('Feature not found');
+    if (!conversation) {
+      throw new Error('Conversation not found');
+    }
+
+    const feature = mockFeatureRequests.find(
+      f => f.id === conversation.featureRequestId,
+    );
+
+    if (!feature) {
+      throw new Error('Feature not found');
+    }
 
     // Add user message
     const userMessage: IConversationMessage = {
@@ -76,7 +101,9 @@ export const conversationsApi = {
     // Generate AI response
     await delay(1200); // Simulate AI "thinking"
 
-    const messageCount = conversation.messages.filter(m => m.role === 'user').length;
+    const messageCount = conversation.messages.filter(
+      m => m.role === 'user',
+    ).length;
     let aiResponse: string;
 
     if (messageCount < aiQuestionFlow.length) {
@@ -85,22 +112,28 @@ export const conversationsApi = {
     } else if (messageCount === aiQuestionFlow.length) {
       // Ask edge case questions
       const edgeCases = generateEdgeCaseQuestions(feature.title);
+
       aiResponse = `Great! A few edge cases to consider:\n\n${edgeCases.map((q, i) => `${i + 1}. ${q}`).join('\n')}`;
     } else if (messageCount === aiQuestionFlow.length + 1) {
       // Generate summary
       const userResponses = conversation.messages
         .filter(m => m.role === 'user')
         .map(m => m.content);
+
       aiResponse = generateSummary(userResponses);
     } else {
       // Conversation complete - generate spec
-      aiResponse = "Perfect! I'll generate a comprehensive specification document now. This will take a moment...";
+      aiResponse =
+        "Perfect! I'll generate a comprehensive specification document now. This will take a moment...";
 
       // Mark conversation as completed
       conversation.status = 'completed';
 
       // Update feature status
-      const featureIndex = mockFeatureRequests.findIndex(f => f.id === feature.id);
+      const featureIndex = mockFeatureRequests.findIndex(
+        f => f.id === feature.id,
+      );
+
       if (featureIndex !== -1) {
         mockFeatureRequests[featureIndex] = {
           ...mockFeatureRequests[featureIndex],
@@ -122,7 +155,10 @@ export const conversationsApi = {
     conversation.updatedAt = new Date();
 
     // Update feature last activity
-    const featureIndex = mockFeatureRequests.findIndex(f => f.id === feature.id);
+    const featureIndex = mockFeatureRequests.findIndex(
+      f => f.id === feature.id,
+    );
+
     if (featureIndex !== -1) {
       mockFeatureRequests[featureIndex].lastActivityAt = new Date();
     }

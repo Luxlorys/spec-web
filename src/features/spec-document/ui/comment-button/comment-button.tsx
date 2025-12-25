@@ -1,9 +1,11 @@
 'use client';
 
 import { FC } from 'react';
+
 import { MessageCircle } from 'lucide-react';
-import { Badge } from 'shared/ui';
+
 import { cn } from 'shared/lib';
+import { Badge } from 'shared/ui';
 
 interface ICommentButtonProps {
   sectionId: string;
@@ -26,7 +28,9 @@ export const CommentButton: FC<ICommentButtonProps> = ({
       aria-label={`${commentCount} ${commentCount === 1 ? 'comment' : 'comments'} on this section`}
       className={cn(
         'flex items-center gap-2 rounded-lg p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800',
-        hasComments ? 'text-purple-600 dark:text-purple-400' : 'text-gray-400 dark:text-gray-500',
+        hasComments
+          ? 'text-purple-600 dark:text-purple-400'
+          : 'text-gray-400 dark:text-gray-500',
         className,
       )}
     >

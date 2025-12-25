@@ -1,9 +1,11 @@
 'use client';
 
 import { FC, useState } from 'react';
-import { Pencil, Trash2, Check, X } from 'lucide-react';
+
+import { Check, Pencil, Trash2, X } from 'lucide-react';
+
+import { useDeleteOpenQuestion, useUpdateOpenQuestion } from 'shared/hooks';
 import { IOpenQuestion } from 'shared/types';
-import { useUpdateOpenQuestion, useDeleteOpenQuestion } from 'shared/hooks';
 import { Badge, Button, Textarea } from 'shared/ui';
 
 interface IOpenQuestionItemProps {
@@ -11,7 +13,10 @@ interface IOpenQuestionItemProps {
   specId: string;
 }
 
-export const OpenQuestionItem: FC<IOpenQuestionItemProps> = ({ question, specId }) => {
+export const OpenQuestionItem: FC<IOpenQuestionItemProps> = ({
+  question,
+  specId,
+}) => {
   const [isEditingQuestion, setIsEditingQuestion] = useState(false);
   const [isEditingAnswer, setIsEditingAnswer] = useState(false);
   const [editedQuestion, setEditedQuestion] = useState(question.question);
@@ -21,7 +26,9 @@ export const OpenQuestionItem: FC<IOpenQuestionItemProps> = ({ question, specId 
   const deleteMutation = useDeleteOpenQuestion();
 
   const handleSaveQuestion = () => {
-    if (!editedQuestion.trim()) return;
+    if (!editedQuestion.trim()) {
+      return;
+    }
 
     updateMutation.mutate(
       {
@@ -91,7 +98,9 @@ export const OpenQuestionItem: FC<IOpenQuestionItemProps> = ({ question, specId 
     : 'text-yellow-800 dark:text-yellow-200';
 
   return (
-    <li className={`rounded-lg border p-4 transition-colors ${borderColor} ${bgColor}`}>
+    <li
+      className={`rounded-lg border p-4 transition-colors ${borderColor} ${bgColor}`}
+    >
       {/* Question */}
       <div className="mb-3">
         <div className="mb-2 flex items-start justify-between gap-2">
@@ -108,7 +117,9 @@ export const OpenQuestionItem: FC<IOpenQuestionItemProps> = ({ question, specId 
                   <Button
                     size="sm"
                     onClick={handleSaveQuestion}
-                    disabled={!editedQuestion.trim() || updateMutation.isPending}
+                    disabled={
+                      !editedQuestion.trim() || updateMutation.isPending
+                    }
                   >
                     <Check className="h-3 w-3" />
                     Save
@@ -125,7 +136,9 @@ export const OpenQuestionItem: FC<IOpenQuestionItemProps> = ({ question, specId 
                 </div>
               </div>
             ) : (
-              <div className={`font-medium ${textColor}`}>Q: {question.question}</div>
+              <div className={`font-medium ${textColor}`}>
+                Q: {question.question}
+              </div>
             )}
           </div>
 
@@ -186,10 +199,12 @@ export const OpenQuestionItem: FC<IOpenQuestionItemProps> = ({ question, specId 
           </div>
         ) : question.answer ? (
           <div className="group relative">
-            <div className={`text-sm ${secondaryTextColor}`}>A: {question.answer}</div>
+            <div className={`text-sm ${secondaryTextColor}`}>
+              A: {question.answer}
+            </div>
             <button
               onClick={() => setIsEditingAnswer(true)}
-              className="absolute right-0 top-0 rounded p-1 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/5"
+              className="absolute right-0 top-0 rounded p-1 opacity-0 transition-opacity hover:bg-black/5 group-hover:opacity-100 dark:hover:bg-white/5"
               title="Edit answer"
               type="button"
             >
@@ -201,7 +216,11 @@ export const OpenQuestionItem: FC<IOpenQuestionItemProps> = ({ question, specId 
             <Badge variant="yellow" size="sm">
               Awaiting Answer
             </Badge>
-            <Button size="sm" variant="outline" onClick={() => setIsEditingAnswer(true)}>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setIsEditingAnswer(true)}
+            >
               Add Answer
             </Button>
           </div>
@@ -218,7 +237,10 @@ export const OpenQuestionItem: FC<IOpenQuestionItemProps> = ({ question, specId 
           className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
           id={`resolved-${question.id}`}
         />
-        <label htmlFor={`resolved-${question.id}`} className="text-sm text-gray-700 dark:text-gray-300">
+        <label
+          htmlFor={`resolved-${question.id}`}
+          className="text-sm text-gray-700 dark:text-gray-300"
+        >
           Mark as resolved
         </label>
       </div>

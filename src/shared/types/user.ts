@@ -1,4 +1,10 @@
-export type UserRole = 'founder' | 'developer' | 'admin' | 'ba' | 'pm' | 'designer';
+export type UserRole =
+  | 'founder'
+  | 'developer'
+  | 'admin'
+  | 'ba'
+  | 'pm'
+  | 'designer';
 
 export type TeamMemberRole = 'developer' | 'ba' | 'pm' | 'designer';
 
@@ -30,6 +36,7 @@ export interface IAdminSignupRequest {
   password: string;
   name: string;
   projectName: string;
+  contextFiles?: File[];
 }
 
 export interface IMemberSignupRequest {

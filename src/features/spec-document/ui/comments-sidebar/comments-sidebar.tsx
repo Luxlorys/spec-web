@@ -1,9 +1,17 @@
 'use client';
 
 import { FC } from 'react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from 'shared/ui';
-import { CommentList } from '../comment-list';
+
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from 'shared/ui';
+
 import { CommentForm } from '../comment-form';
+import { CommentList } from '../comment-list';
 
 interface ICommentsSidebarProps {
   isOpen: boolean;
@@ -29,7 +37,9 @@ export const CommentsSidebar: FC<ICommentsSidebarProps> = ({
         {/* Header */}
         <SheetHeader className="border-b border-border p-4 text-left">
           <SheetTitle>Comments</SheetTitle>
-          <SheetDescription className="text-left">{sectionTitle}</SheetDescription>
+          <SheetDescription className="text-left">
+            {sectionTitle}
+          </SheetDescription>
         </SheetHeader>
 
         {/* Content - Scrollable */}

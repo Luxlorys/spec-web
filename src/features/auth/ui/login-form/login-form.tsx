@@ -1,14 +1,18 @@
 'use client';
 
 import { FC, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useRouter } from 'next/navigation';
+
 import Link from 'next/link';
-import { loginSchema, LoginInput } from '../../lib';
-import { Button, Input } from 'shared/ui';
+import { useRouter } from 'next/navigation';
+
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+
 import { authApi } from 'shared/api/auth';
 import { useAuthStore } from 'shared/store';
+import { Button, Input } from 'shared/ui';
+
+import { LoginInput, loginSchema } from '../../lib';
 
 export const LoginForm: FC = () => {
   const router = useRouter();
@@ -31,6 +35,7 @@ export const LoginForm: FC = () => {
     try {
       setError('');
       const response = await authApi.login(values);
+
       setAuth(response.user, response.token);
       router.push('/dashboard');
     } catch (err) {
@@ -69,7 +74,8 @@ export const LoginForm: FC = () => {
       )}
 
       <div className="text-sm text-gray-600 dark:text-gray-400">
-        Demo credentials: <strong>sarah.founder@example.com</strong> / <strong>password</strong>
+        Demo credentials: <strong>sarah.founder@example.com</strong> /{' '}
+        <strong>password</strong>
       </div>
 
       <Button type="submit" className="w-full" isLoading={isSubmitting}>
@@ -78,7 +84,10 @@ export const LoginForm: FC = () => {
 
       <div className="text-center text-sm text-gray-600 dark:text-gray-400">
         Don't have an account?{' '}
-        <Link href="/signup" className="font-medium text-primary hover:text-primary/80">
+        <Link
+          href="/signup"
+          className="font-medium text-primary hover:text-primary/80"
+        >
           Sign up
         </Link>
       </div>

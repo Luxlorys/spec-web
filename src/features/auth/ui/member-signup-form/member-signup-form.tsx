@@ -1,32 +1,57 @@
 'use client';
 
 import { FC, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+
 import { useRouter } from 'next/navigation';
+
+import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowLeft, CheckCircle2, Loader2 } from 'lucide-react';
-import { memberSignupSchema, MemberSignupInput } from '../../lib';
-import { Button, Input } from 'shared/ui';
+
 import { authApi } from 'shared/api/auth';
 import { useAuthStore } from 'shared/store';
 import { IInviteCode, TeamMemberRole } from 'shared/types';
+import { Button, Input } from 'shared/ui';
+
+import { MemberSignupInput, memberSignupSchema } from '../../lib';
 
 interface IProps {
   onBack: () => void;
 }
 
-const roleOptions: { value: TeamMemberRole; label: string; description: string }[] = [
-  { value: 'developer', label: 'Developer', description: 'Build and implement features' },
-  { value: 'ba', label: 'Business Analyst', description: 'Define requirements and specs' },
-  { value: 'pm', label: 'Project Manager', description: 'Coordinate and manage projects' },
-  { value: 'designer', label: 'Designer', description: 'Design UI/UX and visuals' },
+const roleOptions: {
+  value: TeamMemberRole;
+  label: string;
+  description: string;
+}[] = [
+  {
+    value: 'developer',
+    label: 'Developer',
+    description: 'Build and implement features',
+  },
+  {
+    value: 'ba',
+    label: 'Business Analyst',
+    description: 'Define requirements and specs',
+  },
+  {
+    value: 'pm',
+    label: 'Project Manager',
+    description: 'Coordinate and manage projects',
+  },
+  {
+    value: 'designer',
+    label: 'Designer',
+    description: 'Design UI/UX and visuals',
+  },
 ];
 
 export const MemberSignupForm: FC<IProps> = ({ onBack }) => {
   const router = useRouter();
   const { setAuth } = useAuthStore();
   const [error, setError] = useState<string>('');
-  const [validatedInvite, setValidatedInvite] = useState<IInviteCode | null>(null);
+  const [validatedInvite, setValidatedInvite] = useState<IInviteCode | null>(
+    null,
+  );
   const [isValidating, setIsValidating] = useState(false);
 
   const {
@@ -50,7 +75,9 @@ export const MemberSignupForm: FC<IProps> = ({ onBack }) => {
   const selectedRole = watch('role');
 
   const validateInviteCode = async () => {
-    if (!inviteCode.trim()) return;
+    if (!inviteCode.trim()) {
+      return;
+    }
 
     setIsValidating(true);
     setError('');
@@ -58,6 +85,7 @@ export const MemberSignupForm: FC<IProps> = ({ onBack }) => {
 
     try {
       const invite = await authApi.validateInviteCode(inviteCode.trim());
+
       setValidatedInvite(invite);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Invalid invite code');
@@ -69,12 +97,14 @@ export const MemberSignupForm: FC<IProps> = ({ onBack }) => {
   const onSubmit = async (values: MemberSignupInput) => {
     if (!validatedInvite) {
       setError('Please validate your invite code first');
+
       return;
     }
 
     try {
       setError('');
       const response = await authApi.signupWithInvite(values);
+
       setAuth(response.user, response.token);
       router.push('/dashboard');
     } catch (err) {
@@ -87,7 +117,7 @@ export const MemberSignupForm: FC<IProps> = ({ onBack }) => {
       <button
         type="button"
         onClick={onBack}
-        className="mb-6 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        className="mb-6 flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to options
@@ -103,7 +133,9 @@ export const MemberSignupForm: FC<IProps> = ({ onBack }) => {
                 type="text"
                 label="Invite Code"
                 placeholder="Enter your invite code"
-                error={!validatedInvite ? errors.inviteCode?.message : undefined}
+                error={
+                  !validatedInvite ? errors.inviteCode?.message : undefined
+                }
                 disabled={!!validatedInvite}
               />
             </div>
@@ -128,7 +160,8 @@ export const MemberSignupForm: FC<IProps> = ({ onBack }) => {
             <div className="flex items-center gap-2 rounded-lg bg-green-50 p-3 text-sm text-green-800 dark:bg-green-900/20 dark:text-green-400">
               <CheckCircle2 className="h-4 w-4 shrink-0" />
               <span>
-                You're joining <strong>{validatedInvite.organizationName}</strong>
+                You're joining{' '}
+                <strong>{validatedInvite.organizationName}</strong>
               </span>
             </div>
           )}
@@ -177,19 +210,21 @@ export const MemberSignupForm: FC<IProps> = ({ onBack }) => {
                 Your Role
               </label>
               <div className="grid grid-cols-2 gap-2">
-                {roleOptions.map((role) => (
+                {roleOptions.map(role => (
                   <button
                     key={role.value}
                     type="button"
-                    onClick={() => setValue('role', role.value, { shouldValidate: true })}
+                    onClick={() =>
+                      setValue('role', role.value, { shouldValidate: true })
+                    }
                     className={`rounded-lg border p-3 text-left transition-colors ${
                       selectedRole === role.value
                         ? 'border-primary bg-primary/5 ring-1 ring-primary'
                         : 'border-border hover:border-primary/50 hover:bg-muted/50'
                     }`}
                   >
-                    <div className="font-medium text-sm">{role.label}</div>
-                    <div className="text-xs text-muted-foreground mt-0.5">
+                    <div className="text-sm font-medium">{role.label}</div>
+                    <div className="mt-0.5 text-xs text-muted-foreground">
                       {role.description}
                     </div>
                   </button>

@@ -8,7 +8,10 @@ import { ICreateCommentRequest, IUpdateCommentRequest } from 'shared/types';
 /**
  * Hook to fetch comments for a specific section
  */
-export const useGetCommentsBySection = (specDocumentId: string, section: string) => {
+export const useGetCommentsBySection = (
+  specDocumentId: string,
+  section: string,
+) => {
   return useQuery({
     queryKey: [QueryKeys.COMMENTS_BY_SPEC, specDocumentId, section],
     queryFn: () => commentsApi.getCommentsBySection(specDocumentId, section),
@@ -53,12 +56,20 @@ export const useCreateComment = () => {
     onSuccess: newComment => {
       // Invalidate the specific section's comments
       queryClient.invalidateQueries({
-        queryKey: [QueryKeys.COMMENTS_BY_SPEC, newComment.specDocumentId, newComment.section],
+        queryKey: [
+          QueryKeys.COMMENTS_BY_SPEC,
+          newComment.specDocumentId,
+          newComment.section,
+        ],
       });
 
       // Invalidate comment counts to update badges
       queryClient.invalidateQueries({
-        queryKey: [QueryKeys.COMMENTS_BY_SPEC, newComment.specDocumentId, 'counts'],
+        queryKey: [
+          QueryKeys.COMMENTS_BY_SPEC,
+          newComment.specDocumentId,
+          'counts',
+        ],
       });
     },
   });
@@ -69,8 +80,13 @@ export const useCreateComment = () => {
  */
 export const useUpdateComment = () => {
   return useMutation({
-    mutationFn: ({ commentId, data }: { commentId: string; data: IUpdateCommentRequest }) =>
-      commentsApi.updateComment(commentId, data),
+    mutationFn: ({
+      commentId,
+      data,
+    }: {
+      commentId: string;
+      data: IUpdateCommentRequest;
+    }) => commentsApi.updateComment(commentId, data),
     onSuccess: updatedComment => {
       // Invalidate the specific section's comments
       queryClient.invalidateQueries({
@@ -101,12 +117,20 @@ export const useDeleteComment = () => {
     onSuccess: (_, variables) => {
       // Invalidate the specific section's comments
       queryClient.invalidateQueries({
-        queryKey: [QueryKeys.COMMENTS_BY_SPEC, variables.specDocumentId, variables.section],
+        queryKey: [
+          QueryKeys.COMMENTS_BY_SPEC,
+          variables.specDocumentId,
+          variables.section,
+        ],
       });
 
       // Invalidate comment counts to update badges
       queryClient.invalidateQueries({
-        queryKey: [QueryKeys.COMMENTS_BY_SPEC, variables.specDocumentId, 'counts'],
+        queryKey: [
+          QueryKeys.COMMENTS_BY_SPEC,
+          variables.specDocumentId,
+          'counts',
+        ],
       });
     },
   });

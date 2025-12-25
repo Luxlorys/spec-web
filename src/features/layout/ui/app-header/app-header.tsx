@@ -1,12 +1,14 @@
 'use client';
 
 import { FC } from 'react';
+
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Avatar, Button } from 'shared/ui';
-import { useAuthStore } from 'shared/store';
-import { authApi } from 'shared/api/auth';
+
 import { NotificationCenter } from 'features/notifications';
+import { authApi } from 'shared/api/auth';
+import { useAuthStore } from 'shared/store';
+import { Avatar, Button } from 'shared/ui';
 
 export const AppHeader: FC = () => {
   const router = useRouter();
@@ -52,8 +54,12 @@ export const AppHeader: FC = () => {
           {user && (
             <div className="flex items-center gap-3">
               <div className="hidden text-right sm:block">
-                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{user.name}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">{user.role}</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                  {user.name}
+                </p>
+                <p className="text-xs capitalize text-gray-500 dark:text-gray-400">
+                  {user.role}
+                </p>
               </div>
               <Avatar src={user.avatarUrl} alt={user.name} size="md" />
               <Button variant="ghost" size="sm" onClick={handleLogout}>

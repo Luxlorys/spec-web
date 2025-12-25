@@ -1,14 +1,17 @@
 'use client';
 
 import { FC, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+
 import { useRouter } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
-import { adminSignupSchema, AdminSignupInput } from '../../lib';
-import { Button, Input } from 'shared/ui';
+
+import { zodResolver } from '@hookform/resolvers/zod';
+import { ArrowLeft, FileText } from 'lucide-react';
+
 import { authApi } from 'shared/api/auth';
 import { useAuthStore } from 'shared/store';
+import { Button, FileUpload, Input } from 'shared/ui';
+
+import { AdminSignupInput, adminSignupSchema } from '../../lib';
 
 interface IProps {
   onBack: () => void;
@@ -22,6 +25,7 @@ export const AdminSignupForm: FC<IProps> = ({ onBack }) => {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<AdminSignupInput>({
     resolver: zodResolver(adminSignupSchema),
@@ -30,6 +34,7 @@ export const AdminSignupForm: FC<IProps> = ({ onBack }) => {
       email: '',
       password: '',
       projectName: '',
+      contextFiles: [],
     },
   });
 
@@ -37,6 +42,7 @@ export const AdminSignupForm: FC<IProps> = ({ onBack }) => {
     try {
       setError('');
       const response = await authApi.signupAsAdmin(values);
+
       setAuth(response.user, response.token);
       router.push('/dashboard');
     } catch (err) {
@@ -49,7 +55,7 @@ export const AdminSignupForm: FC<IProps> = ({ onBack }) => {
       <button
         type="button"
         onClick={onBack}
-        className="mb-6 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        className="mb-6 flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to options
@@ -98,6 +104,35 @@ export const AdminSignupForm: FC<IProps> = ({ onBack }) => {
             placeholder="My Awesome Project"
             error={errors.projectName?.message}
             helperText="This will be the name of your workspace"
+          />
+        </div>
+
+        <div className="border-t border-gray-200 pt-4 dark:border-gray-700">
+          <div className="mb-3 flex items-center gap-2">
+            <FileText className="h-5 w-5 text-primary" />
+            <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
+              Project Documentation (Optional)
+            </h3>
+          </div>
+          <p className="mb-3 text-xs text-gray-600 dark:text-gray-400">
+            Upload initial project documentation to help your team understand
+            the context and requirements.
+          </p>
+
+          <Controller
+            name="contextFiles"
+            control={control}
+            render={({ field: { onChange, value } }) => (
+              <FileUpload
+                label="Upload Files"
+                helperText="Upload documentation files (.txt, .md, .pdf, .docx) up to 10MB each"
+                accept=".txt,.md,.pdf,.docx,.doc"
+                multiple
+                files={value || []}
+                onFilesChange={onChange}
+                error={errors.contextFiles?.message}
+              />
+            )}
           />
         </div>
 

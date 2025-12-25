@@ -1,6 +1,7 @@
 import { FC } from 'react';
-import { Badge } from 'shared/ui';
+
 import { FeatureStatus } from 'shared/types';
+import { Badge } from 'shared/ui';
 
 interface IProps {
   status: FeatureStatus;

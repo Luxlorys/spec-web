@@ -1,11 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+
 import Link from 'next/link';
+
 import {
-  SignupRoleSelect,
   AdminSignupForm,
   MemberSignupForm,
+  SignupRoleSelect,
 } from 'features/auth';
 
 type SignupStep = 'select' | 'admin' | 'member';
@@ -17,8 +19,10 @@ export default function SignupPage() {
     switch (step) {
       case 'admin':
         return 'Create your project';
+
       case 'member':
         return 'Join a project';
+
       default:
         return 'Get started';
     }
@@ -28,8 +32,10 @@ export default function SignupPage() {
     switch (step) {
       case 'admin':
         return 'Set up your workspace and invite your team';
+
       case 'member':
         return 'Enter your invite code to join an existing project';
+
       default:
         return 'Create or join a project to start building better specs';
     }
@@ -47,7 +53,7 @@ export default function SignupPage() {
 
         <div className="rounded-lg border border-gray-200 bg-white p-8 shadow-sm dark:border-gray-700 dark:bg-gray-800">
           {step === 'select' && (
-            <SignupRoleSelect onSelect={(flow) => setStep(flow)} />
+            <SignupRoleSelect onSelect={flow => setStep(flow)} />
           )}
           {step === 'admin' && (
             <AdminSignupForm onBack={() => setStep('select')} />

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+
 import { IUser } from 'shared/types';
 
 // Cookie helpers for middleware auth
@@ -28,7 +29,7 @@ interface IAuthStore {
 
 export const useAuthStore = create<IAuthStore>()(
   persist(
-    (set) => ({
+    set => ({
       user: null,
       token: null,
       isAuthenticated: false,
@@ -51,12 +52,12 @@ export const useAuthStore = create<IAuthStore>()(
     }),
     {
       name: 'auth-storage',
-      onRehydrateStorage: () => (state) => {
+      onRehydrateStorage: () => state => {
         // Sync cookie on rehydration if token exists
         if (state?.token) {
           setAuthCookie(state.token);
         }
       },
-    }
-  )
+    },
+  ),
 );

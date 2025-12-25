@@ -6,3 +6,4 @@ export * from './spec-documents';
 export * from './comments';
 export * from './notifications';
 export * from './invite-codes';
+export * from './documentation';

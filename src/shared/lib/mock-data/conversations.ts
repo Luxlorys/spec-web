@@ -16,7 +16,8 @@ export const mockConversations: IAIConversation[] = [
       {
         id: 'msg-2',
         role: 'user',
-        content: 'Only admins and organization owners should be able to send invitations.',
+        content:
+          'Only admins and organization owners should be able to send invitations.',
         timestamp: new Date('2024-11-20T10:02:00'),
       },
       {
@@ -43,14 +44,15 @@ export const mockConversations: IAIConversation[] = [
       {
         id: 'msg-6',
         role: 'user',
-        content: 'Yes, expire after 7 days. No limit on pending. Yes, admins can revoke.',
+        content:
+          'Yes, expire after 7 days. No limit on pending. Yes, admins can revoke.',
         timestamp: new Date('2024-11-20T10:08:00'),
       },
       {
         id: 'msg-7',
         role: 'assistant',
         content:
-          "Perfect. What happens if someone is invited to multiple teams? And should there be role assignment during invitation (admin, member, etc.)?",
+          'Perfect. What happens if someone is invited to multiple teams? And should there be role assignment during invitation (admin, member, etc.)?',
         timestamp: new Date('2024-11-20T10:08:30'),
       },
       {
@@ -106,7 +108,7 @@ export const mockConversations: IAIConversation[] = [
         id: 'msg-25',
         role: 'user',
         content:
-          "Yes, three options: Light, Dark, and Auto (follows system). Auto should be the default for new users.",
+          'Yes, three options: Light, Dark, and Auto (follows system). Auto should be the default for new users.',
         timestamp: new Date('2024-12-10T09:30:00'),
       },
     ],

@@ -1,25 +1,33 @@
 'use client';
 
 import { useState } from 'react';
+
 import Link from 'next/link';
+
 import { useQuery } from '@tanstack/react-query';
-import { LayoutGrid, List } from 'lucide-react';
+import { Home, LayoutGrid, List } from 'lucide-react';
+
+import { FeatureCard } from 'features/feature-requests';
 import { featureRequestsApi } from 'shared/api/feature-requests';
 import { QueryKeys } from 'shared/constants';
+import { cn } from 'shared/lib';
+import { FeatureStatus } from 'shared/types';
 import {
   Button,
-  EmptyState,
   Card,
-  TabsRoot,
-  TabsList,
-  TabsTrigger,
+  EmptyState,
   TabsContent,
+  TabsList,
+  TabsRoot,
+  TabsTrigger,
 } from 'shared/ui';
-import { FeatureCard } from 'features/feature-requests';
-import { FeatureStatus } from 'shared/types';
-import { cn } from 'shared/lib';
 
-type TabFilter = 'all' | 'draft' | 'spec_generated' | 'ready_to_build' | 'completed';
+type TabFilter =
+  | 'all'
+  | 'draft'
+  | 'spec_generated'
+  | 'ready_to_build'
+  | 'completed';
 
 const tabToStatuses: Record<TabFilter, FeatureStatus[] | null> = {
   all: null,
@@ -35,7 +43,11 @@ function FeaturesList({
   isLoading,
   showCreateButton,
 }: {
-  features: ReturnType<typeof featureRequestsApi.getAll> extends Promise<infer T> ? T : never;
+  features: ReturnType<typeof featureRequestsApi.getAll> extends Promise<
+    infer T
+  >
+    ? T
+    : never;
   viewMode: 'grid' | 'list';
   isLoading: boolean;
   showCreateButton: boolean;
@@ -45,10 +57,12 @@ function FeaturesList({
       <div
         className={cn(
           'gap-4',
-          viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid'
+          viewMode === 'grid'
+            ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+            : 'grid',
         )}
       >
-        {[1, 2, 3].map((i) => (
+        {[1, 2, 3].map(i => (
           <Card key={i} padding="md" className="h-40 animate-pulse border">
             <div />
           </Card>
@@ -81,10 +95,12 @@ function FeaturesList({
     <div
       className={cn(
         'gap-4',
-        viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid'
+        viewMode === 'grid'
+          ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+          : 'grid',
       )}
     >
-      {features.map((feature) => (
+      {features.map(feature => (
         <FeatureCard key={feature.id} feature={feature} variant={viewMode} />
       ))}
     </div>
@@ -100,10 +116,16 @@ function DashboardContent() {
   });
 
   const getFilteredFeatures = (tab: TabFilter) => {
-    if (!features) return [];
+    if (!features) {
+      return [];
+    }
     const statuses = tabToStatuses[tab];
-    if (!statuses) return features;
-    return features.filter((f) => statuses.includes(f.status));
+
+    if (!statuses) {
+      return features;
+    }
+
+    return features.filter(f => statuses.includes(f.status));
   };
 
   const getTabCount = (tab: TabFilter): number => {
@@ -113,10 +135,19 @@ function DashboardContent() {
   return (
     <main className="p-6">
       <div className="mb-6">
-        <h1 className="mb-1 text-2xl font-bold text-foreground">Feature Requests</h1>
-        <p className="text-sm text-muted-foreground">
-          Manage and track all your feature specifications
-        </p>
+        <div className="flex items-center gap-3">
+          <div className="rounded-lg bg-primary/10 p-2">
+            <Home className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">
+              Feature Requests
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Manage and track all your feature specifications
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Tabs and View Toggle */}
@@ -129,10 +160,16 @@ function DashboardContent() {
             <TabsTrigger value="draft" badge={getTabCount('draft')}>
               Draft
             </TabsTrigger>
-            <TabsTrigger value="spec_generated" badge={getTabCount('spec_generated')}>
+            <TabsTrigger
+              value="spec_generated"
+              badge={getTabCount('spec_generated')}
+            >
               Spec Generated
             </TabsTrigger>
-            <TabsTrigger value="ready_to_build" badge={getTabCount('ready_to_build')}>
+            <TabsTrigger
+              value="ready_to_build"
+              badge={getTabCount('ready_to_build')}
+            >
               Ready to Build
             </TabsTrigger>
             <TabsTrigger value="completed" badge={getTabCount('completed')}>
@@ -148,7 +185,7 @@ function DashboardContent() {
                   'rounded-md p-1.5 transition-colors',
                   viewMode === 'grid'
                     ? 'bg-background text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
+                    : 'text-muted-foreground hover:text-foreground',
                 )}
                 title="Grid view"
               >
@@ -160,7 +197,7 @@ function DashboardContent() {
                   'rounded-md p-1.5 transition-colors',
                   viewMode === 'list'
                     ? 'bg-background text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
+                    : 'text-muted-foreground hover:text-foreground',
                 )}
                 title="List view"
               >
@@ -176,7 +213,7 @@ function DashboardContent() {
             features={getFilteredFeatures('all')}
             viewMode={viewMode}
             isLoading={isLoading}
-            showCreateButton={true}
+            showCreateButton
           />
         </TabsContent>
 

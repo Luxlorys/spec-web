@@ -1,9 +1,9 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 
 import {
-  specDocumentsApi,
   ICreateOpenQuestionRequest,
   IUpdateOpenQuestionRequest,
+  specDocumentsApi,
 } from 'shared/api';
 import { QueryKeys } from 'shared/constants';
 import { queryClient } from 'shared/lib';
@@ -25,8 +25,13 @@ export const useGetSpecByFeature = (featureId: string) => {
  */
 export const useCreateOpenQuestion = () => {
   return useMutation({
-    mutationFn: ({ specId, data }: { specId: string; data: ICreateOpenQuestionRequest }) =>
-      specDocumentsApi.createOpenQuestion(specId, data),
+    mutationFn: ({
+      specId,
+      data,
+    }: {
+      specId: string;
+      data: ICreateOpenQuestionRequest;
+    }) => specDocumentsApi.createOpenQuestion(specId, data),
     onSuccess: async () => {
       // Force refetch all active spec queries
       await queryClient.refetchQueries({
@@ -66,8 +71,13 @@ export const useUpdateOpenQuestion = () => {
  */
 export const useDeleteOpenQuestion = () => {
   return useMutation({
-    mutationFn: ({ specId, questionId }: { specId: string; questionId: string }) =>
-      specDocumentsApi.deleteOpenQuestion(specId, questionId),
+    mutationFn: ({
+      specId,
+      questionId,
+    }: {
+      specId: string;
+      questionId: string;
+    }) => specDocumentsApi.deleteOpenQuestion(specId, questionId),
     onSuccess: async () => {
       // Force refetch all active spec queries
       await queryClient.refetchQueries({
@@ -83,8 +93,13 @@ export const useDeleteOpenQuestion = () => {
  */
 export const useUpdateSpecSection = () => {
   return useMutation({
-    mutationFn: ({ specId, update }: { specId: string; update: IUpdateSpecSection }) =>
-      specDocumentsApi.updateSection(specId, update),
+    mutationFn: ({
+      specId,
+      update,
+    }: {
+      specId: string;
+      update: IUpdateSpecSection;
+    }) => specDocumentsApi.updateSection(specId, update),
     onSuccess: async () => {
       // Force refetch all active spec queries
       await queryClient.refetchQueries({
@@ -113,8 +128,13 @@ export const usePreviewRegeneration = (specId: string) => {
  */
 export const useCommitRegeneration = () => {
   return useMutation({
-    mutationFn: ({ specId, proposedSpec }: { specId: string; proposedSpec: ISpecDocument }) =>
-      specDocumentsApi.commitRegeneration(specId, proposedSpec),
+    mutationFn: ({
+      specId,
+      proposedSpec,
+    }: {
+      specId: string;
+      proposedSpec: ISpecDocument;
+    }) => specDocumentsApi.commitRegeneration(specId, proposedSpec),
     onSuccess: async () => {
       // Refetch the spec to show new version
       await queryClient.refetchQueries({
@@ -149,8 +169,13 @@ export const useGetVersionHistory = (specId: string) => {
  */
 export const useRollbackSpec = () => {
   return useMutation({
-    mutationFn: ({ specId, targetVersion }: { specId: string; targetVersion: number }) =>
-      specDocumentsApi.rollbackToVersion(specId, targetVersion),
+    mutationFn: ({
+      specId,
+      targetVersion,
+    }: {
+      specId: string;
+      targetVersion: number;
+    }) => specDocumentsApi.rollbackToVersion(specId, targetVersion),
     onSuccess: async () => {
       // Refetch the spec to show rolled back version
       await queryClient.refetchQueries({

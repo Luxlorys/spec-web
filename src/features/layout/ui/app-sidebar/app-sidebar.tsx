@@ -1,18 +1,32 @@
 'use client';
 
 import { FC } from 'react';
+
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+
 import { useQuery } from '@tanstack/react-query';
 import {
-  Home,
   Bell,
-  Settings,
-  LogOut,
+  BookOpen,
   ChevronUp,
-  Sparkles
+  Home,
+  LogOut,
+  Settings,
+  Sparkles,
 } from 'lucide-react';
 
+import { authApi } from 'shared/api/auth';
+import { QueryKeys } from 'shared/constants';
+import { mockNotifications } from 'shared/lib/mock-data';
+import { useAuthStore } from 'shared/store';
+import { Avatar, Button } from 'shared/ui';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from 'shared/ui/dropdown-menu';
 import {
   Sidebar,
   SidebarContent,
@@ -25,23 +39,17 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from 'shared/ui/sidebar';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from 'shared/ui/dropdown-menu';
-import { Avatar, Button } from 'shared/ui';
-import { useAuthStore } from 'shared/store';
-import { authApi } from 'shared/api/auth';
-import { QueryKeys } from 'shared/constants';
-import { mockNotifications } from 'shared/lib/mock-data';
 
 const navItems = [
   {
     title: 'Dashboard',
     url: '/dashboard',
     icon: Home,
+  },
+  {
+    title: 'Documentation',
+    url: '/documentation',
+    icon: BookOpen,
   },
   {
     title: 'Notifications',
@@ -81,7 +89,7 @@ export const AppSidebar: FC = () => {
     <Sidebar>
       <SidebarHeader className="p-4">
         <Link href="/dashboard" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary font-bold text-primary-foreground">
             S
           </div>
           <div className="flex flex-col">
@@ -105,17 +113,23 @@ export const AppSidebar: FC = () => {
           <SidebarGroupContent>
             <SidebarMenu>
               {navItems.map(item => {
-                const isActive = pathname === item.url || pathname.startsWith(item.url + '/');
+                const isActive =
+                  pathname === item.url || pathname.startsWith(`${item.url}/`);
+
                 return (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive}
+                      tooltip={item.title}
+                    >
                       <Link href={item.url}>
                         <item.icon className="h-4 w-4" />
                         <span>{item.title}</span>
                       </Link>
                     </SidebarMenuButton>
                     {item.hasBadge && unreadCount > 0 && (
-                      <SidebarMenuBadge className="bg-destructive text-destructive-foreground rounded-full">
+                      <SidebarMenuBadge className="rounded-full bg-destructive text-destructive-foreground">
                         {unreadCount}
                       </SidebarMenuBadge>
                     )}
@@ -140,8 +154,10 @@ export const AppSidebar: FC = () => {
                     <>
                       <Avatar src={user.avatarUrl} alt={user.name} size="sm" />
                       <div className="grid flex-1 text-left text-sm leading-tight">
-                        <span className="truncate font-semibold">{user.name}</span>
-                        <span className="truncate text-xs text-muted-foreground capitalize">
+                        <span className="truncate font-semibold">
+                          {user.name}
+                        </span>
+                        <span className="truncate text-xs capitalize text-muted-foreground">
                           {user.role}
                         </span>
                       </div>

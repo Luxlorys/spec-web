@@ -6,7 +6,8 @@ export const mockNotifications: INotification[] = [
     userId: 'user-1',
     type: 'question_asked',
     title: 'New question on Team Invitation spec',
-    message: 'Mike Johnson asked: "Should we use SendGrid or AWS SES for email sending?"',
+    message:
+      'Mike Johnson asked: "Should we use SendGrid or AWS SES for email sending?"',
     link: '/features/feat-2',
     read: false,
     createdAt: new Date('2024-12-08T10:00:30'),
@@ -56,7 +57,8 @@ export const mockNotifications: INotification[] = [
     userId: 'user-1',
     type: 'spec_updated',
     title: 'Spec document updated',
-    message: 'Team Invitation spec was updated with new technical considerations',
+    message:
+      'Team Invitation spec was updated with new technical considerations',
     link: '/features/feat-2',
     read: true,
     createdAt: new Date('2024-12-07T10:15:00'),

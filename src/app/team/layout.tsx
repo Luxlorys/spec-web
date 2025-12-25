@@ -1,8 +1,9 @@
 'use client';
 
 import { ReactNode } from 'react';
-import { SidebarProvider, SidebarInset } from 'shared/ui/sidebar';
+
 import { AppSidebar } from 'features/layout/ui/app-sidebar';
+import { SidebarInset, SidebarProvider } from 'shared/ui/sidebar';
 
 interface Props {
   children: ReactNode;

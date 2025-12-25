@@ -1,12 +1,13 @@
-import { ISpecDocument, IComment } from 'shared/types';
 import { formatDate } from 'shared/lib';
+import { IComment, ISpecDocument } from 'shared/types';
+
 import {
-  formatUserStories,
   formatAcceptanceCriteria,
-  formatEdgeCases,
-  formatResolvedComments,
-  formatOpenQuestions,
   formatArrayAsBulletList,
+  formatEdgeCases,
+  formatOpenQuestions,
+  formatResolvedComments,
+  formatUserStories,
 } from './format-prompt-sections';
 
 export interface IGeneratePromptOptions {
@@ -61,7 +62,8 @@ export function generateAIPrompt(options: IGeneratePromptOptions): string {
   }
 
   // Constraints & Technical Considerations
-  const hasConstraints = spec.scopeExcluded.length > 0 ||
+  const hasConstraints =
+    spec.scopeExcluded.length > 0 ||
     spec.technicalConsiderations.length > 0 ||
     spec.assumptions.length > 0;
 
@@ -96,7 +98,8 @@ export function generateAIPrompt(options: IGeneratePromptOptions): string {
   }
 
   // Design Notes from resolved comments and answered questions
-  const hasDesignNotes = resolvedComments.length > 0 ||
+  const hasDesignNotes =
+    resolvedComments.length > 0 ||
     spec.openQuestions.some(q => q.answer && q.answer.trim().length > 0);
 
   if (hasDesignNotes) {

@@ -1,26 +1,28 @@
 'use client';
 
-import { FC, useState, useEffect } from 'react';
-import { Sparkles, History } from 'lucide-react';
-import { ISpecDocument, IUpdateSpecSection } from 'shared/types';
-import { formatDate } from 'shared/lib';
+import { FC, useEffect, useState } from 'react';
+
+import { History, Sparkles } from 'lucide-react';
+
 import {
-  useGetCommentCounts,
-  useUpdateSpecSection,
-  usePreviewRegeneration,
   useCommitRegeneration,
-  useGetVersionHistory,
-  useRollbackSpec,
+  useGetCommentCounts,
   useGetCommentsBySpec,
+  useGetVersionHistory,
+  usePreviewRegeneration,
+  useRollbackSpec,
+  useUpdateSpecSection,
 } from 'shared/hooks';
+import { formatDate } from 'shared/lib';
 import { useAuthStore } from 'shared/store';
-import { SpecSection } from '../spec-section';
-import { Badge, Card, Button } from 'shared/ui';
+import { Badge, Button, Card } from 'shared/ui';
+
 import { CommentsSidebar } from '../comments-sidebar';
-import { OpenQuestionItem } from '../open-question-item';
-import { OpenQuestionForm } from '../open-question-form';
 import { GeneratePromptButton } from '../generate-prompt-button';
+import { OpenQuestionForm } from '../open-question-form';
+import { OpenQuestionItem } from '../open-question-item';
 import { RegenerationModal } from '../regeneration-modal';
+import { SpecSection } from '../spec-section';
 import { VersionHistorySidebar } from '../version-history-sidebar';
 
 interface IProps {
@@ -61,12 +63,15 @@ export const SpecView: FC<IProps> = ({ spec }) => {
   const commitRegenerationMutation = useCommitRegeneration();
 
   // Version history hooks
-  const { data: versionHistory = [], isLoading: isLoadingHistory } = useGetVersionHistory(spec.id);
+  const { data: versionHistory = [], isLoading: isLoadingHistory } =
+    useGetVersionHistory(spec.id);
   const rollbackMutation = useRollbackSpec();
 
   // Calculate if regeneration should be enabled
   const resolvedCommentsCount = allComments.filter(c => c.resolved).length;
-  const answeredQuestionsCount = spec.openQuestions.filter(q => q.answer && q.answer.trim().length > 0).length;
+  const answeredQuestionsCount = spec.openQuestions.filter(
+    q => q.answer && q.answer.trim().length > 0,
+  ).length;
   const canRegenerate = resolvedCommentsCount > 0 || answeredQuestionsCount > 0;
 
   // Handler for opening sidebar
@@ -86,7 +91,10 @@ export const SpecView: FC<IProps> = ({ spec }) => {
   };
 
   // Handler for saving section edits
-  const handleSaveSection = (section: IUpdateSpecSection['section'], value: string | string[]) => {
+  const handleSaveSection = (
+    section: IUpdateSpecSection['section'],
+    value: string | string[],
+  ) => {
     updateSectionMutation.mutate({
       specId: spec.id,
       update: { section, value },
@@ -112,7 +120,7 @@ export const SpecView: FC<IProps> = ({ spec }) => {
         onSuccess: () => {
           // Modal will auto-close after showing success state
         },
-      }
+      },
     );
   };
 
@@ -134,7 +142,7 @@ export const SpecView: FC<IProps> = ({ spec }) => {
         onSuccess: () => {
           // Sidebar will stay open to show updated history
         },
-      }
+      },
     );
   };
 
@@ -161,7 +169,8 @@ export const SpecView: FC<IProps> = ({ spec }) => {
                 Specification Document
               </h2>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Version {spec.version} • Generated on {formatDate(spec.generatedAt)}
+                Version {spec.version} • Generated on{' '}
+                {formatDate(spec.generatedAt)}
               </p>
             </div>
           </div>
@@ -173,7 +182,7 @@ export const SpecView: FC<IProps> = ({ spec }) => {
                 onClick={handleRegenerateClick}
                 disabled={!canRegenerate}
               >
-                <Sparkles className="h-4 w-4 mr-2" />
+                <Sparkles className="mr-2 h-4 w-4" />
                 Update Specification
               </Button>
             )}
@@ -189,11 +198,11 @@ export const SpecView: FC<IProps> = ({ spec }) => {
         id="overview"
         sectionId="overview"
         specDocumentId={spec.id}
-        commentCount={commentCounts['overview'] || 0}
+        commentCount={commentCounts.overview || 0}
         onCommentClick={sectionId => handleCommentClick(sectionId, 'Overview')}
         editable={isFounder}
         editValue={spec.overview}
-        onSave={(value) => handleSaveSection('overview', value)}
+        onSave={value => handleSaveSection('overview', value)}
         isSaving={updateSectionMutation.isPending}
       >
         <p>{spec.overview}</p>
@@ -206,10 +215,12 @@ export const SpecView: FC<IProps> = ({ spec }) => {
         sectionId="problem-statement"
         specDocumentId={spec.id}
         commentCount={commentCounts['problem-statement'] || 0}
-        onCommentClick={sectionId => handleCommentClick(sectionId, 'Problem Statement')}
+        onCommentClick={sectionId =>
+          handleCommentClick(sectionId, 'Problem Statement')
+        }
         editable={isFounder}
         editValue={spec.problemStatement}
-        onSave={(value) => handleSaveSection('problemStatement', value)}
+        onSave={value => handleSaveSection('problemStatement', value)}
         isSaving={updateSectionMutation.isPending}
       >
         <p>{spec.problemStatement}</p>
@@ -222,10 +233,12 @@ export const SpecView: FC<IProps> = ({ spec }) => {
         sectionId="user-stories"
         specDocumentId={spec.id}
         commentCount={commentCounts['user-stories'] || 0}
-        onCommentClick={sectionId => handleCommentClick(sectionId, 'User Stories')}
+        onCommentClick={sectionId =>
+          handleCommentClick(sectionId, 'User Stories')
+        }
         editable={isFounder}
         editValue={spec.userStories}
-        onSave={(value) => handleSaveSection('userStories', value)}
+        onSave={value => handleSaveSection('userStories', value)}
         isSaving={updateSectionMutation.isPending}
         isArrayField
       >
@@ -246,7 +259,9 @@ export const SpecView: FC<IProps> = ({ spec }) => {
         sectionId="acceptance-criteria"
         specDocumentId={spec.id}
         commentCount={commentCounts['acceptance-criteria'] || 0}
-        onCommentClick={sectionId => handleCommentClick(sectionId, 'Acceptance Criteria')}
+        onCommentClick={sectionId =>
+          handleCommentClick(sectionId, 'Acceptance Criteria')
+        }
       >
         <ul className="space-y-3">
           {spec.acceptanceCriteria.map(criteria => (
@@ -257,7 +272,9 @@ export const SpecView: FC<IProps> = ({ spec }) => {
                 readOnly
                 className="mt-1 h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
               />
-              <span className={criteria.completed ? 'line-through opacity-60' : ''}>
+              <span
+                className={criteria.completed ? 'line-through opacity-60' : ''}
+              >
                 {criteria.description}
               </span>
             </li>
@@ -271,11 +288,11 @@ export const SpecView: FC<IProps> = ({ spec }) => {
         id="scope-included"
         sectionId="scope-included"
         specDocumentId={spec.id}
-        commentCount={commentCounts['scope'] || 0}
+        commentCount={commentCounts.scope || 0}
         onCommentClick={() => handleCommentClick('scope', 'Scope')}
         editable={isFounder}
         editValue={spec.scopeIncluded}
-        onSave={(value) => handleSaveSection('scopeIncluded', value)}
+        onSave={value => handleSaveSection('scopeIncluded', value)}
         isSaving={updateSectionMutation.isPending}
         isArrayField
       >
@@ -297,7 +314,7 @@ export const SpecView: FC<IProps> = ({ spec }) => {
         specDocumentId={spec.id}
         editable={isFounder}
         editValue={spec.scopeExcluded}
-        onSave={(value) => handleSaveSection('scopeExcluded', value)}
+        onSave={value => handleSaveSection('scopeExcluded', value)}
         isSaving={updateSectionMutation.isPending}
         isArrayField
       >
@@ -317,11 +334,13 @@ export const SpecView: FC<IProps> = ({ spec }) => {
         id="technical"
         sectionId="technical"
         specDocumentId={spec.id}
-        commentCount={commentCounts['technical'] || 0}
-        onCommentClick={sectionId => handleCommentClick(sectionId, 'Technical Considerations')}
+        commentCount={commentCounts.technical || 0}
+        onCommentClick={sectionId =>
+          handleCommentClick(sectionId, 'Technical Considerations')
+        }
         editable={isFounder}
         editValue={spec.technicalConsiderations}
-        onSave={(value) => handleSaveSection('technicalConsiderations', value)}
+        onSave={value => handleSaveSection('technicalConsiderations', value)}
         isSaving={updateSectionMutation.isPending}
         isArrayField
       >
@@ -342,7 +361,9 @@ export const SpecView: FC<IProps> = ({ spec }) => {
         sectionId="edge-cases"
         specDocumentId={spec.id}
         commentCount={commentCounts['edge-cases'] || 0}
-        onCommentClick={sectionId => handleCommentClick(sectionId, 'Edge Cases')}
+        onCommentClick={sectionId =>
+          handleCommentClick(sectionId, 'Edge Cases')
+        }
       >
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -379,14 +400,20 @@ export const SpecView: FC<IProps> = ({ spec }) => {
         sectionId="open-questions"
         specDocumentId={spec.id}
         commentCount={commentCounts['open-questions'] || 0}
-        onCommentClick={sectionId => handleCommentClick(sectionId, 'Open Questions')}
+        onCommentClick={sectionId =>
+          handleCommentClick(sectionId, 'Open Questions')
+        }
       >
         <OpenQuestionForm specId={spec.id} />
 
         {spec.openQuestions.length > 0 ? (
           <ul className="space-y-4">
             {spec.openQuestions.map(question => (
-              <OpenQuestionItem key={question.id} question={question} specId={spec.id} />
+              <OpenQuestionItem
+                key={question.id}
+                question={question}
+                specId={spec.id}
+              />
             ))}
           </ul>
         ) : (
@@ -402,11 +429,13 @@ export const SpecView: FC<IProps> = ({ spec }) => {
         id="assumptions"
         sectionId="assumptions"
         specDocumentId={spec.id}
-        commentCount={commentCounts['assumptions'] || 0}
-        onCommentClick={sectionId => handleCommentClick(sectionId, 'Assumptions')}
+        commentCount={commentCounts.assumptions || 0}
+        onCommentClick={sectionId =>
+          handleCommentClick(sectionId, 'Assumptions')
+        }
         editable={isFounder}
         editValue={spec.assumptions}
-        onSave={(value) => handleSaveSection('assumptions', value)}
+        onSave={value => handleSaveSection('assumptions', value)}
         isSaving={updateSectionMutation.isPending}
         isArrayField
       >

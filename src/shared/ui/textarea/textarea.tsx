@@ -1,4 +1,5 @@
-import { TextareaHTMLAttributes, forwardRef } from 'react';
+import { forwardRef, TextareaHTMLAttributes } from 'react';
+
 import { cn } from 'shared/lib';
 
 interface IProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
@@ -31,9 +32,15 @@ export const Textarea = forwardRef<HTMLTextAreaElement, IProps>(
           )}
           {...props}
         />
-        {error && <p className="mt-1.5 text-sm text-red-600 dark:text-red-400">{error}</p>}
+        {error && (
+          <p className="mt-1.5 text-sm text-red-600 dark:text-red-400">
+            {error}
+          </p>
+        )}
         {helperText && !error && (
-          <p className="mt-1.5 text-sm text-gray-500 dark:text-gray-400">{helperText}</p>
+          <p className="mt-1.5 text-sm text-gray-500 dark:text-gray-400">
+            {helperText}
+          </p>
         )}
       </div>
     );

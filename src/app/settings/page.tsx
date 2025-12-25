@@ -1,24 +1,35 @@
 'use client';
 
 import { useState } from 'react';
+
 import {
-  User,
-  Building2,
-  Users,
   Bell,
-  Shield,
-  Palette,
+  Building2,
+  ChevronRight,
   CreditCard,
   Link as LinkIcon,
   LogOut,
-  ChevronRight,
+  Palette,
+  Settings,
+  Shield,
+  User,
+  Users,
 } from 'lucide-react';
-import { useAuthStore } from 'shared/store';
-import { Card, Button, Input, Avatar } from 'shared/ui';
-import { cn } from 'shared/lib';
-import { UserRole } from 'shared/types';
 
-type SettingsSection = 'profile' | 'project' | 'team' | 'notifications' | 'security' | 'appearance' | 'billing' | 'integrations';
+import { cn } from 'shared/lib';
+import { useAuthStore } from 'shared/store';
+import { UserRole } from 'shared/types';
+import { Avatar, Button, Card, Input } from 'shared/ui';
+
+type SettingsSection =
+  | 'profile'
+  | 'project'
+  | 'team'
+  | 'notifications'
+  | 'security'
+  | 'appearance'
+  | 'billing'
+  | 'integrations';
 
 interface NavItem {
   id: SettingsSection;
@@ -52,12 +63,12 @@ function SettingsNav({
   userRole: UserRole;
 }) {
   const filteredItems = navItems.filter(
-    (item) => !item.adminOnly || isAdminRole(userRole)
+    item => !item.adminOnly || isAdminRole(userRole),
   );
 
   return (
     <nav className="space-y-1">
-      {filteredItems.map((item) => {
+      {filteredItems.map(item => {
         const Icon = item.icon;
         const isActive = activeSection === item.id;
 
@@ -69,7 +80,7 @@ function SettingsNav({
               'flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
               isActive
                 ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                : 'text-muted-foreground hover:bg-muted hover:text-foreground',
             )}
           >
             <Icon className="h-4 w-4" />
@@ -161,9 +172,11 @@ function ProjectSettings() {
             placeholder="Your project name"
           />
           <div>
-            <label className="mb-1.5 block text-sm font-medium">Description</label>
+            <label className="mb-1.5 block text-sm font-medium">
+              Description
+            </label>
             <textarea
-              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
               rows={3}
               placeholder="Describe your project..."
               defaultValue="Building the next generation of productivity tools"
@@ -180,12 +193,14 @@ function ProjectSettings() {
       <Card className="border border-red-200 dark:border-red-900" padding="lg">
         <div className="space-y-4">
           <div>
-            <h3 className="font-medium text-red-600 dark:text-red-400">Danger Zone</h3>
+            <h3 className="font-medium text-red-600 dark:text-red-400">
+              Danger Zone
+            </h3>
             <p className="text-sm text-muted-foreground">
               Irreversible actions for your project
             </p>
           </div>
-          <div className="flex items-center justify-between rounded-lg border border-red-200 dark:border-red-900 p-4">
+          <div className="flex items-center justify-between rounded-lg border border-red-200 p-4 dark:border-red-900">
             <div>
               <p className="font-medium">Delete Project</p>
               <p className="text-sm text-muted-foreground">
@@ -225,7 +240,7 @@ function TeamSettings() {
           <div className="space-y-3">
             <div className="flex items-center justify-between rounded-lg border p-3">
               <div>
-                <code className="rounded bg-muted px-2 py-1 text-sm font-mono">
+                <code className="rounded bg-muted px-2 py-1 font-mono text-sm">
                   TECHSTART2024
                 </code>
                 <p className="mt-1 text-xs text-muted-foreground">
@@ -238,7 +253,7 @@ function TeamSettings() {
             </div>
             <div className="flex items-center justify-between rounded-lg border p-3">
               <div>
-                <code className="rounded bg-muted px-2 py-1 text-sm font-mono">
+                <code className="rounded bg-muted px-2 py-1 font-mono text-sm">
                   DEMO123
                 </code>
                 <p className="mt-1 text-xs text-muted-foreground">
@@ -259,10 +274,18 @@ function TeamSettings() {
           <div className="space-y-3">
             {[
               { name: 'John Doe', email: 'john@example.com', role: 'Founder' },
-              { name: 'Jane Smith', email: 'jane@example.com', role: 'Developer' },
-              { name: 'Bob Wilson', email: 'bob@example.com', role: 'Designer' },
+              {
+                name: 'Jane Smith',
+                email: 'jane@example.com',
+                role: 'Developer',
+              },
+              {
+                name: 'Bob Wilson',
+                email: 'bob@example.com',
+                role: 'Designer',
+              },
               { name: 'Alice Brown', email: 'alice@example.com', role: 'PM' },
-            ].map((member) => (
+            ].map(member => (
               <div
                 key={member.email}
                 className="flex items-center justify-between rounded-lg border p-3"
@@ -270,8 +293,10 @@ function TeamSettings() {
                 <div className="flex items-center gap-3">
                   <Avatar alt={member.name} size="sm" />
                   <div>
-                    <p className="font-medium text-sm">{member.name}</p>
-                    <p className="text-xs text-muted-foreground">{member.email}</p>
+                    <p className="text-sm font-medium">{member.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {member.email}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -307,15 +332,33 @@ function NotificationSettings() {
         <div className="space-y-4">
           <h3 className="font-medium">Email Notifications</h3>
           {[
-            { label: 'New feature requests', description: 'When a new feature is created', defaultChecked: true },
-            { label: 'Spec generated', description: 'When AI generates a spec for your feature', defaultChecked: true },
-            { label: 'Questions & answers', description: 'When someone asks or answers a question', defaultChecked: false },
-            { label: 'Status changes', description: 'When a feature status is updated', defaultChecked: true },
-          ].map((item) => (
+            {
+              label: 'New feature requests',
+              description: 'When a new feature is created',
+              defaultChecked: true,
+            },
+            {
+              label: 'Spec generated',
+              description: 'When AI generates a spec for your feature',
+              defaultChecked: true,
+            },
+            {
+              label: 'Questions & answers',
+              description: 'When someone asks or answers a question',
+              defaultChecked: false,
+            },
+            {
+              label: 'Status changes',
+              description: 'When a feature status is updated',
+              defaultChecked: true,
+            },
+          ].map(item => (
             <div key={item.label} className="flex items-start justify-between">
               <div>
-                <p className="font-medium text-sm">{item.label}</p>
-                <p className="text-xs text-muted-foreground">{item.description}</p>
+                <p className="text-sm font-medium">{item.label}</p>
+                <p className="text-xs text-muted-foreground">
+                  {item.description}
+                </p>
               </div>
               <label className="relative inline-flex cursor-pointer items-center">
                 <input
@@ -323,7 +366,7 @@ function NotificationSettings() {
                   defaultChecked={item.defaultChecked}
                   className="peer sr-only"
                 />
-                <div className="h-5 w-9 rounded-full bg-muted peer-checked:bg-primary after:absolute after:left-[2px] after:top-[2px] after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-4" />
+                <div className="h-5 w-9 rounded-full bg-muted after:absolute after:left-[2px] after:top-[2px] after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-all peer-checked:bg-primary peer-checked:after:translate-x-4" />
               </label>
             </div>
           ))}
@@ -334,13 +377,23 @@ function NotificationSettings() {
         <div className="space-y-4">
           <h3 className="font-medium">In-App Notifications</h3>
           {[
-            { label: 'Desktop notifications', description: 'Show browser notifications', defaultChecked: false },
-            { label: 'Sound alerts', description: 'Play sound for new notifications', defaultChecked: false },
-          ].map((item) => (
+            {
+              label: 'Desktop notifications',
+              description: 'Show browser notifications',
+              defaultChecked: false,
+            },
+            {
+              label: 'Sound alerts',
+              description: 'Play sound for new notifications',
+              defaultChecked: false,
+            },
+          ].map(item => (
             <div key={item.label} className="flex items-start justify-between">
               <div>
-                <p className="font-medium text-sm">{item.label}</p>
-                <p className="text-xs text-muted-foreground">{item.description}</p>
+                <p className="text-sm font-medium">{item.label}</p>
+                <p className="text-xs text-muted-foreground">
+                  {item.description}
+                </p>
               </div>
               <label className="relative inline-flex cursor-pointer items-center">
                 <input
@@ -348,7 +401,7 @@ function NotificationSettings() {
                   defaultChecked={item.defaultChecked}
                   className="peer sr-only"
                 />
-                <div className="h-5 w-9 rounded-full bg-muted peer-checked:bg-primary after:absolute after:left-[2px] after:top-[2px] after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-4" />
+                <div className="h-5 w-9 rounded-full bg-muted after:absolute after:left-[2px] after:top-[2px] after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-all peer-checked:bg-primary peer-checked:after:translate-x-4" />
               </label>
             </div>
           ))}
@@ -402,7 +455,7 @@ function SecuritySettings() {
           <div className="space-y-3">
             <div className="flex items-center justify-between rounded-lg border p-3">
               <div>
-                <p className="font-medium text-sm">Current Session</p>
+                <p className="text-sm font-medium">Current Session</p>
                 <p className="text-xs text-muted-foreground">
                   Chrome on macOS • Last active now
                 </p>
@@ -418,7 +471,9 @@ function SecuritySettings() {
       <Card className="border border-red-200 dark:border-red-900" padding="lg">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="font-medium text-red-600 dark:text-red-400">Sign Out</h3>
+            <h3 className="font-medium text-red-600 dark:text-red-400">
+              Sign Out
+            </h3>
             <p className="text-sm text-muted-foreground">
               Sign out from your account on this device
             </p>
@@ -451,14 +506,14 @@ function AppearanceSettings() {
               { id: 'light', label: 'Light' },
               { id: 'dark', label: 'Dark' },
               { id: 'system', label: 'System' },
-            ].map((theme) => (
+            ].map(theme => (
               <button
                 key={theme.id}
                 className={cn(
                   'rounded-lg border-2 p-4 text-center transition-colors',
                   theme.id === 'system'
                     ? 'border-primary bg-primary/5'
-                    : 'border-border hover:border-primary/50'
+                    : 'border-border hover:border-primary/50',
                 )}
               >
                 <div className="text-sm font-medium">{theme.label}</div>
@@ -476,14 +531,14 @@ function AppearanceSettings() {
               { id: 'compact', label: 'Compact' },
               { id: 'default', label: 'Default' },
               { id: 'comfortable', label: 'Comfortable' },
-            ].map((density) => (
+            ].map(density => (
               <button
                 key={density.id}
                 className={cn(
                   'rounded-lg border-2 p-4 text-center transition-colors',
                   density.id === 'default'
                     ? 'border-primary bg-primary/5'
-                    : 'border-border hover:border-primary/50'
+                    : 'border-border hover:border-primary/50',
                 )}
               >
                 <div className="text-sm font-medium">{density.label}</div>
@@ -538,7 +593,7 @@ function BillingSettings() {
                 <span className="text-xs font-bold">VISA</span>
               </div>
               <div>
-                <p className="font-medium text-sm">•••• •••• •••• 4242</p>
+                <p className="text-sm font-medium">•••• •••• •••• 4242</p>
                 <p className="text-xs text-muted-foreground">Expires 12/25</p>
               </div>
             </div>
@@ -563,8 +618,10 @@ function BillingSettings() {
                 className="flex items-center justify-between rounded-lg border p-3"
               >
                 <div>
-                  <p className="font-medium text-sm">{invoice.date}</p>
-                  <p className="text-xs text-muted-foreground">{invoice.amount}</p>
+                  <p className="text-sm font-medium">{invoice.date}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {invoice.amount}
+                  </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
@@ -615,7 +672,7 @@ function IntegrationsSettings() {
             description: 'Connect to Linear projects',
             connected: false,
           },
-        ].map((integration) => (
+        ].map(integration => (
           <Card key={integration.name} className="border" padding="md">
             <div className="flex items-start justify-between">
               <div>
@@ -640,27 +697,36 @@ function IntegrationsSettings() {
 
 function SettingsContent() {
   const { user } = useAuthStore();
-  const [activeSection, setActiveSection] = useState<SettingsSection>('profile');
+  const [activeSection, setActiveSection] =
+    useState<SettingsSection>('profile');
   const userRole = user?.role || 'developer';
 
   const renderSection = () => {
     switch (activeSection) {
       case 'profile':
         return <ProfileSettings />;
+
       case 'project':
         return <ProjectSettings />;
+
       case 'team':
         return <TeamSettings />;
+
       case 'notifications':
         return <NotificationSettings />;
+
       case 'security':
         return <SecuritySettings />;
+
       case 'appearance':
         return <AppearanceSettings />;
+
       case 'billing':
         return <BillingSettings />;
+
       case 'integrations':
         return <IntegrationsSettings />;
+
       default:
         return <ProfileSettings />;
     }
@@ -669,10 +735,17 @@ function SettingsContent() {
   return (
     <main className="p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">Settings</h1>
-        <p className="text-sm text-muted-foreground">
-          Manage your account and preferences
-        </p>
+        <div className="flex items-center gap-3">
+          <div className="rounded-lg bg-primary/10 p-2">
+            <Settings className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Settings</h1>
+            <p className="text-sm text-muted-foreground">
+              Manage your account and preferences
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="flex gap-8">
@@ -684,7 +757,7 @@ function SettingsContent() {
           />
         </aside>
 
-        <div className="flex-1 max-w-3xl">{renderSection()}</div>
+        <div className="max-w-3xl flex-1">{renderSection()}</div>
       </div>
     </main>
   );

@@ -1,14 +1,18 @@
 'use client';
 
 import { FC, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useRouter } from 'next/navigation';
+
 import Link from 'next/link';
-import { signupSchema, SignupInput } from '../../lib';
-import { Button, Input } from 'shared/ui';
+import { useRouter } from 'next/navigation';
+
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+
 import { authApi } from 'shared/api/auth';
 import { useAuthStore } from 'shared/store';
+import { Button, Input } from 'shared/ui';
+
+import { SignupInput, signupSchema } from '../../lib';
 
 export const SignupForm: FC = () => {
   const router = useRouter();
@@ -33,6 +37,7 @@ export const SignupForm: FC = () => {
     try {
       setError('');
       const response = await authApi.signup(values);
+
       setAuth(response.user, response.token);
       router.push('/dashboard');
     } catch (err) {
@@ -99,7 +104,10 @@ export const SignupForm: FC = () => {
 
       <div className="text-center text-sm text-gray-600 dark:text-gray-400">
         Already have an account?{' '}
-        <Link href="/login" className="font-medium text-primary hover:text-primary/80">
+        <Link
+          href="/login"
+          className="font-medium text-primary hover:text-primary/80"
+        >
           Sign in
         </Link>
       </div>

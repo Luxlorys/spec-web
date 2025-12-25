@@ -1,15 +1,19 @@
-import {
-  ISpecDocument,
-  IUpdateSpecSection,
-  IOpenQuestion,
-  IRegenerationPreview,
-  ISpecVersion,
-  IProposedChange,
-} from 'shared/types';
 import { delay, generateId } from 'shared/lib';
-import { mockSpecDocuments, mockFeatureRequests, mockSpecVersionHistory } from 'shared/lib/mock-data';
-import { mockComments } from 'shared/lib/mock-data/comments';
+import {
+  mockFeatureRequests,
+  mockSpecDocuments,
+  mockSpecVersionHistory,
+} from 'shared/lib/mock-data';
 import { generateRegeneratedSpec } from 'shared/lib/mock-data/ai-responses';
+import { mockComments } from 'shared/lib/mock-data/comments';
+import {
+  IOpenQuestion,
+  IProposedChange,
+  IRegenerationPreview,
+  ISpecDocument,
+  ISpecVersion,
+  IUpdateSpecSection,
+} from 'shared/types';
 
 export interface ICreateOpenQuestionRequest {
   question: string;
@@ -26,14 +30,20 @@ export const specDocumentsApi = {
     await delay(300);
 
     const spec = mockSpecDocuments.find(s => s.featureRequestId === featureId);
+
     return spec || null;
   },
 
-  generateFromConversation: async (featureId: string): Promise<ISpecDocument> => {
+  generateFromConversation: async (
+    featureId: string,
+  ): Promise<ISpecDocument> => {
     await delay(2000); // Simulate generation time
 
     const feature = mockFeatureRequests.find(f => f.id === featureId);
-    if (!feature) throw new Error('Feature not found');
+
+    if (!feature) {
+      throw new Error('Feature not found');
+    }
 
     const specId = generateId();
 
@@ -49,13 +59,18 @@ export const specDocumentsApi = {
       acceptanceCriteria: [
         {
           id: generateId(),
-          description: 'Given the feature is implemented, when user interacts, then it should work',
+          description:
+            'Given the feature is implemented, when user interacts, then it should work',
           completed: false,
         },
       ],
       scopeIncluded: ['Core functionality', 'Basic user interface'],
       scopeExcluded: ['Advanced features for v2', 'Third-party integrations'],
-      technicalConsiderations: ['API design', 'Database schema', 'Frontend implementation'],
+      technicalConsiderations: [
+        'API design',
+        'Database schema',
+        'Frontend implementation',
+      ],
       openQuestions: [],
       edgeCases: [
         {
@@ -63,7 +78,10 @@ export const specDocumentsApi = {
           expectedBehavior: 'System handles gracefully',
         },
       ],
-      assumptions: ['Users have necessary permissions', 'System has required dependencies'],
+      assumptions: [
+        'Users have necessary permissions',
+        'System has required dependencies',
+      ],
       version: 1,
       generatedAt: new Date(),
       updatedAt: new Date(),
@@ -73,6 +91,7 @@ export const specDocumentsApi = {
 
     // Update feature request
     const featureIndex = mockFeatureRequests.findIndex(f => f.id === featureId);
+
     if (featureIndex !== -1) {
       mockFeatureRequests[featureIndex] = {
         ...mockFeatureRequests[featureIndex],
@@ -92,7 +111,10 @@ export const specDocumentsApi = {
     await delay(400);
 
     const index = mockSpecDocuments.findIndex(s => s.id === specId);
-    if (index === -1) throw new Error('Spec not found');
+
+    if (index === -1) {
+      throw new Error('Spec not found');
+    }
 
     const updated = {
       ...mockSpecDocuments[index],
@@ -113,7 +135,10 @@ export const specDocumentsApi = {
     await delay(300);
 
     const specIndex = mockSpecDocuments.findIndex(s => s.id === specId);
-    if (specIndex === -1) throw new Error('Spec not found');
+
+    if (specIndex === -1) {
+      throw new Error('Spec not found');
+    }
 
     const newQuestion: IOpenQuestion = {
       id: generateId(),
@@ -136,14 +161,21 @@ export const specDocumentsApi = {
     await delay(300);
 
     const specIndex = mockSpecDocuments.findIndex(s => s.id === specId);
-    if (specIndex === -1) throw new Error('Spec not found');
+
+    if (specIndex === -1) {
+      throw new Error('Spec not found');
+    }
 
     const questionIndex = mockSpecDocuments[specIndex].openQuestions.findIndex(
       q => q.id === questionId,
     );
-    if (questionIndex === -1) throw new Error('Question not found');
 
-    const currentQuestion = mockSpecDocuments[specIndex].openQuestions[questionIndex];
+    if (questionIndex === -1) {
+      throw new Error('Question not found');
+    }
+
+    const currentQuestion =
+      mockSpecDocuments[specIndex].openQuestions[questionIndex];
 
     const updatedQuestion: IOpenQuestion = {
       ...currentQuestion,
@@ -161,16 +193,25 @@ export const specDocumentsApi = {
     return updatedQuestion;
   },
 
-  deleteOpenQuestion: async (specId: string, questionId: string): Promise<void> => {
+  deleteOpenQuestion: async (
+    specId: string,
+    questionId: string,
+  ): Promise<void> => {
     await delay(300);
 
     const specIndex = mockSpecDocuments.findIndex(s => s.id === specId);
-    if (specIndex === -1) throw new Error('Spec not found');
+
+    if (specIndex === -1) {
+      throw new Error('Spec not found');
+    }
 
     const questionIndex = mockSpecDocuments[specIndex].openQuestions.findIndex(
       q => q.id === questionId,
     );
-    if (questionIndex === -1) throw new Error('Question not found');
+
+    if (questionIndex === -1) {
+      throw new Error('Question not found');
+    }
 
     mockSpecDocuments[specIndex].openQuestions.splice(questionIndex, 1);
     mockSpecDocuments[specIndex].updatedAt = new Date();
@@ -179,29 +220,41 @@ export const specDocumentsApi = {
   /**
    * Preview what changes would be made if spec is regenerated from discussions
    */
-  previewRegeneration: async (specId: string): Promise<IRegenerationPreview> => {
+  previewRegeneration: async (
+    specId: string,
+  ): Promise<IRegenerationPreview> => {
     await delay(1500); // Simulate AI processing
 
     const spec = mockSpecDocuments.find(s => s.id === specId);
-    if (!spec) throw new Error('Spec not found');
+
+    if (!spec) {
+      throw new Error('Spec not found');
+    }
 
     // Gather resolved comments and answered questions
     const resolvedComments = mockComments.filter(
-      c => c.specDocumentId === specId && c.resolved
+      c => c.specDocumentId === specId && c.resolved,
     );
 
     const answeredQuestions = spec.openQuestions.filter(
-      q => q.answer && q.answer.trim().length > 0
+      q => q.answer && q.answer.trim().length > 0,
     );
 
     // Get unique sections with feedback
-    const sectionsWithFeedback = [...new Set(resolvedComments.map(c => c.section))];
+    const sectionsWithFeedback = [
+      ...new Set(resolvedComments.map(c => c.section)),
+    ];
 
     // Generate proposed changes using mock AI
-    const proposedChanges = generateRegeneratedSpec(spec, resolvedComments, answeredQuestions);
+    const proposedChanges = generateRegeneratedSpec(
+      spec,
+      resolvedComments,
+      answeredQuestions,
+    );
 
     // Build full proposed spec by applying changes
     const fullProposedSpec: ISpecDocument = { ...spec };
+
     proposedChanges.forEach(change => {
       if (change.changeType !== 'unchanged') {
         (fullProposedSpec as any)[change.section] = change.proposedValue;
@@ -226,12 +279,15 @@ export const specDocumentsApi = {
    */
   commitRegeneration: async (
     specId: string,
-    proposedSpec: ISpecDocument
+    proposedSpec: ISpecDocument,
   ): Promise<ISpecDocument> => {
     await delay(800);
 
     const index = mockSpecDocuments.findIndex(s => s.id === specId);
-    if (index === -1) throw new Error('Spec not found');
+
+    if (index === -1) {
+      throw new Error('Spec not found');
+    }
 
     const currentSpec = mockSpecDocuments[index];
 
@@ -296,16 +352,25 @@ export const specDocumentsApi = {
   /**
    * Rollback to a previous version
    */
-  rollbackToVersion: async (specId: string, targetVersion: number): Promise<ISpecDocument> => {
+  rollbackToVersion: async (
+    specId: string,
+    targetVersion: number,
+  ): Promise<ISpecDocument> => {
     await delay(500);
 
     const index = mockSpecDocuments.findIndex(s => s.id === specId);
-    if (index === -1) throw new Error('Spec not found');
+
+    if (index === -1) {
+      throw new Error('Spec not found');
+    }
 
     const versionSnapshot = mockSpecVersionHistory.find(
-      v => v.specDocumentId === specId && v.version === targetVersion
+      v => v.specDocumentId === specId && v.version === targetVersion,
     );
-    if (!versionSnapshot) throw new Error('Version not found');
+
+    if (!versionSnapshot) {
+      throw new Error('Version not found');
+    }
 
     const currentSpec = mockSpecDocuments[index];
 

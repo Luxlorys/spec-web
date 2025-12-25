@@ -1,13 +1,16 @@
 'use client';
 
-import { FC, useState, useRef, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { FC, useEffect, useRef, useState } from 'react';
+
 import Link from 'next/link';
+
+import { useQuery } from '@tanstack/react-query';
+
 import { QueryKeys } from 'shared/constants';
-import { Badge, Button, Card } from 'shared/ui';
-import { mockNotifications } from 'shared/lib/mock-data';
 import { formatRelativeTime } from 'shared/lib';
+import { mockNotifications } from 'shared/lib/mock-data';
 import { useAuthStore } from 'shared/store';
+import { Badge, Button, Card } from 'shared/ui';
 
 export const NotificationCenter: FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -27,7 +30,10 @@ export const NotificationCenter: FC = () => {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
@@ -45,16 +51,22 @@ export const NotificationCenter: FC = () => {
     switch (type) {
       case 'feature_created':
         return '✨';
+
       case 'spec_generated':
         return '📄';
+
       case 'question_asked':
         return '❓';
+
       case 'question_answered':
         return '💬';
+
       case 'status_changed':
         return '🔄';
+
       case 'spec_updated':
         return '✏️';
+
       default:
         return '🔔';
     }
@@ -89,7 +101,9 @@ export const NotificationCenter: FC = () => {
       {isOpen && (
         <div className="absolute right-0 mt-2 w-96 rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
           <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 dark:border-gray-700">
-            <h3 className="font-semibold text-gray-900 dark:text-gray-100">Notifications</h3>
+            <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+              Notifications
+            </h3>
             {unreadCount > 0 && (
               <Badge variant="red" size="sm">
                 {unreadCount} new
@@ -106,16 +120,20 @@ export const NotificationCenter: FC = () => {
                     href={notification.link || '#'}
                     onClick={() => setIsOpen(false)}
                     className={`block px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 ${
-                      !notification.read ? 'bg-purple-50 dark:bg-purple-900/10' : ''
+                      !notification.read
+                        ? 'bg-purple-50 dark:bg-purple-900/10'
+                        : ''
                     }`}
                   >
                     <div className="flex gap-3">
-                      <span className="text-2xl">{getNotificationIcon(notification.type)}</span>
-                      <div className="flex-1 min-w-0">
+                      <span className="text-2xl">
+                        {getNotificationIcon(notification.type)}
+                      </span>
+                      <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                           {notification.title}
                         </p>
-                        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                        <p className="mt-1 line-clamp-2 text-sm text-gray-600 dark:text-gray-400">
                           {notification.message}
                         </p>
                         <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
@@ -133,7 +151,9 @@ export const NotificationCenter: FC = () => {
               </div>
             ) : (
               <div className="py-12 text-center">
-                <p className="text-sm text-gray-600 dark:text-gray-400">No notifications</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  No notifications
+                </p>
               </div>
             )}
           </div>

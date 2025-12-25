@@ -1,27 +1,32 @@
-import {
-  IAuthResponse,
-  ILoginRequest,
-  ISignupRequest,
-  IAdminSignupRequest,
-  IMemberSignupRequest,
-  IInviteCode,
-} from 'shared/types';
 import { delay, generateId } from 'shared/lib';
 import {
-  mockUsers,
-  mockOrganizations,
-  mockInviteCodes,
   DEMO_EMAIL,
   DEMO_PASSWORD,
+  mockDocumentationData,
+  mockInviteCodes,
+  mockOrganizations,
+  mockUsers,
 } from 'shared/lib/mock-data';
+import {
+  IAdminSignupRequest,
+  IAuthResponse,
+  IInviteCode,
+  ILoginRequest,
+  IMemberSignupRequest,
+  ISignupRequest,
+} from 'shared/types';
 
 export const authApi = {
   login: async (credentials: ILoginRequest): Promise<IAuthResponse> => {
     await delay(800);
 
     // Demo authentication
-    if (credentials.email === DEMO_EMAIL && credentials.password === DEMO_PASSWORD) {
+    if (
+      credentials.email === DEMO_EMAIL &&
+      credentials.password === DEMO_PASSWORD
+    ) {
       const user = mockUsers[0];
+
       return {
         user,
         token: `mock-token-${user.id}`,
@@ -30,6 +35,7 @@ export const authApi = {
 
     // Check against mock users
     const user = mockUsers.find(u => u.email === credentials.email);
+
     if (user && credentials.password === 'password') {
       return {
         user,
@@ -45,12 +51,14 @@ export const authApi = {
 
     // Check if email already exists
     const existingUser = mockUsers.find(u => u.email === data.email);
+
     if (existingUser) {
       throw new Error('Email already in use');
     }
 
     // Create new organization if provided
     let organizationId = mockOrganizations[0].id;
+
     if (data.organizationName) {
       organizationId = generateId();
       mockOrganizations.push({
@@ -86,6 +94,7 @@ export const authApi = {
 
     // Check if email already exists
     const existingUser = mockUsers.find(u => u.email === data.email);
+
     if (existingUser) {
       throw new Error('Email already in use');
     }
@@ -93,6 +102,7 @@ export const authApi = {
     // Create new organization
     const userId = generateId();
     const organizationId = generateId();
+
     mockOrganizations.push({
       id: organizationId,
       name: data.projectName,
@@ -100,6 +110,38 @@ export const authApi = {
       createdBy: userId,
       createdAt: new Date(),
     });
+
+    // Process uploaded context files and create documentation entries
+    if (data.contextFiles && data.contextFiles.length > 0) {
+      for (const file of data.contextFiles) {
+        // In a real implementation, you would read the file content and process it
+        // For this mock, we'll simulate file processing
+        const fileContent = await new Promise<string>(resolve => {
+          const reader = new FileReader();
+
+          reader.onload = e => {
+            resolve((e.target?.result as string) || '');
+          };
+          reader.readAsText(file);
+        });
+
+        // Create documentation entry for each uploaded file
+        const docId = generateId();
+
+        mockDocumentationData.push({
+          id: docId,
+          title: file.name.replace(/\.[^/.]+$/, ''), // Remove file extension
+          content:
+            fileContent ||
+            `# ${file.name}\n\nContent of uploaded file: ${file.name}\n\nFile size: ${Math.round(file.size / 1024)} KB`,
+          type: 'project-context',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          authorId: userId,
+          projectId: organizationId,
+        });
+      }
+    }
 
     // Create new user as founder
     const newUser = {
@@ -142,7 +184,9 @@ export const authApi = {
     return inviteCode;
   },
 
-  signupWithInvite: async (data: IMemberSignupRequest): Promise<IAuthResponse> => {
+  signupWithInvite: async (
+    data: IMemberSignupRequest,
+  ): Promise<IAuthResponse> => {
     await delay(1000);
 
     // Validate invite code first
@@ -150,6 +194,7 @@ export const authApi = {
 
     // Check if email already exists
     const existingUser = mockUsers.find(u => u.email === data.email);
+
     if (existingUser) {
       throw new Error('Email already in use');
     }

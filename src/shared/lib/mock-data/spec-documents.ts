@@ -19,18 +19,31 @@ export const mockSpecVersionHistory: ISpecVersion[] = [
       acceptanceCriteria: [
         {
           id: 'ac-20',
-          description: 'Given search results, when I apply a date filter, then only matching items show',
+          description:
+            'Given search results, when I apply a date filter, then only matching items show',
           completed: false,
         },
         {
           id: 'ac-21',
-          description: 'Given search results, when I apply a tag filter, then only tagged items show',
+          description:
+            'Given search results, when I apply a tag filter, then only tagged items show',
           completed: false,
         },
       ],
-      scopeIncluded: ['Date range filter', 'Tag filter', 'Basic UI for filters'],
-      scopeExcluded: ['Advanced query builder', 'Saved search filters', 'Export filtered results'],
-      technicalConsiderations: ['Database query optimization', 'Filter UI component design'],
+      scopeIncluded: [
+        'Date range filter',
+        'Tag filter',
+        'Basic UI for filters',
+      ],
+      scopeExcluded: [
+        'Advanced query builder',
+        'Saved search filters',
+        'Export filtered results',
+      ],
+      technicalConsiderations: [
+        'Database query optimization',
+        'Filter UI component design',
+      ],
       openQuestions: [
         {
           id: 'oq-10',
@@ -45,7 +58,10 @@ export const mockSpecVersionHistory: ISpecVersion[] = [
           expectedBehavior: 'Show validation error',
         },
       ],
-      assumptions: ['Users understand how filters work', 'Search index supports filtering'],
+      assumptions: [
+        'Users understand how filters work',
+        'Search index supports filtering',
+      ],
       generatedAt: new Date('2024-12-01T09:00:00'),
       updatedAt: new Date('2024-12-01T09:00:00'),
     },
@@ -125,13 +141,15 @@ export const mockSpecDocuments: ISpecDocument[] = [
     openQuestions: [
       {
         id: 'oq-1',
-        question: 'What should happen if someone is already a member and gets invited again?',
+        question:
+          'What should happen if someone is already a member and gets invited again?',
         askedBy: 'user-2',
         resolved: false,
       },
       {
         id: 'oq-2',
-        question: 'Should we send a reminder email before the invitation expires?',
+        question:
+          'Should we send a reminder email before the invitation expires?',
         answer: 'Not in v1, we can add this later if needed',
         askedBy: 'user-4',
         answeredBy: 'user-1',
@@ -141,11 +159,13 @@ export const mockSpecDocuments: ISpecDocument[] = [
     edgeCases: [
       {
         scenario: 'User clicks invitation link after it expired',
-        expectedBehavior: 'Show friendly error message with option to request new invitation',
+        expectedBehavior:
+          'Show friendly error message with option to request new invitation',
       },
       {
         scenario: 'User is invited to multiple teams simultaneously',
-        expectedBehavior: 'Each invitation is independent; user can accept each separately',
+        expectedBehavior:
+          'Each invitation is independent; user can accept each separately',
       },
       {
         scenario: 'Admin invites themselves',
@@ -219,7 +239,10 @@ export const mockSpecDocuments: ISpecDocument[] = [
         expectedBehavior: 'Show message that content no longer exists',
       },
     ],
-    assumptions: ['Users have browser notifications permission', 'Application is open in browser'],
+    assumptions: [
+      'Users have browser notifications permission',
+      'Application is open in browser',
+    ],
     version: 1,
     generatedAt: new Date('2024-11-25T15:00:00'),
     updatedAt: new Date('2024-11-25T15:00:00'),
@@ -305,23 +328,28 @@ export const mockSpecDocuments: ISpecDocument[] = [
     openQuestions: [
       {
         id: 'oq-10',
-        question: 'Should filters be AND or OR logic when multiple are selected?',
-        answer: 'AND logic - users want to narrow down results, not expand them',
+        question:
+          'Should filters be AND or OR logic when multiple are selected?',
+        answer:
+          'AND logic - users want to narrow down results, not expand them',
         askedBy: 'user-2',
         answeredBy: 'user-1',
         resolved: true,
       },
       {
         id: 'oq-11',
-        question: 'Should we show filter options that would result in zero results?',
-        answer: 'Yes, but disable them visually and show count (0) to set expectations',
+        question:
+          'Should we show filter options that would result in zero results?',
+        answer:
+          'Yes, but disable them visually and show count (0) to set expectations',
         askedBy: 'user-4',
         answeredBy: 'user-1',
         resolved: true,
       },
       {
         id: 'oq-12',
-        question: 'What date range presets should we include (last 7 days, last month, etc.)?',
+        question:
+          'What date range presets should we include (last 7 days, last month, etc.)?',
         answer: 'Last 7 days, Last 30 days, Last 90 days, Custom range',
         askedBy: 'user-2',
         answeredBy: 'user-1',
@@ -331,7 +359,8 @@ export const mockSpecDocuments: ISpecDocument[] = [
     edgeCases: [
       {
         scenario: 'User selects end date before start date',
-        expectedBehavior: 'Automatically swap dates or show validation error with helpful message',
+        expectedBehavior:
+          'Automatically swap dates or show validation error with helpful message',
       },
       {
         scenario: 'User applies filters that result in zero matches',
@@ -340,15 +369,18 @@ export const mockSpecDocuments: ISpecDocument[] = [
       },
       {
         scenario: 'Tag is deleted while user has it selected as filter',
-        expectedBehavior: 'Remove the filter automatically and show notification to user',
+        expectedBehavior:
+          'Remove the filter automatically and show notification to user',
       },
       {
         scenario: 'Very large number of tags (100+) in filter dropdown',
-        expectedBehavior: 'Implement search within tags and virtual scrolling for performance',
+        expectedBehavior:
+          'Implement search within tags and virtual scrolling for performance',
       },
       {
         scenario: 'Network error while applying filters',
-        expectedBehavior: 'Show error toast, keep previous results visible, allow retry',
+        expectedBehavior:
+          'Show error toast, keep previous results visible, allow retry',
       },
     ],
     assumptions: [

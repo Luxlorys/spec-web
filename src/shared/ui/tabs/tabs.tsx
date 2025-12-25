@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+
 import * as TabsPrimitive from '@radix-ui/react-tabs';
 
 import { cn } from 'shared/lib';
@@ -15,11 +16,12 @@ const TabsList = React.forwardRef<
     ref={ref}
     className={cn(
       'inline-flex h-9 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground',
-      className
+      className,
     )}
     {...props}
   />
 ));
+
 TabsList.displayName = TabsPrimitive.List.displayName;
 
 const TabsTrigger = React.forwardRef<
@@ -32,7 +34,7 @@ const TabsTrigger = React.forwardRef<
     ref={ref}
     className={cn(
       'inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow',
-      className
+      className,
     )}
     {...props}
   >
@@ -44,6 +46,7 @@ const TabsTrigger = React.forwardRef<
     )}
   </TabsPrimitive.Trigger>
 ));
+
 TabsTrigger.displayName = TabsPrimitive.Trigger.displayName;
 
 const TabsContent = React.forwardRef<
@@ -54,11 +57,12 @@ const TabsContent = React.forwardRef<
     ref={ref}
     className={cn(
       'mt-4 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-      className
+      className,
     )}
     {...props}
   />
 ));
+
 TabsContent.displayName = TabsPrimitive.Content.displayName;
 
 interface ITab {
@@ -77,8 +81,8 @@ interface ITabsProps {
 const Tabs: React.FC<ITabsProps> = ({ tabs, defaultTab, className }) => {
   return (
     <TabsRoot defaultValue={defaultTab || tabs[0]?.id} className={className}>
-      <TabsList className="w-full justify-start bg-transparent border-b border-border rounded-none h-auto p-0 gap-6">
-        {tabs.map((tab) => (
+      <TabsList className="h-auto w-full justify-start gap-6 rounded-none border-b border-border bg-transparent p-0">
+        {tabs.map(tab => (
           <TabsTrigger
             key={tab.id}
             value={tab.id}
@@ -89,7 +93,7 @@ const Tabs: React.FC<ITabsProps> = ({ tabs, defaultTab, className }) => {
           </TabsTrigger>
         ))}
       </TabsList>
-      {tabs.map((tab) => (
+      {tabs.map(tab => (
         <TabsContent key={tab.id} value={tab.id} className="mt-6">
           {tab.content}
         </TabsContent>

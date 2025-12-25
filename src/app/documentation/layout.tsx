@@ -9,7 +9,7 @@ interface Props {
   children: ReactNode;
 }
 
-export default function SettingsLayout({ children }: Props) {
+export default function DocumentationLayout({ children }: Props) {
   return (
     <SidebarProvider>
       <AppSidebar />

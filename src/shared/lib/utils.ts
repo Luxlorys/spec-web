@@ -31,10 +31,19 @@ export const formatRelativeTime = (date: Date): string => {
   const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
   const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
 
-  if (diffInMinutes < 1) return 'just now';
-  if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-  if (diffInHours < 24) return `${diffInHours}h ago`;
-  if (diffInDays < 7) return `${diffInDays}d ago`;
+  if (diffInMinutes < 1) {
+    return 'just now';
+  }
+  if (diffInMinutes < 60) {
+    return `${diffInMinutes}m ago`;
+  }
+  if (diffInHours < 24) {
+    return `${diffInHours}h ago`;
+  }
+  if (diffInDays < 7) {
+    return `${diffInDays}d ago`;
+  }
+
   return formatDate(date);
 };
 
@@ -48,8 +57,11 @@ export const getInitials = (name: string): string => {
 };
 
 export const truncate = (text: string, maxLength: number): string => {
-  if (text.length <= maxLength) return text;
-  return text.slice(0, maxLength) + '...';
+  if (text.length <= maxLength) {
+    return text;
+  }
+
+  return `${text.slice(0, maxLength)}...`;
 };
 
 /**
@@ -62,11 +74,13 @@ export async function copyToClipboard(text: string): Promise<boolean> {
     // Modern clipboard API
     if (navigator.clipboard && window.isSecureContext) {
       await navigator.clipboard.writeText(text);
+
       return true;
     }
 
     // Fallback for older browsers
     const textarea = document.createElement('textarea');
+
     textarea.value = text;
     textarea.style.position = 'fixed';
     textarea.style.left = '-999999px';
@@ -76,11 +90,13 @@ export async function copyToClipboard(text: string): Promise<boolean> {
     textarea.select();
 
     const success = document.execCommand('copy');
+
     document.body.removeChild(textarea);
 
     return success;
   } catch (error) {
     console.error('Failed to copy to clipboard:', error);
+
     return false;
   }
 }

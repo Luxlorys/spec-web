@@ -1,7 +1,9 @@
 'use client';
 
 import { FC, useState } from 'react';
+
 import { Plus } from 'lucide-react';
+
 import { useCreateOpenQuestion } from 'shared/hooks';
 import { Button, Textarea } from 'shared/ui';
 
@@ -18,7 +20,9 @@ export const OpenQuestionForm: FC<IOpenQuestionFormProps> = ({ specId }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!questionText.trim()) return;
+    if (!questionText.trim()) {
+      return;
+    }
 
     createMutation.mutate(
       {
@@ -51,9 +55,15 @@ export const OpenQuestionForm: FC<IOpenQuestionFormProps> = ({ specId }) => {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
+    <form
+      onSubmit={handleSubmit}
+      className="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50"
+    >
       <div className="mb-3">
-        <label htmlFor="new-question" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label
+          htmlFor="new-question"
+          className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
           New Question
         </label>
         <Textarea

@@ -1,14 +1,17 @@
 'use client';
 
 import { FC } from 'react';
+
 import Link from 'next/link';
+
 import { Calendar, User, UserCheck } from 'lucide-react';
-import { IFeatureRequest } from 'shared/types';
-import { Card, Badge, Avatar } from 'shared/ui';
-import { formatRelativeTime } from 'shared/lib';
-import { cn } from 'shared/lib';
-import { StatusBadge } from '../status-badge';
+
+import { cn, formatRelativeTime } from 'shared/lib';
 import { mockUsers } from 'shared/lib/mock-data';
+import { IFeatureRequest } from 'shared/types';
+import { Avatar, Badge, Card } from 'shared/ui';
+
+import { StatusBadge } from '../status-badge';
 
 interface IProps {
   feature: IFeatureRequest;
@@ -28,7 +31,9 @@ export const FeatureCard: FC<IProps> = ({ feature, variant = 'grid' }) => {
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-3">
-                <h3 className="font-semibold text-foreground">{feature.title}</h3>
+                <h3 className="font-semibold text-foreground">
+                  {feature.title}
+                </h3>
                 <StatusBadge status={feature.status} />
               </div>
               {feature.initialContext && (
@@ -46,7 +51,11 @@ export const FeatureCard: FC<IProps> = ({ feature, variant = 'grid' }) => {
               )}
               {assignee ? (
                 <div className="flex items-center gap-1.5">
-                  <Avatar src={assignee.avatarUrl} alt={assignee.name} size="xs" />
+                  <Avatar
+                    src={assignee.avatarUrl}
+                    alt={assignee.name}
+                    size="xs"
+                  />
                   <span>{assignee.name}</span>
                 </div>
               ) : (
@@ -83,7 +92,9 @@ export const FeatureCard: FC<IProps> = ({ feature, variant = 'grid' }) => {
 
         {/* Title and description */}
         <div className="mb-4 flex-1">
-          <h3 className="mb-2 font-semibold text-foreground line-clamp-2">{feature.title}</h3>
+          <h3 className="mb-2 line-clamp-2 font-semibold text-foreground">
+            {feature.title}
+          </h3>
           {feature.initialContext && (
             <p className="line-clamp-2 text-sm text-muted-foreground">
               {feature.initialContext}

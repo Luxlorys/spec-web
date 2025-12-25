@@ -1,4 +1,8 @@
-export type FeatureStatus = 'draft' | 'spec_generated' | 'ready_to_build' | 'completed';
+export type FeatureStatus =
+  | 'draft'
+  | 'spec_generated'
+  | 'ready_to_build'
+  | 'completed';
 
 export interface IFeatureRequest {
   id: string;

@@ -1,12 +1,14 @@
 'use client';
 
 import { FC, useState } from 'react';
+
 import { FileCode } from 'lucide-react';
-import { Button } from 'shared/ui';
-import { ISpecDocument, IComment } from 'shared/types';
+
+import { useGetCommentsBySpec } from 'shared/hooks';
+import { IComment, ISpecDocument } from 'shared/types';
+
 import { generateAIPrompt } from '../../lib';
 import { PromptPreviewSheet } from '../prompt-preview-sheet';
-import { useGetCommentsBySpec } from 'shared/hooks';
 
 interface IProps {
   spec: ISpecDocument;
@@ -18,11 +20,14 @@ export const GeneratePromptButton: FC<IProps> = ({ spec, featureTitle }) => {
   const [generatedPrompt, setGeneratedPrompt] = useState('');
 
   // Fetch all comments for the spec (we'll filter resolved ones)
-  const { data: allComments = [], isLoading: isLoadingComments } = useGetCommentsBySpec(spec.id);
+  const { data: allComments = [], isLoading: isLoadingComments } =
+    useGetCommentsBySpec(spec.id);
 
   const handleGeneratePrompt = () => {
     // Filter for resolved comments only
-    const resolvedComments: IComment[] = allComments.filter(comment => comment.resolved);
+    const resolvedComments: IComment[] = allComments.filter(
+      comment => comment.resolved,
+    );
 
     // Generate the prompt
     const prompt = generateAIPrompt({

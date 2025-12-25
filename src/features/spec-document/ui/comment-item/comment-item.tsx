@@ -1,13 +1,15 @@
 'use client';
 
 import { FC, useState } from 'react';
-import { Reply, Edit2, Trash2 } from 'lucide-react';
+
+import { Edit2, Reply, Trash2 } from 'lucide-react';
+
+import { useDeleteComment, useUpdateComment } from 'shared/hooks';
+import { formatRelativeTime } from 'shared/lib';
+import { mockUsers } from 'shared/lib/mock-data';
+import { useAuthStore } from 'shared/store';
 import { IComment } from 'shared/types';
 import { Avatar, Button } from 'shared/ui';
-import { formatRelativeTime } from 'shared/lib';
-import { useUpdateComment, useDeleteComment } from 'shared/hooks';
-import { useAuthStore } from 'shared/store';
-import { mockUsers } from 'shared/lib/mock-data';
 
 interface ICommentItemProps {
   comment: IComment;
@@ -15,7 +17,11 @@ interface ICommentItemProps {
   isReply?: boolean;
 }
 
-export const CommentItem: FC<ICommentItemProps> = ({ comment, onReply, isReply = false }) => {
+export const CommentItem: FC<ICommentItemProps> = ({
+  comment,
+  onReply,
+  isReply = false,
+}) => {
   const currentUser = useAuthStore(state => state.user);
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(comment.content);
@@ -38,6 +44,7 @@ export const CommentItem: FC<ICommentItemProps> = ({ comment, onReply, isReply =
   const handleSaveEdit = async () => {
     if (editContent.trim() === comment.content) {
       setIsEditing(false);
+
       return;
     }
 
@@ -53,7 +60,9 @@ export const CommentItem: FC<ICommentItemProps> = ({ comment, onReply, isReply =
   };
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this comment?')) return;
+    if (!confirm('Are you sure you want to delete this comment?')) {
+      return;
+    }
 
     try {
       await deleteMutation.mutateAsync({
@@ -70,7 +79,11 @@ export const CommentItem: FC<ICommentItemProps> = ({ comment, onReply, isReply =
     <div className="group rounded-lg p-3 hover:bg-gray-50 dark:hover:bg-gray-800/50">
       {/* Header */}
       <div className="mb-2 flex items-start gap-3">
-        <Avatar src={author?.avatarUrl} alt={author?.name || 'User'} size="sm" />
+        <Avatar
+          src={author?.avatarUrl}
+          alt={author?.name || 'User'}
+          size="sm"
+        />
 
         <div className="flex-1">
           <div className="flex items-baseline gap-2">
@@ -81,7 +94,9 @@ export const CommentItem: FC<ICommentItemProps> = ({ comment, onReply, isReply =
               {formatRelativeTime(comment.createdAt)}
             </span>
             {isUpdated && (
-              <span className="text-xs text-gray-400 dark:text-gray-500">(edited)</span>
+              <span className="text-xs text-gray-400 dark:text-gray-500">
+                (edited)
+              </span>
             )}
           </div>
         </div>
@@ -90,7 +105,9 @@ export const CommentItem: FC<ICommentItemProps> = ({ comment, onReply, isReply =
       {/* Content */}
       <div className="ml-11">
         {isReply && (
-          <div className="mb-1 text-sm text-gray-400 dark:text-gray-500">...</div>
+          <div className="mb-1 text-sm text-gray-400 dark:text-gray-500">
+            ...
+          </div>
         )}
 
         {isEditing ? (
@@ -103,7 +120,11 @@ export const CommentItem: FC<ICommentItemProps> = ({ comment, onReply, isReply =
               autoFocus
             />
             <div className="flex gap-2">
-              <Button size="sm" onClick={handleSaveEdit} isLoading={updateMutation.isPending}>
+              <Button
+                size="sm"
+                onClick={handleSaveEdit}
+                isLoading={updateMutation.isPending}
+              >
                 Save
               </Button>
               <Button size="sm" variant="outline" onClick={handleCancelEdit}>

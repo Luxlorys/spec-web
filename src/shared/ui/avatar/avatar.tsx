@@ -1,4 +1,5 @@
 import { FC } from 'react';
+
 import { cn } from 'shared/lib';
 
 interface IProps {
@@ -31,7 +32,11 @@ export const Avatar: FC<IProps> = ({ src, alt, size = 'md', className }) => {
       )}
     >
       {src ? (
-        <img src={src} alt={alt} className="h-full w-full rounded-full object-cover" />
+        <img
+          src={src}
+          alt={alt}
+          className="h-full w-full rounded-full object-cover"
+        />
       ) : (
         <span>{initials}</span>
       )}

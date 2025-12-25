@@ -1,9 +1,8 @@
 'use client';
 
 import { FC } from 'react';
-import { IConversationMessage } from 'shared/types';
-import { formatDateTime } from 'shared/lib';
-import { cn } from 'shared/lib';
+
+import { cn, formatDateTime , cn } from 'shared/lib';
 
 interface IProps {
   message: IConversationMessage;
@@ -23,7 +22,9 @@ export const Message: FC<IProps> = ({ message }) => {
               : 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100',
           )}
         >
-          <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</p>
+          <p className="whitespace-pre-wrap text-sm leading-relaxed">
+            {message.content}
+          </p>
         </div>
         <p
           className={cn(

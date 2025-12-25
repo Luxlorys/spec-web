@@ -33,4 +33,7 @@ export enum QueryKeys {
 
   // Users
   USERS = 'users',
+
+  // Documentation
+  DOCUMENTATION = 'documentation',
 }

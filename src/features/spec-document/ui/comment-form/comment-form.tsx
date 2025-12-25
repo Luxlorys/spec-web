@@ -1,8 +1,10 @@
 'use client';
 
-import { FC, useState, FormEvent } from 'react';
-import { Textarea, Button } from 'shared/ui';
+import { FC, FormEvent, useState } from 'react';
+
 import { useCreateComment } from 'shared/hooks';
+import { Button, Textarea } from 'shared/ui';
+
 import { validateCommentContent } from '../../lib/validation';
 
 interface ICommentFormProps {
@@ -32,8 +34,10 @@ export const CommentForm: FC<ICommentFormProps> = ({
 
     // Validate
     const validationError = validateCommentContent(content);
+
     if (validationError) {
       setError(validationError);
+
       return;
     }
 
@@ -73,7 +77,9 @@ export const CommentForm: FC<ICommentFormProps> = ({
         value={content}
         onChange={e => {
           setContent(e.target.value);
-          if (error) setError(null);
+          if (error) {
+            setError(null);
+          }
         }}
         placeholder={placeholder}
         rows={3}
@@ -83,11 +89,18 @@ export const CommentForm: FC<ICommentFormProps> = ({
       />
 
       <div className="flex items-center justify-between">
-        <span className="text-sm text-gray-500 dark:text-gray-400">{content.length}/1000</span>
+        <span className="text-sm text-gray-500 dark:text-gray-400">
+          {content.length}/1000
+        </span>
 
         <div className="flex gap-2">
           {isReply && (
-            <Button type="button" variant="outline" size="sm" onClick={handleCancel}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleCancel}
+            >
               Cancel
             </Button>
           )}

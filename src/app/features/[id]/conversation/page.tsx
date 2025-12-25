@@ -1,8 +1,11 @@
 'use client';
 
 import { use } from 'react';
+
 import Link from 'next/link';
+
 import { useQuery } from '@tanstack/react-query';
+
 import { ChatInterface } from 'features/ai-conversation';
 import { featureRequestsApi } from 'shared/api/feature-requests';
 import { QueryKeys } from 'shared/constants';
@@ -31,7 +34,7 @@ function ConversationContent({ featureId }: { featureId: string }) {
   }
 
   return (
-    <main className="flex flex-col h-full">
+    <main className="flex h-full flex-col">
       {/* Header */}
       <div className="border-b bg-background px-6 py-4">
         <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
@@ -77,5 +80,6 @@ interface IProps {
 
 export default function ConversationPage({ params }: IProps) {
   const { id } = use(params);
+
   return <ConversationContent featureId={id} />;
 }

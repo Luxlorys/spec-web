@@ -1,14 +1,18 @@
 'use client';
 
-import { FC, useState, useRef, useEffect } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { FC, useEffect, useRef, useState } from 'react';
+
 import { useRouter } from 'next/navigation';
+
+import { useMutation, useQuery } from '@tanstack/react-query';
+
 import { conversationsApi } from 'shared/api/conversations';
 import { QueryKeys } from 'shared/constants';
-import { Button, Textarea, Card } from 'shared/ui';
+import { queryClient } from 'shared/lib';
+import { Button, Card, Textarea } from 'shared/ui';
+
 import { Message } from '../message';
 import { ThinkingIndicator } from '../thinking-indicator';
-import { queryClient } from 'shared/lib';
 
 interface IProps {
   featureId: string;
@@ -28,7 +32,9 @@ export const ChatInterface: FC<IProps> = ({ featureId }) => {
       if (!existing && !isInitializing) {
         setIsInitializing(true);
         const newConv = await conversationsApi.createConversation(featureId);
+
         setIsInitializing(false);
+
         return newConv;
       }
 
@@ -38,18 +44,27 @@ export const ChatInterface: FC<IProps> = ({ featureId }) => {
 
   const sendMessageMutation = useMutation({
     mutationFn: (content: string) => {
-      if (!conversation) throw new Error('No conversation');
+      if (!conversation) {
+        throw new Error('No conversation');
+      }
+
       return conversationsApi.sendMessage(conversation.id, { content });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QueryKeys.CONVERSATION_BY_FEATURE, featureId] });
-      queryClient.invalidateQueries({ queryKey: [QueryKeys.FEATURE_REQUEST_BY_ID, featureId] });
+      queryClient.invalidateQueries({
+        queryKey: [QueryKeys.CONVERSATION_BY_FEATURE, featureId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QueryKeys.FEATURE_REQUEST_BY_ID, featureId],
+      });
       setInputValue('');
     },
   });
 
   const handleSend = () => {
-    if (!inputValue.trim() || sendMessageMutation.isPending) return;
+    if (!inputValue.trim() || sendMessageMutation.isPending) {
+      return;
+    }
     sendMessageMutation.mutate(inputValue);
   };
 
@@ -96,9 +111,12 @@ export const ChatInterface: FC<IProps> = ({ featureId }) => {
                   Conversation Complete!
                 </h3>
                 <p className="mb-4 text-sm text-green-800 dark:text-green-200">
-                  The specification document has been generated and is ready for review.
+                  The specification document has been generated and is ready for
+                  review.
                 </p>
-                <Button onClick={handleViewSpec}>View Specification Document</Button>
+                <Button onClick={handleViewSpec}>
+                  View Specification Document
+                </Button>
               </div>
             </Card>
           )}

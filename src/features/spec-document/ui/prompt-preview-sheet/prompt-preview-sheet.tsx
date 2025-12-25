@@ -1,17 +1,19 @@
 'use client';
 
 import { FC, useState } from 'react';
+
 import { Check, Copy } from 'lucide-react';
+
+import { copyToClipboard } from 'shared/lib';
+import { Button } from 'shared/ui';
 import {
   Sheet,
   SheetContent,
   SheetDescription,
+  SheetFooter,
   SheetHeader,
   SheetTitle,
-  SheetFooter,
 } from 'shared/ui/sheet';
-import { Button } from 'shared/ui';
-import { copyToClipboard } from 'shared/lib';
 
 interface IProps {
   isOpen: boolean;
@@ -19,7 +21,11 @@ interface IProps {
   promptText: string;
 }
 
-export const PromptPreviewSheet: FC<IProps> = ({ isOpen, onClose, promptText }) => {
+export const PromptPreviewSheet: FC<IProps> = ({
+  isOpen,
+  onClose,
+  promptText,
+}) => {
   const [isCopied, setIsCopied] = useState(false);
   const [copyError, setCopyError] = useState<string | null>(null);
 
@@ -43,7 +49,10 @@ export const PromptPreviewSheet: FC<IProps> = ({ isOpen, onClose, promptText }) 
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-2xl">
+      <SheetContent
+        side="right"
+        className="w-full overflow-y-auto sm:max-w-2xl"
+      >
         <SheetHeader>
           <SheetTitle>Generated AI Prompt</SheetTitle>
           <SheetDescription>
@@ -56,7 +65,9 @@ export const PromptPreviewSheet: FC<IProps> = ({ isOpen, onClose, promptText }) 
           <div className="flex items-center justify-between text-sm text-gray-500">
             <span>{characterCount.toLocaleString()} characters</span>
             {characterCount > 10000 && (
-              <span className="text-yellow-600">Large prompt - consider breaking into sections</span>
+              <span className="text-yellow-600">
+                Large prompt - consider breaking into sections
+              </span>
             )}
           </div>
 
@@ -65,7 +76,7 @@ export const PromptPreviewSheet: FC<IProps> = ({ isOpen, onClose, promptText }) 
             readOnly
             value={promptText}
             className="min-h-[500px] w-full resize-y rounded-md border border-input bg-muted px-3 py-2 font-mono text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            onClick={(e) => {
+            onClick={e => {
               // Auto-select all text on click
               (e.target as HTMLTextAreaElement).select();
             }}

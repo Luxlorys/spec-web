@@ -8,7 +8,8 @@ export const mockFeatureRequests: IFeatureRequest[] = [
     createdBy: 'user-1',
     assignedTo: 'user-2',
     status: 'completed',
-    initialContext: 'Need a secure way for users to login and manage their accounts',
+    initialContext:
+      'Need a secure way for users to login and manage their accounts',
     conversationId: 'conv-1',
     specDocumentId: 'spec-1',
     openQuestionsCount: 0,

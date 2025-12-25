@@ -1,12 +1,19 @@
 'use client';
 
 import Link from 'next/link';
-import { useQuery, useMutation } from '@tanstack/react-query';
+
+import { useMutation, useQuery } from '@tanstack/react-query';
+
+import { StatusBadge } from 'features/feature-requests';
+import { SpecView } from 'features/spec-document';
 import { featureRequestsApi } from 'shared/api/feature-requests';
 import { specDocumentsApi } from 'shared/api/spec-documents';
 import { usersApi } from 'shared/api/users';
 import { QueryKeys } from 'shared/constants';
-import { Button, Tabs, Card, EmptyState, Avatar } from 'shared/ui';
+import { formatRelativeTime, queryClient , formatRelativeTime } from 'shared/lib';
+import { mockUsers } from 'shared/lib/mock-data';
+import { FeatureStatus } from 'shared/types';
+import { Avatar, Button, Card, EmptyState, Tabs } from 'shared/ui';
 import {
   Select,
   SelectContent,
@@ -14,13 +21,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from 'shared/ui/select';
-import { StatusBadge } from 'features/feature-requests';
-import { SpecView } from 'features/spec-document';
-import { queryClient } from 'shared/lib';
-import { mockUsers } from 'shared/lib/mock-data';
-import { formatRelativeTime } from 'shared/lib';
-import { FeatureStatus } from 'shared/types';
-import { useAuthStore } from 'shared/store';
 
 const statusOptions: { value: FeatureStatus; label: string }[] = [
   { value: 'draft', label: 'Draft' },
@@ -95,9 +95,9 @@ export function FeatureDetailClient({ featureId }: IProps) {
     );
   }
 
-  const creator = mockUsers.find((u) => u.id === feature.createdBy);
+  const creator = mockUsers.find(u => u.id === feature.createdBy);
   const assignee = feature.assignedTo
-    ? mockUsers.find((u) => u.id === feature.assignedTo)
+    ? mockUsers.find(u => u.id === feature.assignedTo)
     : null;
 
   const createdAt = new Date(feature.createdAt);
@@ -124,7 +124,7 @@ export function FeatureDetailClient({ featureId }: IProps) {
                 <dd>
                   <Select
                     value={feature.status}
-                    onValueChange={(value) =>
+                    onValueChange={value =>
                       updateStatusMutation.mutate(value as FeatureStatus)
                     }
                     disabled={updateStatusMutation.isPending}
@@ -133,7 +133,7 @@ export function FeatureDetailClient({ featureId }: IProps) {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {statusOptions.map((option) => (
+                      {statusOptions.map(option => (
                         <SelectItem key={option.value} value={option.value}>
                           {option.label}
                         </SelectItem>
@@ -150,9 +150,9 @@ export function FeatureDetailClient({ featureId }: IProps) {
                 <dd>
                   <Select
                     value={feature.assignedTo || 'unassigned'}
-                    onValueChange={(value) =>
+                    onValueChange={value =>
                       updateAssigneeMutation.mutate(
-                        value === 'unassigned' ? undefined : value
+                        value === 'unassigned' ? undefined : value,
                       )
                     }
                     disabled={updateAssigneeMutation.isPending}
@@ -162,7 +162,7 @@ export function FeatureDetailClient({ featureId }: IProps) {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="unassigned">Unassigned</SelectItem>
-                      {teamMembers?.map((member) => (
+                      {teamMembers?.map(member => (
                         <SelectItem key={member.id} value={member.id}>
                           <div className="flex items-center gap-2">
                             <Avatar
@@ -272,8 +272,8 @@ export function FeatureDetailClient({ featureId }: IProps) {
           <div className="space-y-4">
             <div className="flex gap-3">
               <div className="flex-shrink-0">
-                <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center dark:bg-purple-900/50">
-                  <span className="text-purple-600 dark:text-purple-300 text-sm">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/50">
+                  <span className="text-sm text-purple-600 dark:text-purple-300">
                     📝
                   </span>
                 </div>
@@ -292,8 +292,8 @@ export function FeatureDetailClient({ featureId }: IProps) {
             {updatedAt.getTime() !== createdAt.getTime() && (
               <div className="flex gap-3">
                 <div className="flex-shrink-0">
-                  <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center dark:bg-purple-900">
-                    <span className="text-purple-600 dark:text-purple-300 text-sm">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900">
+                    <span className="text-sm text-purple-600 dark:text-purple-300">
                       🔄
                     </span>
                   </div>

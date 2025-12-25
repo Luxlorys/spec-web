@@ -1,11 +1,25 @@
 'use client';
 
 import { useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+
 import Link from 'next/link';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Shield, Trash2, AlertTriangle, Sparkles } from 'lucide-react';
-import { Button, Card, Avatar, Badge, Label } from 'shared/ui';
+import { useParams, useRouter } from 'next/navigation';
+
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  AlertTriangle,
+  ArrowLeft,
+  Shield,
+  Sparkles,
+  Trash2,
+} from 'lucide-react';
+
+import { usersApi } from 'shared/api/users';
+import { QueryKeys } from 'shared/constants';
+import { formatDate } from 'shared/lib';
+import { useAuthStore } from 'shared/store';
+import { UserRole } from 'shared/types';
+import { Avatar, Badge, Button, Card, Label } from 'shared/ui';
 import {
   Select,
   SelectContent,
@@ -13,19 +27,38 @@ import {
   SelectTrigger,
   SelectValue,
 } from 'shared/ui/select';
-import { usersApi } from 'shared/api/users';
-import { useAuthStore } from 'shared/store';
-import { QueryKeys } from 'shared/constants';
-import { formatDate } from 'shared/lib';
-import { UserRole } from 'shared/types';
 
 const roleOptions: { value: UserRole; label: string; description: string }[] = [
-  { value: 'founder', label: 'Founder', description: 'Full access to all features and settings' },
-  { value: 'admin', label: 'Admin', description: 'Can manage team members and settings' },
-  { value: 'pm', label: 'Project Manager', description: 'Can manage features and specifications' },
-  { value: 'ba', label: 'Business Analyst', description: 'Can create and edit specifications' },
-  { value: 'developer', label: 'Developer', description: 'Can view and comment on specifications' },
-  { value: 'designer', label: 'Designer', description: 'Can view and comment on specifications' },
+  {
+    value: 'founder',
+    label: 'Founder',
+    description: 'Full access to all features and settings',
+  },
+  {
+    value: 'admin',
+    label: 'Admin',
+    description: 'Can manage team members and settings',
+  },
+  {
+    value: 'pm',
+    label: 'Project Manager',
+    description: 'Can manage features and specifications',
+  },
+  {
+    value: 'ba',
+    label: 'Business Analyst',
+    description: 'Can create and edit specifications',
+  },
+  {
+    value: 'developer',
+    label: 'Developer',
+    description: 'Can view and comment on specifications',
+  },
+  {
+    value: 'designer',
+    label: 'Designer',
+    description: 'Can view and comment on specifications',
+  },
 ];
 
 function TeamMemberContent() {
@@ -78,7 +111,8 @@ function TeamMemberContent() {
     removeMemberMutation.mutate();
   };
 
-  const isCurrentUserAdmin = currentUser?.role === 'founder' || currentUser?.role === 'admin';
+  const isCurrentUserAdmin =
+    currentUser?.role === 'founder' || currentUser?.role === 'admin';
   const isFounder = member?.role === 'founder';
   const isSelf = member?.id === currentUser?.id;
   const canChangeRole = isCurrentUserAdmin && !isFounder;
@@ -107,9 +141,12 @@ function TeamMemberContent() {
     return (
       <main className="p-6">
         <Card className="border p-6 text-center">
-          <h2 className="mb-2 text-lg font-semibold text-foreground">Member not found</h2>
+          <h2 className="mb-2 text-lg font-semibold text-foreground">
+            Member not found
+          </h2>
           <p className="mb-4 text-sm text-muted-foreground">
-            The team member you're looking for doesn't exist or has been removed.
+            The team member you're looking for doesn't exist or has been
+            removed.
           </p>
           <Link href="/team">
             <Button variant="outline">Back to Team</Button>
@@ -130,7 +167,9 @@ function TeamMemberContent() {
           <ArrowLeft className="h-4 w-4" />
           Back to Team
         </Link>
-        <h1 className="text-2xl font-bold text-foreground">Manage Team Member</h1>
+        <h1 className="text-2xl font-bold text-foreground">
+          Manage Team Member
+        </h1>
         <p className="text-sm text-muted-foreground">
           View and manage permissions for this team member
         </p>
@@ -142,7 +181,9 @@ function TeamMemberContent() {
           <Avatar src={member.avatarUrl} alt={member.name} size="lg" />
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <h2 className="text-xl font-semibold text-foreground">{member.name}</h2>
+              <h2 className="text-xl font-semibold text-foreground">
+                {member.name}
+              </h2>
               {isSelf && (
                 <Badge variant="blue" size="sm">
                   You
@@ -174,7 +215,7 @@ function TeamMemberContent() {
                 ? "The founder's role cannot be changed."
                 : !isCurrentUserAdmin
                   ? 'You need admin permissions to change member roles.'
-                  : "You cannot change your own role."}
+                  : 'You cannot change your own role.'}
             </p>
           </div>
         ) : (
@@ -183,15 +224,15 @@ function TeamMemberContent() {
               <Label className="mb-2 block">Role</Label>
               <Select
                 value={selectedRole || member.role}
-                onValueChange={(value) => setSelectedRole(value as UserRole)}
+                onValueChange={value => setSelectedRole(value as UserRole)}
               >
                 <SelectTrigger className="w-full max-w-xs">
                   <SelectValue placeholder="Select a role" />
                 </SelectTrigger>
                 <SelectContent>
                   {roleOptions
-                    .filter((r) => r.value !== 'founder')
-                    .map((role) => (
+                    .filter(r => r.value !== 'founder')
+                    .map(role => (
                       <SelectItem key={role.value} value={role.value}>
                         <div className="flex flex-col">
                           <span>{role.label}</span>
@@ -201,7 +242,11 @@ function TeamMemberContent() {
                 </SelectContent>
               </Select>
               <p className="mt-2 text-sm text-muted-foreground">
-                {roleOptions.find((r) => r.value === (selectedRole || member.role))?.description}
+                {
+                  roleOptions.find(
+                    r => r.value === (selectedRole || member.role),
+                  )?.description
+                }
               </p>
             </div>
 
@@ -241,13 +286,13 @@ function TeamMemberContent() {
                   <input
                     type="checkbox"
                     checked={member.canCreateFeatures}
-                    onChange={(e) => {
+                    onChange={e => {
                       updateCanCreateFeaturesMutation.mutate(e.target.checked);
                     }}
                     disabled={updateCanCreateFeaturesMutation.isPending}
                     className="peer sr-only"
                   />
-                  <div className="h-5 w-9 rounded-full bg-muted peer-checked:bg-primary after:absolute after:left-[2px] after:top-[2px] after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-4 peer-disabled:cursor-not-allowed peer-disabled:opacity-50" />
+                  <div className="h-5 w-9 rounded-full bg-muted after:absolute after:left-[2px] after:top-[2px] after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-all peer-checked:bg-primary peer-checked:after:translate-x-4 peer-disabled:cursor-not-allowed peer-disabled:opacity-50" />
                 </label>
               </div>
               {updateCanCreateFeaturesMutation.isError && (
@@ -262,10 +307,15 @@ function TeamMemberContent() {
 
       {/* Danger Zone */}
       {canDelete && (
-        <Card className="border border-red-200 dark:border-red-900/50" padding="lg">
+        <Card
+          className="border border-red-200 dark:border-red-900/50"
+          padding="lg"
+        >
           <div className="mb-4 flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-red-500" />
-            <h3 className="text-lg font-semibold text-red-600 dark:text-red-400">Danger Zone</h3>
+            <h3 className="text-lg font-semibold text-red-600 dark:text-red-400">
+              Danger Zone
+            </h3>
           </div>
 
           {!showDeleteConfirm ? (
@@ -276,7 +326,10 @@ function TeamMemberContent() {
                   This member will lose access to the organization.
                 </p>
               </div>
-              <Button variant="danger" onClick={() => setShowDeleteConfirm(true)}>
+              <Button
+                variant="danger"
+                onClick={() => setShowDeleteConfirm(true)}
+              >
                 <Trash2 className="mr-2 h-4 w-4" />
                 Remove Member
               </Button>
@@ -284,8 +337,8 @@ function TeamMemberContent() {
           ) : (
             <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900/50 dark:bg-red-900/20">
               <p className="mb-4 text-sm text-red-800 dark:text-red-200">
-                Are you sure you want to remove <strong>{member.name}</strong> from the team? This
-                action cannot be undone.
+                Are you sure you want to remove <strong>{member.name}</strong>{' '}
+                from the team? This action cannot be undone.
               </p>
               <div className="flex gap-3">
                 <Button
@@ -293,9 +346,14 @@ function TeamMemberContent() {
                   onClick={handleDelete}
                   disabled={removeMemberMutation.isPending}
                 >
-                  {removeMemberMutation.isPending ? 'Removing...' : 'Yes, Remove Member'}
+                  {removeMemberMutation.isPending
+                    ? 'Removing...'
+                    : 'Yes, Remove Member'}
                 </Button>
-                <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowDeleteConfirm(false)}
+                >
                   Cancel
                 </Button>
               </div>

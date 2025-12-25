@@ -33,9 +33,11 @@ export const commentValidation = {
     },
     validate: (value: string) => {
       const trimmed = value.trim();
+
       if (trimmed.length === 0) {
         return 'Comment cannot be only whitespace';
       }
+
       return true;
     },
   },

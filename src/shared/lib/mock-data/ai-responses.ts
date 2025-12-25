@@ -1,8 +1,17 @@
+// Mock AI regeneration logic
+import type {
+  IComment,
+  IOpenQuestion,
+  IProposedChange,
+  ISpecDocument,
+} from 'shared/types';
+
 // Pre-scripted AI questions for the mock conversation flow
 export const aiQuestionFlow = [
   {
     step: 1,
-    question: "Let's start by understanding the core problem. Who is this feature for?",
+    question:
+      "Let's start by understanding the core problem. Who is this feature for?",
     keywords: ['user', 'users', 'team', 'admin', 'customer', 'people'],
   },
   {
@@ -12,7 +21,8 @@ export const aiQuestionFlow = [
   },
   {
     step: 3,
-    question: 'What does success look like? How will you know this feature is working well?',
+    question:
+      'What does success look like? How will you know this feature is working well?',
     keywords: ['success', 'metric', 'goal', 'outcome', 'result'],
   },
   {
@@ -23,13 +33,21 @@ export const aiQuestionFlow = [
   },
   {
     step: 5,
-    question: "What's explicitly NOT included in this feature? What are we saving for later?",
+    question:
+      "What's explicitly NOT included in this feature? What are we saving for later?",
     keywords: ['scope', 'out of scope', 'later', 'v2', 'future'],
   },
   {
     step: 6,
-    question: 'Are there any technical constraints or dependencies I should know about?',
-    keywords: ['technical', 'constraint', 'dependency', 'limitation', 'integration'],
+    question:
+      'Are there any technical constraints or dependencies I should know about?',
+    keywords: [
+      'technical',
+      'constraint',
+      'dependency',
+      'limitation',
+      'integration',
+    ],
   },
   {
     step: 7,
@@ -110,9 +128,6 @@ ${responses[5] ? `Technical considerations: ${responses[5]}` : ''}
 Does this match your vision? Should I proceed with generating the specification document?`;
 };
 
-// Mock AI regeneration logic
-import type { ISpecDocument, IComment, IOpenQuestion, IProposedChange } from 'shared/types';
-
 /**
  * Mock function that simulates AI regenerating a spec from discussions
  * In production, this would be replaced with actual Claude/OpenAI API call
@@ -120,12 +135,13 @@ import type { ISpecDocument, IComment, IOpenQuestion, IProposedChange } from 'sh
 export const generateRegeneratedSpec = (
   currentSpec: ISpecDocument,
   resolvedComments: IComment[],
-  answeredQuestions: IOpenQuestion[]
+  answeredQuestions: IOpenQuestion[],
 ): IProposedChange[] => {
   const changes: IProposedChange[] = [];
 
   // Group comments by section
   const commentsBySection: Record<string, IComment[]> = {};
+
   resolvedComments.forEach(comment => {
     if (!commentsBySection[comment.section]) {
       commentsBySection[comment.section] = [];
@@ -134,9 +150,12 @@ export const generateRegeneratedSpec = (
   });
 
   // Check technical considerations section for comments
-  if (commentsBySection['technical'] || commentsBySection['technical-considerations']) {
+  if (
+    commentsBySection.technical ||
+    commentsBySection['technical-considerations']
+  ) {
     const techComments = [
-      ...(commentsBySection['technical'] || []),
+      ...(commentsBySection.technical || []),
       ...(commentsBySection['technical-considerations'] || []),
     ];
 
@@ -144,9 +163,11 @@ export const generateRegeneratedSpec = (
 
     techComments.forEach(comment => {
       // Extract technical decisions from comments
-      if (comment.content.toLowerCase().includes('should use') ||
-          comment.content.toLowerCase().includes('need to') ||
-          comment.content.toLowerCase().includes('must')) {
+      if (
+        comment.content.toLowerCase().includes('should use') ||
+        comment.content.toLowerCase().includes('need to') ||
+        comment.content.toLowerCase().includes('must')
+      ) {
         newConsiderations.push(comment.content);
       }
     });
@@ -163,9 +184,13 @@ export const generateRegeneratedSpec = (
   }
 
   // Check for scope clarifications
-  if (commentsBySection['scope'] || commentsBySection['scope-included'] || commentsBySection['scope-excluded']) {
+  if (
+    commentsBySection.scope ||
+    commentsBySection['scope-included'] ||
+    commentsBySection['scope-excluded']
+  ) {
     const scopeComments = [
-      ...(commentsBySection['scope'] || []),
+      ...(commentsBySection.scope || []),
       ...(commentsBySection['scope-included'] || []),
       ...(commentsBySection['scope-excluded'] || []),
     ];
@@ -173,11 +198,17 @@ export const generateRegeneratedSpec = (
     const newExcluded = [...currentSpec.scopeExcluded];
 
     scopeComments.forEach(comment => {
-      if (comment.content.toLowerCase().includes('not include') ||
-          comment.content.toLowerCase().includes('out of scope') ||
-          comment.content.toLowerCase().includes('future version')) {
+      if (
+        comment.content.toLowerCase().includes('not include') ||
+        comment.content.toLowerCase().includes('out of scope') ||
+        comment.content.toLowerCase().includes('future version')
+      ) {
         // Extract what should be excluded
-        const extracted = comment.content.replace(/.*?(not include|out of scope|future version):?\s*/i, '');
+        const extracted = comment.content.replace(
+          /.*?(not include|out of scope|future version):?\s*/i,
+          '',
+        );
+
         if (extracted && extracted.length > 10) {
           newExcluded.push(extracted);
         }
@@ -202,6 +233,7 @@ export const generateRegeneratedSpec = (
     answeredQuestions.forEach(q => {
       if (q.answer && q.answer.trim().length > 0) {
         const assumption = `${q.question} - Decision: ${q.answer}`;
+
         newAssumptions.push(assumption);
       }
     });
@@ -220,10 +252,14 @@ export const generateRegeneratedSpec = (
   // Check for problem statement clarifications
   if (commentsBySection['problem-statement']) {
     const problemComments = commentsBySection['problem-statement'];
+
     if (problemComments.length > 0) {
       // In a real implementation, AI would synthesize comments into updated text
       // For mock, we'll append the first substantive comment
-      const substantiveComment = problemComments.find(c => c.content.length > 50);
+      const substantiveComment = problemComments.find(
+        c => c.content.length > 50,
+      );
+
       if (substantiveComment) {
         const proposedStatement = `${currentSpec.problemStatement} ${substantiveComment.content}`;
 
@@ -232,7 +268,8 @@ export const generateRegeneratedSpec = (
           currentValue: currentSpec.problemStatement,
           proposedValue: proposedStatement,
           changeType: 'modified',
-          reason: 'Enhanced problem statement with clarifications from team discussion',
+          reason:
+            'Enhanced problem statement with clarifications from team discussion',
         });
       }
     }
@@ -240,8 +277,15 @@ export const generateRegeneratedSpec = (
 
   // Mark unchanged sections
   const changedSections = new Set(changes.map(c => c.section));
-  const allSections = ['overview', 'problemStatement', 'userStories', 'scopeIncluded',
-                       'scopeExcluded', 'technicalConsiderations', 'assumptions'];
+  const allSections = [
+    'overview',
+    'problemStatement',
+    'userStories',
+    'scopeIncluded',
+    'scopeExcluded',
+    'technicalConsiderations',
+    'assumptions',
+  ];
 
   allSections.forEach(section => {
     if (!changedSections.has(section)) {
