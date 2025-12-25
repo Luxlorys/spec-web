@@ -78,6 +78,7 @@ export const OpenQuestionItem: FC<IOpenQuestionItemProps> = ({
   };
 
   const handleDelete = () => {
+    // eslint-disable-next-line no-alert
     if (window.confirm('Are you sure you want to delete this question?')) {
       deleteMutation.mutate({ specId, questionId: question.id });
     }
@@ -148,6 +149,7 @@ export const OpenQuestionItem: FC<IOpenQuestionItemProps> = ({
                 onClick={() => setIsEditingQuestion(true)}
                 className="rounded p-1 transition-colors hover:bg-black/5 dark:hover:bg-white/5"
                 title="Edit question"
+                aria-label="Edit question"
                 type="button"
               >
                 <Pencil className="h-4 w-4 text-gray-500" />
@@ -156,6 +158,7 @@ export const OpenQuestionItem: FC<IOpenQuestionItemProps> = ({
                 onClick={handleDelete}
                 className="rounded p-1 transition-colors hover:bg-black/5 dark:hover:bg-white/5"
                 title="Delete question"
+                aria-label="Delete question"
                 type="button"
                 disabled={deleteMutation.isPending}
               >
@@ -168,63 +171,73 @@ export const OpenQuestionItem: FC<IOpenQuestionItemProps> = ({
 
       {/* Answer */}
       <div className="mb-3">
-        {isEditingAnswer ? (
-          <div className="space-y-2">
-            <Textarea
-              value={editedAnswer}
-              onChange={e => setEditedAnswer(e.target.value)}
-              placeholder="Type your answer here..."
-              className="min-h-[80px]"
-              autoFocus
-            />
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                onClick={handleSaveAnswer}
-                disabled={updateMutation.isPending}
-              >
-                <Check className="h-3 w-3" />
-                Save Answer
-              </Button>
+        {(() => {
+          if (isEditingAnswer) {
+            return (
+              <div className="space-y-2">
+                <Textarea
+                  value={editedAnswer}
+                  onChange={e => setEditedAnswer(e.target.value)}
+                  placeholder="Type your answer here..."
+                  className="min-h-[80px]"
+                  autoFocus
+                />
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    onClick={handleSaveAnswer}
+                    disabled={updateMutation.isPending}
+                  >
+                    <Check className="h-3 w-3" />
+                    Save Answer
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleCancelEditAnswer}
+                    disabled={updateMutation.isPending}
+                  >
+                    <X className="h-3 w-3" />
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            );
+          }
+          if (question.answer) {
+            return (
+              <div className="group relative">
+                <div className={`text-sm ${secondaryTextColor}`}>
+                  A: {question.answer}
+                </div>
+                <button
+                  onClick={() => setIsEditingAnswer(true)}
+                  className="absolute right-0 top-0 rounded p-1 opacity-0 transition-opacity hover:bg-black/5 group-hover:opacity-100 dark:hover:bg-white/5"
+                  title="Edit answer"
+                  aria-label="Edit answer"
+                  type="button"
+                >
+                  <Pencil className="h-3 w-3 text-gray-500" />
+                </button>
+              </div>
+            );
+          }
+
+          return (
+            <div className="flex items-center gap-2">
+              <Badge variant="yellow" size="sm">
+                Awaiting Answer
+              </Badge>
               <Button
                 size="sm"
                 variant="outline"
-                onClick={handleCancelEditAnswer}
-                disabled={updateMutation.isPending}
+                onClick={() => setIsEditingAnswer(true)}
               >
-                <X className="h-3 w-3" />
-                Cancel
+                Add Answer
               </Button>
             </div>
-          </div>
-        ) : question.answer ? (
-          <div className="group relative">
-            <div className={`text-sm ${secondaryTextColor}`}>
-              A: {question.answer}
-            </div>
-            <button
-              onClick={() => setIsEditingAnswer(true)}
-              className="absolute right-0 top-0 rounded p-1 opacity-0 transition-opacity hover:bg-black/5 group-hover:opacity-100 dark:hover:bg-white/5"
-              title="Edit answer"
-              type="button"
-            >
-              <Pencil className="h-3 w-3 text-gray-500" />
-            </button>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2">
-            <Badge variant="yellow" size="sm">
-              Awaiting Answer
-            </Badge>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setIsEditingAnswer(true)}
-            >
-              Add Answer
-            </Button>
-          </div>
-        )}
+          );
+        })()}
       </div>
 
       {/* Resolved Checkbox */}

@@ -16,7 +16,11 @@ interface IProps {
 export const SignupRoleSelect: FC<IProps> = ({ onSelect }) => {
   return (
     <div className="space-y-4">
-      <button onClick={() => onSelect('admin')} className="w-full text-left">
+      <button
+        type="button"
+        onClick={() => onSelect('admin')}
+        className="w-full text-left"
+      >
         <Card
           className={cn(
             'border-2 transition-all hover:border-primary hover:shadow-md',
@@ -36,8 +40,8 @@ export const SignupRoleSelect: FC<IProps> = ({ onSelect }) => {
                 <ArrowRight className="h-5 w-5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
               </div>
               <p className="mt-1 text-sm text-muted-foreground">
-                Start a new project and invite your team members. You'll be the
-                project admin with full access.
+                Start a new project and invite your team members. You&apos;ll be
+                the project admin with full access.
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
@@ -52,7 +56,11 @@ export const SignupRoleSelect: FC<IProps> = ({ onSelect }) => {
         </Card>
       </button>
 
-      <button onClick={() => onSelect('member')} className="w-full text-left">
+      <button
+        type="button"
+        onClick={() => onSelect('member')}
+        className="w-full text-left"
+      >
         <Card
           className={cn(
             'border-2 transition-all hover:border-primary hover:shadow-md',

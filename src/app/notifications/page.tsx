@@ -14,8 +14,7 @@ import {
 } from 'lucide-react';
 
 import { QueryKeys } from 'shared/constants';
-import { cn, formatRelativeTime } from 'shared/lib';
-import { mockNotifications } from 'shared/lib/mock-data';
+import { cn, formatRelativeTime, mockNotifications } from 'shared/lib';
 import { useAuthStore } from 'shared/store';
 import { INotification, NotificationType } from 'shared/types';
 import {
@@ -106,7 +105,11 @@ const getNotificationTypeLabel = (type: NotificationType): string => {
   }
 };
 
-function NotificationCard({ notification }: { notification: INotification }) {
+const NotificationCard = ({
+  notification,
+}: {
+  notification: INotification;
+}) => {
   const { icon: Icon, color, bg } = getNotificationIcon(notification.type);
 
   return (
@@ -162,15 +165,15 @@ function NotificationCard({ notification }: { notification: INotification }) {
       </div>
     </Card>
   );
-}
+};
 
-function NotificationsList({
+const NotificationsList = ({
   notifications,
   emptyMessage,
 }: {
   notifications: INotification[];
   emptyMessage: string;
-}) {
+}) => {
   if (notifications.length === 0) {
     return (
       <Card className="border py-12 text-center">
@@ -190,14 +193,14 @@ function NotificationsList({
       ))}
     </div>
   );
-}
+};
 
-function NotificationsContent() {
+const NotificationsContent = () => {
   const { user } = useAuthStore();
 
   const { data: notifications = [] } = useQuery({
     queryKey: [QueryKeys.NOTIFICATIONS],
-    queryFn: async () => {
+    queryFn: () => {
       return mockNotifications.filter(n => n.userId === user?.id);
     },
     enabled: !!user,
@@ -285,7 +288,7 @@ function NotificationsContent() {
       </TabsRoot>
     </main>
   );
-}
+};
 
 export default function NotificationsPage() {
   return <NotificationsContent />;

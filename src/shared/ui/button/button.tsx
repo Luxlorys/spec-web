@@ -24,6 +24,7 @@ export const Button = forwardRef<HTMLButtonElement, IProps>(
   ) => {
     return (
       <button
+        type="button"
         ref={ref}
         className={cn(
           'inline-flex items-center justify-center rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',

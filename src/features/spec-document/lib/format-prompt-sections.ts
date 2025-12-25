@@ -8,20 +8,20 @@ import {
 /**
  * Format user stories as a numbered list
  */
-export function formatUserStories(stories: string[]): string {
+export const formatUserStories = (stories: string[]): string => {
   if (stories.length === 0) {
     return '(None specified)';
   }
 
   return stories.map((story, index) => `${index + 1}. ${story}`).join('\n');
-}
+};
 
 /**
  * Format acceptance criteria as numbered requirements
  */
-export function formatAcceptanceCriteria(
+export const formatAcceptanceCriteria = (
   criteria: IAcceptanceCriteria[],
-): string {
+): string => {
   if (criteria.length === 0) {
     return '(None specified)';
   }
@@ -29,12 +29,12 @@ export function formatAcceptanceCriteria(
   return criteria
     .map((item, index) => `${index + 1}. ${item.description}`)
     .join('\n');
-}
+};
 
 /**
  * Format edge cases as descriptive list
  */
-export function formatEdgeCases(cases: IEdgeCase[]): string {
+export const formatEdgeCases = (cases: IEdgeCase[]): string => {
   if (cases.length === 0) {
     return '(None specified)';
   }
@@ -44,12 +44,12 @@ export function formatEdgeCases(cases: IEdgeCase[]): string {
       edgeCase => `- When ${edgeCase.scenario}: ${edgeCase.expectedBehavior}`,
     )
     .join('\n');
-}
+};
 
 /**
  * Format resolved comments grouped by section
  */
-export function formatResolvedComments(comments: IComment[]): string {
+export const formatResolvedComments = (comments: IComment[]): string => {
   if (comments.length === 0) {
     return '';
   }
@@ -90,12 +90,12 @@ export function formatResolvedComments(comments: IComment[]): string {
   });
 
   return formatted;
-}
+};
 
 /**
  * Format answered open questions
  */
-export function formatOpenQuestions(questions: IOpenQuestion[]): string {
+export const formatOpenQuestions = (questions: IOpenQuestion[]): string => {
   // Only include questions that have answers
   const answeredQuestions = questions.filter(
     q => q.answer && q.answer.trim().length > 0,
@@ -113,18 +113,18 @@ export function formatOpenQuestions(questions: IOpenQuestion[]): string {
   });
 
   return formatted;
-}
+};
 
 /**
  * Format array items as bullet list
  */
-export function formatArrayAsBulletList(
+export const formatArrayAsBulletList = (
   items: string[],
   prefix: string = '-',
-): string {
+): string => {
   if (items.length === 0) {
     return '(None specified)';
   }
 
   return items.map(item => `${prefix} ${item}`).join('\n');
-}
+};

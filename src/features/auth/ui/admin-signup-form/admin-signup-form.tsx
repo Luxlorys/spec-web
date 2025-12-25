@@ -6,8 +6,9 @@ import { useRouter } from 'next/navigation';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowLeft, FileText } from 'lucide-react';
+import { Controller, useForm } from 'react-hook-form';
 
-import { authApi } from 'shared/api/auth';
+import { authApi } from 'shared/api';
 import { useAuthStore } from 'shared/store';
 import { Button, FileUpload, Input } from 'shared/ui';
 

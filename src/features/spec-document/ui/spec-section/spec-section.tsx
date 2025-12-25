@@ -26,9 +26,9 @@ interface IProps {
 export const SpecSection: FC<IProps> = ({
   title,
   children,
-  id,
+  id: _id,
   sectionId,
-  specDocumentId,
+  specDocumentId: _specDocumentId,
   onCommentClick,
   commentCount = 0,
   editable = false,
@@ -85,9 +85,11 @@ export const SpecSection: FC<IProps> = ({
           </h3>
           {editable && !isEditing && (
             <button
+              type="button"
               onClick={handleStartEdit}
               className="rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground group-hover:opacity-100"
               title="Edit section"
+              aria-label="Edit section"
             >
               <Pencil className="h-4 w-4" />
             </button>
@@ -111,6 +113,7 @@ export const SpecSection: FC<IProps> = ({
                 ? 'Enter each item on a new line...'
                 : 'Enter content...'
             }
+            // eslint-disable-next-line jsx-a11y/no-autofocus
             autoFocus
           />
           {isArrayField && (

@@ -6,6 +6,7 @@ import { FileCode } from 'lucide-react';
 
 import { useGetCommentsBySpec } from 'shared/hooks';
 import { IComment, ISpecDocument } from 'shared/types';
+import { Button } from 'shared/ui';
 
 import { generateAIPrompt } from '../../lib';
 import { PromptPreviewSheet } from '../prompt-preview-sheet';

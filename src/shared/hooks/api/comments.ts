@@ -107,8 +107,8 @@ export const useDeleteComment = () => {
   return useMutation({
     mutationFn: ({
       commentId,
-      specDocumentId,
-      section,
+      specDocumentId: _specDocumentId,
+      section: _section,
     }: {
       commentId: string;
       specDocumentId: string;

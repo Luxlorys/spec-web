@@ -8,7 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Home, LayoutGrid, List } from 'lucide-react';
 
 import { FeatureCard } from 'features/feature-requests';
-import { featureRequestsApi } from 'shared/api/feature-requests';
+import { featureRequestsApi } from 'shared/api';
 import { QueryKeys } from 'shared/constants';
 import { cn } from 'shared/lib';
 import { FeatureStatus } from 'shared/types';
@@ -37,7 +37,7 @@ const tabToStatuses: Record<TabFilter, FeatureStatus[] | null> = {
   completed: ['completed'],
 };
 
-function FeaturesList({
+const FeaturesList = ({
   features,
   viewMode,
   isLoading,
@@ -51,7 +51,7 @@ function FeaturesList({
   viewMode: 'grid' | 'list';
   isLoading: boolean;
   showCreateButton: boolean;
-}) {
+}) => {
   if (isLoading) {
     return (
       <div
@@ -105,9 +105,9 @@ function FeaturesList({
       ))}
     </div>
   );
-}
+};
 
-function DashboardContent() {
+const DashboardContent = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   const { data: features, isLoading } = useQuery({
@@ -180,6 +180,7 @@ function DashboardContent() {
           <div className="flex items-center gap-2">
             <div className="flex items-center rounded-lg border bg-muted/50 p-1">
               <button
+                type="button"
                 onClick={() => setViewMode('grid')}
                 className={cn(
                   'rounded-md p-1.5 transition-colors',
@@ -188,10 +189,12 @@ function DashboardContent() {
                     : 'text-muted-foreground hover:text-foreground',
                 )}
                 title="Grid view"
+                aria-label="Grid view"
               >
                 <LayoutGrid className="h-4 w-4" />
               </button>
               <button
+                type="button"
                 onClick={() => setViewMode('list')}
                 className={cn(
                   'rounded-md p-1.5 transition-colors',
@@ -200,6 +203,7 @@ function DashboardContent() {
                     : 'text-muted-foreground hover:text-foreground',
                 )}
                 title="List view"
+                aria-label="List view"
               >
                 <List className="h-4 w-4" />
               </button>
@@ -255,7 +259,7 @@ function DashboardContent() {
       </TabsRoot>
     </main>
   );
-}
+};
 
 export default function DashboardPage() {
   return <DashboardContent />;

@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useEffect, useState } from 'react';
+import { FC, useState } from 'react';
 
 import { History, Sparkles } from 'lucide-react';
 
@@ -14,7 +14,7 @@ import {
   useUpdateSpecSection,
 } from 'shared/hooks';
 import { formatDate } from 'shared/lib';
-import { useAuthStore } from 'shared/store';
+import { ISpecDocument, IUpdateSpecSection } from 'shared/types';
 import { Badge, Button, Card } from 'shared/ui';
 
 import { CommentsSidebar } from '../comments-sidebar';
@@ -243,8 +243,8 @@ export const SpecView: FC<IProps> = ({ spec }) => {
         isArrayField
       >
         <ul className="space-y-2">
-          {spec.userStories.map((story, index) => (
-            <li key={index} className="flex items-start gap-2">
+          {spec.userStories.map(story => (
+            <li key={story} className="flex items-start gap-2">
               <span className="text-purple-600 dark:text-purple-400">•</span>
               <span>{story}</span>
             </li>
@@ -297,8 +297,8 @@ export const SpecView: FC<IProps> = ({ spec }) => {
         isArrayField
       >
         <ul className="space-y-2">
-          {spec.scopeIncluded.map((item, index) => (
-            <li key={index} className="flex items-start gap-2">
+          {spec.scopeIncluded.map(item => (
+            <li key={item} className="flex items-start gap-2">
               <span className="text-green-600 dark:text-green-400">✓</span>
               <span>{item}</span>
             </li>
@@ -319,8 +319,8 @@ export const SpecView: FC<IProps> = ({ spec }) => {
         isArrayField
       >
         <ul className="space-y-2">
-          {spec.scopeExcluded.map((item, index) => (
-            <li key={index} className="flex items-start gap-2">
+          {spec.scopeExcluded.map(item => (
+            <li key={item} className="flex items-start gap-2">
               <span className="text-red-600 dark:text-red-400">✗</span>
               <span>{item}</span>
             </li>
@@ -345,8 +345,8 @@ export const SpecView: FC<IProps> = ({ spec }) => {
         isArrayField
       >
         <ul className="space-y-2">
-          {spec.technicalConsiderations.map((item, index) => (
-            <li key={index} className="flex items-start gap-2">
+          {spec.technicalConsiderations.map(item => (
+            <li key={item} className="flex items-start gap-2">
               <span className="text-gray-400">⚙️</span>
               <span>{item}</span>
             </li>
@@ -378,8 +378,8 @@ export const SpecView: FC<IProps> = ({ spec }) => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {spec.edgeCases.map((edgeCase, index) => (
-                <tr key={index}>
+              {spec.edgeCases.map(edgeCase => (
+                <tr key={edgeCase.scenario}>
                   <td className="py-3 pr-4 text-sm font-medium text-gray-900 dark:text-gray-100">
                     {edgeCase.scenario}
                   </td>
@@ -440,8 +440,8 @@ export const SpecView: FC<IProps> = ({ spec }) => {
         isArrayField
       >
         <ul className="space-y-2">
-          {spec.assumptions.map((assumption, index) => (
-            <li key={index} className="flex items-start gap-2">
+          {spec.assumptions.map(assumption => (
+            <li key={assumption} className="flex items-start gap-2">
               <span className="text-gray-400">💭</span>
               <span>{assumption}</span>
             </li>

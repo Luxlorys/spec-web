@@ -48,6 +48,7 @@ export const CommentList: FC<ICommentListProps> = ({
           Failed to load comments
         </p>
         <button
+          type="button"
           onClick={() => refetch()}
           className="text-purple-600 hover:underline dark:text-purple-400"
         >

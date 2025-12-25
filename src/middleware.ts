@@ -10,7 +10,7 @@ const PROTECTED_PATHS = [
 
 const PUBLIC_PATHS = ['/login', '/signup', '/'];
 
-export function middleware(request: NextRequest) {
+export const middleware = (request: NextRequest) => {
   const { pathname } = request.nextUrl;
   const authToken = request.cookies.get('auth-token')?.value;
 
@@ -40,7 +40,7 @@ export function middleware(request: NextRequest) {
   }
 
   return NextResponse.next();
-}
+};
 
 export const config = {
   matcher: [

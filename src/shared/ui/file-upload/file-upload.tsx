@@ -50,19 +50,21 @@ export const FileUpload = ({
     const valid: File[] = [];
     let error = '';
 
-    for (const file of filesToValidate) {
+    const allowedTypes = accept
+      .split(',')
+      .map(type => type.trim().toLowerCase());
+
+    filesToValidate.some(file => {
       // Check file size
       if (file.size > maxSize) {
         error = `File "${file.name}" is too large. Maximum size is ${formatFileSize(maxSize)}.`;
-        break;
+
+        return true; // Stop iteration
       }
 
       // Check file type
-      const allowedTypes = accept
-        .split(',')
-        .map(type => type.trim().toLowerCase());
-      const fileExtension = `.${file.name.split('.').pop()
-?.toLowerCase()}`;
+      const extension = file.name.split('.').pop();
+      const fileExtension = `.${extension?.toLowerCase()}`;
       const isValidType = allowedTypes.some(
         type =>
           type === fileExtension ||
@@ -72,11 +74,14 @@ export const FileUpload = ({
 
       if (!isValidType) {
         error = `File "${file.name}" is not a supported format. Allowed formats: ${accept}`;
-        break;
+
+        return true; // Stop iteration
       }
 
       valid.push(file);
-    }
+
+      return false; // Continue iteration
+    });
 
     return { valid, error };
   };
@@ -208,9 +213,9 @@ export const FileUpload = ({
       {/* File List */}
       {files.length > 0 && (
         <div className="mt-3 space-y-2">
-          {files.map((file, index) => (
+          {files.map(file => (
             <div
-              key={index}
+              key={file.name}
               className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-800"
             >
               <File className="h-4 w-4 flex-shrink-0 text-primary" />
@@ -225,9 +230,12 @@ export const FileUpload = ({
               {!disabled && (
                 <button
                   type="button"
+                  aria-label={`Remove file ${file.name}`}
                   onClick={e => {
                     e.stopPropagation();
-                    removeFile(index);
+                    const fileIndex = files.indexOf(file);
+
+                    removeFile(fileIndex);
                   }}
                   className="rounded p-1 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
                 >

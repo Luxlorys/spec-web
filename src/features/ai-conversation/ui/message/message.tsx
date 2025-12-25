@@ -2,7 +2,8 @@
 
 import { FC } from 'react';
 
-import { cn, formatDateTime , cn } from 'shared/lib';
+import { cn, formatDateTime } from 'shared/lib';
+import { IConversationMessage } from 'shared/types';
 
 interface IProps {
   message: IConversationMessage;

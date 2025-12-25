@@ -7,7 +7,18 @@ interface IProps {
   changes: IProposedChange[];
 }
 
-export function DiffView({ changes }: IProps) {
+const getProposedBgColor = (changeType: string): string => {
+  if (changeType === 'added') {
+    return 'bg-green-50';
+  }
+  if (changeType === 'modified') {
+    return 'bg-purple-50';
+  }
+
+  return 'bg-gray-50';
+};
+
+export const DiffView = ({ changes }: IProps) => {
   const formatSectionName = (section: string): string => {
     return section
       .replace(/([A-Z])/g, ' $1')
@@ -50,8 +61,8 @@ export function DiffView({ changes }: IProps) {
     ) {
       return (
         <ul className="list-inside list-disc space-y-1">
-          {value.map((item, idx) => (
-            <li key={idx}>{item}</li>
+          {value.map((item: string) => (
+            <li key={item}>{item}</li>
           ))}
         </ul>
       );
@@ -79,8 +90,11 @@ export function DiffView({ changes }: IProps) {
 
       return (
         <div className="space-y-3">
-          {cases.map((item, idx) => (
-            <div key={idx} className="border-l-2 border-gray-300 pl-3">
+          {cases.map(item => (
+            <div
+              key={item.scenario}
+              className="border-l-2 border-gray-300 pl-3"
+            >
               <p className="font-medium text-gray-900">{item.scenario}</p>
               <p className="mt-1 text-sm text-gray-600">
                 {item.expectedBehavior}
@@ -109,9 +123,9 @@ export function DiffView({ changes }: IProps) {
 
   return (
     <div className="space-y-6">
-      {visibleChanges.map((change, index) => (
+      {visibleChanges.map(change => (
         <div
-          key={`change-${index}`}
+          key={change.section}
           className="overflow-hidden rounded-lg border border-gray-200"
         >
           {/* Header */}
@@ -137,15 +151,7 @@ export function DiffView({ changes }: IProps) {
             </div>
 
             {/* Proposed Value */}
-            <div
-              className={`p-4 ${
-                change.changeType === 'added'
-                  ? 'bg-green-50'
-                  : change.changeType === 'modified'
-                    ? 'bg-purple-50'
-                    : 'bg-gray-50'
-              }`}
-            >
+            <div className={`p-4 ${getProposedBgColor(change.changeType)}`}>
               <h4 className="mb-2 text-xs font-semibold uppercase text-gray-600">
                 Proposed
               </h4>
@@ -172,4 +178,4 @@ export function DiffView({ changes }: IProps) {
       )}
     </div>
   );
-}
+};

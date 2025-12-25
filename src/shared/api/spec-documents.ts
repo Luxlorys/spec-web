@@ -1,14 +1,13 @@
 import { delay, generateId } from 'shared/lib';
 import {
+  generateRegeneratedSpec,
+  mockComments,
   mockFeatureRequests,
   mockSpecDocuments,
   mockSpecVersionHistory,
 } from 'shared/lib/mock-data';
-import { generateRegeneratedSpec } from 'shared/lib/mock-data/ai-responses';
-import { mockComments } from 'shared/lib/mock-data/comments';
 import {
   IOpenQuestion,
-  IProposedChange,
   IRegenerationPreview,
   ISpecDocument,
   ISpecVersion,

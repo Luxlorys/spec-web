@@ -4,3 +4,4 @@ export * from './feature-requests';
 export * from './conversations';
 export * from './spec-documents';
 export * from './comments';
+export * from './users';

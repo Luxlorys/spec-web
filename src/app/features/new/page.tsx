@@ -11,13 +11,13 @@ import { useForm } from 'react-hook-form';
 import {
   CreateFeatureInput,
   createFeatureSchema,
-} from 'features/feature-requests/lib';
-import { featureRequestsApi } from 'shared/api/feature-requests';
+} from 'features/feature-requests';
+import { featureRequestsApi } from 'shared/api';
 import { QueryKeys } from 'shared/constants';
 import { queryClient } from 'shared/lib';
 import { Button, Card, Input, Textarea } from 'shared/ui';
 
-function NewFeatureContent() {
+const NewFeatureContent = () => {
   const router = useRouter();
   const [error, setError] = useState('');
 
@@ -45,7 +45,7 @@ function NewFeatureContent() {
     },
   });
 
-  const onSubmit = async (values: CreateFeatureInput) => {
+  const onSubmit = (values: CreateFeatureInput) => {
     setError('');
     createMutation.mutate(values);
   };
@@ -120,7 +120,7 @@ function NewFeatureContent() {
       </Card>
     </main>
   );
-}
+};
 
 export default function NewFeaturePage() {
   return <NewFeatureContent />;

@@ -61,7 +61,21 @@ const roleOptions: { value: UserRole; label: string; description: string }[] = [
   },
 ];
 
-function TeamMemberContent() {
+const getPermissionWarningMessage = (
+  isFounder: boolean,
+  isCurrentUserAdmin: boolean,
+): string => {
+  if (isFounder) {
+    return "The founder's role cannot be changed.";
+  }
+  if (!isCurrentUserAdmin) {
+    return 'You need admin permissions to change member roles.';
+  }
+
+  return 'You cannot change your own role.';
+};
+
+const TeamMemberContent = () => {
   const params = useParams();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -145,8 +159,8 @@ function TeamMemberContent() {
             Member not found
           </h2>
           <p className="mb-4 text-sm text-muted-foreground">
-            The team member you're looking for doesn't exist or has been
-            removed.
+            The team member you&apos;re looking for doesn&apos;t exist or has
+            been removed.
           </p>
           <Link href="/team">
             <Button variant="outline">Back to Team</Button>
@@ -208,17 +222,7 @@ function TeamMemberContent() {
           <h3 className="text-lg font-semibold text-foreground">Permissions</h3>
         </div>
 
-        {!canChangeRole ? (
-          <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-900/50 dark:bg-yellow-900/20">
-            <p className="text-sm text-yellow-800 dark:text-yellow-200">
-              {isFounder
-                ? "The founder's role cannot be changed."
-                : !isCurrentUserAdmin
-                  ? 'You need admin permissions to change member roles.'
-                  : 'You cannot change your own role.'}
-            </p>
-          </div>
-        ) : (
+        {canChangeRole ? (
           <div className="space-y-4">
             <div>
               <Label className="mb-2 block">Role</Label>
@@ -302,6 +306,12 @@ function TeamMemberContent() {
               )}
             </div>
           </div>
+        ) : (
+          <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-900/50 dark:bg-yellow-900/20">
+            <p className="text-sm text-yellow-800 dark:text-yellow-200">
+              {getPermissionWarningMessage(isFounder, isCurrentUserAdmin)}
+            </p>
+          </div>
         )}
       </Card>
 
@@ -318,23 +328,7 @@ function TeamMemberContent() {
             </h3>
           </div>
 
-          {!showDeleteConfirm ? (
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-foreground">Remove from team</p>
-                <p className="text-sm text-muted-foreground">
-                  This member will lose access to the organization.
-                </p>
-              </div>
-              <Button
-                variant="danger"
-                onClick={() => setShowDeleteConfirm(true)}
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Remove Member
-              </Button>
-            </div>
-          ) : (
+          {showDeleteConfirm ? (
             <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900/50 dark:bg-red-900/20">
               <p className="mb-4 text-sm text-red-800 dark:text-red-200">
                 Are you sure you want to remove <strong>{member.name}</strong>{' '}
@@ -363,12 +357,28 @@ function TeamMemberContent() {
                 </p>
               )}
             </div>
+          ) : (
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-foreground">Remove from team</p>
+                <p className="text-sm text-muted-foreground">
+                  This member will lose access to the organization.
+                </p>
+              </div>
+              <Button
+                variant="danger"
+                onClick={() => setShowDeleteConfirm(true)}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Remove Member
+              </Button>
+            </div>
           )}
         </Card>
       )}
     </main>
   );
-}
+};
 
 export default function TeamMemberPage() {
   return <TeamMemberContent />;

@@ -71,7 +71,7 @@ export const AppSidebar: FC = () => {
 
   const { data: notifications = [] } = useQuery({
     queryKey: [QueryKeys.NOTIFICATIONS],
-    queryFn: async () => {
+    queryFn: () => {
       return mockNotifications.filter(n => n.userId === user?.id);
     },
     enabled: !!user,

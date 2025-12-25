@@ -21,7 +21,7 @@ export interface IGeneratePromptOptions {
  * Generate AI-ready prompt from spec document
  * Produces markdown-formatted prompt suitable for Cursor, Claude, Copilot
  */
-export function generateAIPrompt(options: IGeneratePromptOptions): string {
+export const generateAIPrompt = (options: IGeneratePromptOptions): string => {
   const {
     spec,
     featureTitle = 'Feature Implementation',
@@ -130,4 +130,4 @@ export function generateAIPrompt(options: IGeneratePromptOptions): string {
   }
 
   return sections.join('\n');
-}
+};

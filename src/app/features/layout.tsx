@@ -2,8 +2,8 @@
 
 import { ReactNode } from 'react';
 
-import { AppSidebar } from 'features/layout/ui/app-sidebar';
-import { SidebarInset, SidebarProvider } from 'shared/ui/sidebar';
+import { AppSidebar } from 'features/layout';
+import { SidebarInset, SidebarProvider } from 'shared/ui';
 
 interface Props {
   children: ReactNode;

@@ -59,6 +59,7 @@ export const CommentForm: FC<ICommentFormProps> = ({
       onSuccess?.();
     } catch (err) {
       setError('Failed to post comment. Please try again.');
+      // eslint-disable-next-line no-console
       console.error('Failed to create comment:', err);
     }
   };

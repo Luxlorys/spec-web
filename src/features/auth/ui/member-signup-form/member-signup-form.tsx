@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowLeft, CheckCircle2, Loader2 } from 'lucide-react';
+import { useForm } from 'react-hook-form';
 
 import { authApi } from 'shared/api/auth';
 import { useAuthStore } from 'shared/store';
@@ -133,9 +134,7 @@ export const MemberSignupForm: FC<IProps> = ({ onBack }) => {
                 type="text"
                 label="Invite Code"
                 placeholder="Enter your invite code"
-                error={
-                  !validatedInvite ? errors.inviteCode?.message : undefined
-                }
+                error={validatedInvite ? undefined : errors.inviteCode?.message}
                 disabled={!!validatedInvite}
               />
             </div>
@@ -160,7 +159,7 @@ export const MemberSignupForm: FC<IProps> = ({ onBack }) => {
             <div className="flex items-center gap-2 rounded-lg bg-green-50 p-3 text-sm text-green-800 dark:bg-green-900/20 dark:text-green-400">
               <CheckCircle2 className="h-4 w-4 shrink-0" />
               <span>
-                You're joining{' '}
+                You&apos;re joining{' '}
                 <strong>{validatedInvite.organizationName}</strong>
               </span>
             </div>

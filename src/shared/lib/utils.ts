@@ -1,9 +1,13 @@
-export const delay = (ms: number): Promise<void> => {
-  return new Promise(resolve => setTimeout(resolve, ms));
-};
+export const delay = (ms: number): Promise<void> =>
+  new Promise(resolve => {
+    setTimeout(resolve, ms);
+  });
 
 export const generateId = (): string => {
-  return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+  const randomNumber = Math.random();
+  const randomPart = randomNumber.toString(36).substring(2, 9);
+
+  return `${Date.now()}-${randomPart}`;
 };
 
 export const formatDate = (date: Date): string => {
@@ -69,7 +73,7 @@ export const truncate = (text: string, maxLength: number): string => {
  * @param text Text to copy
  * @returns Promise<boolean> Success status
  */
-export async function copyToClipboard(text: string): Promise<boolean> {
+export const copyToClipboard = async (text: string): Promise<boolean> => {
   try {
     // Modern clipboard API
     if (navigator.clipboard && window.isSecureContext) {
@@ -95,8 +99,9 @@ export async function copyToClipboard(text: string): Promise<boolean> {
 
     return success;
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('Failed to copy to clipboard:', error);
 
     return false;
   }
-}
+};

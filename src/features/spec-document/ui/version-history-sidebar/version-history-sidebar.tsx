@@ -26,7 +26,7 @@ interface IProps {
   isRollingBack: boolean;
 }
 
-export function VersionHistorySidebar({
+export const VersionHistorySidebar = ({
   isOpen,
   onClose,
   currentVersion,
@@ -34,7 +34,7 @@ export function VersionHistorySidebar({
   isLoading,
   onRollback,
   isRollingBack,
-}: IProps) {
+}: IProps) => {
   const [rollbackDialogOpen, setRollbackDialogOpen] = useState(false);
   const [selectedVersion, setSelectedVersion] = useState<number | null>(null);
 
@@ -75,8 +75,10 @@ export function VersionHistorySidebar({
                   Confirm Rollback
                 </h3>
                 <button
+                  type="button"
                   onClick={handleCancelRollback}
                   className="text-orange-600 hover:text-orange-800"
+                  aria-label="Cancel rollback"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -114,75 +116,86 @@ export function VersionHistorySidebar({
           )}
 
           {/* Version List */}
-          {isLoading ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-purple-600" />
-            </div>
-          ) : versions.length === 0 ? (
-            <div className="py-8 text-center text-gray-600">
-              <p>No version history available</p>
-              <p className="mt-2 text-sm">
-                Version history is created when specs are regenerated
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {versions.map(version => (
-                <div
-                  key={version.id}
-                  className={`rounded-lg border p-4 ${
-                    version.version === currentVersion
-                      ? 'border-purple-300 bg-purple-50'
-                      : 'border-gray-200 bg-white'
-                  }`}
-                >
-                  {/* Version Header */}
-                  <div className="mb-2 flex items-start justify-between">
-                    <div className="flex items-center gap-2">
-                      <Badge
-                        variant={
-                          version.version === currentVersion ? 'purple' : 'gray'
-                        }
-                        className="font-semibold"
-                      >
-                        v{version.version}
-                      </Badge>
-                      {version.version === currentVersion && (
-                        <Badge variant="blue" className="text-xs">
-                          Current
+          {(() => {
+            if (isLoading) {
+              return (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-purple-600" />
+                </div>
+              );
+            }
+            if (versions.length === 0) {
+              return (
+                <div className="py-8 text-center text-gray-600">
+                  <p>No version history available</p>
+                  <p className="mt-2 text-sm">
+                    Version history is created when specs are regenerated
+                  </p>
+                </div>
+              );
+            }
+
+            return (
+              <div className="space-y-4">
+                {versions.map(version => (
+                  <div
+                    key={version.id}
+                    className={`rounded-lg border p-4 ${
+                      version.version === currentVersion
+                        ? 'border-purple-300 bg-purple-50'
+                        : 'border-gray-200 bg-white'
+                    }`}
+                  >
+                    {/* Version Header */}
+                    <div className="mb-2 flex items-start justify-between">
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          variant={
+                            version.version === currentVersion
+                              ? 'purple'
+                              : 'gray'
+                          }
+                          className="font-semibold"
+                        >
+                          v{version.version}
                         </Badge>
+                        {version.version === currentVersion && (
+                          <Badge variant="blue" className="text-xs">
+                            Current
+                          </Badge>
+                        )}
+                      </div>
+                      {version.version < currentVersion && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleRollbackClick(version.version)}
+                          disabled={isRollingBack || rollbackDialogOpen}
+                          className="text-xs"
+                        >
+                          <RotateCcw className="mr-1 h-3 w-3" />
+                          Rollback
+                        </Button>
                       )}
                     </div>
-                    {version.version < currentVersion && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleRollbackClick(version.version)}
-                        disabled={isRollingBack || rollbackDialogOpen}
-                        className="text-xs"
-                      >
-                        <RotateCcw className="mr-1 h-3 w-3" />
-                        Rollback
-                      </Button>
-                    )}
-                  </div>
 
-                  {/* Change Description */}
-                  <p className="mb-2 text-sm text-gray-900">
-                    {version.changeDescription}
-                  </p>
+                    {/* Change Description */}
+                    <p className="mb-2 text-sm text-gray-900">
+                      {version.changeDescription}
+                    </p>
 
-                  {/* Metadata */}
-                  <div className="space-y-1 text-xs text-gray-600">
-                    <p>Created: {formatDate(version.createdAt)}</p>
-                    <p>By: {version.createdBy}</p>
+                    {/* Metadata */}
+                    <div className="space-y-1 text-xs text-gray-600">
+                      <p>Created: {formatDate(version.createdAt)}</p>
+                      <p>By: {version.createdBy}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            );
+          })()}
         </div>
       </SheetContent>
     </Sheet>
   );
-}
+};

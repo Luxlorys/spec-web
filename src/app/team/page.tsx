@@ -9,7 +9,7 @@ import { mockUsers } from 'shared/lib/mock-data';
 import { useAuthStore } from 'shared/store';
 import { Avatar, Badge, Button, Card, EmptyState, Input } from 'shared/ui';
 
-function TeamContent() {
+const TeamContent = () => {
   const { user: currentUser } = useAuthStore();
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
@@ -24,7 +24,8 @@ function TeamContent() {
 
   const handleInvite = () => {
     // Mock invite - would call API in real app
-    alert(`Invitation sent to ${inviteEmail} as ${inviteRole}`);
+    // eslint-disable-next-line no-console
+    console.log(`Invitation sent to ${inviteEmail} as ${inviteRole}`);
     setInviteEmail('');
     setShowInviteForm(false);
   };
@@ -37,7 +38,7 @@ function TeamContent() {
             Team Members
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Manage your organization's team members and permissions
+            Manage your organization&apos;s team members and permissions
           </p>
         </div>
         <Button onClick={() => setShowInviteForm(!showInviteForm)}>
@@ -154,7 +155,7 @@ function TeamContent() {
       )}
     </main>
   );
-}
+};
 
 export default function TeamPage() {
   return <TeamContent />;

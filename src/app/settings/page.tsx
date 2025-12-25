@@ -53,7 +53,7 @@ const isAdminRole = (role: UserRole): boolean => {
   return role === 'founder' || role === 'admin';
 };
 
-function SettingsNav({
+const SettingsNav = ({
   activeSection,
   onSectionChange,
   userRole,
@@ -61,7 +61,7 @@ function SettingsNav({
   activeSection: SettingsSection;
   onSectionChange: (section: SettingsSection) => void;
   userRole: UserRole;
-}) {
+}) => {
   const filteredItems = navItems.filter(
     item => !item.adminOnly || isAdminRole(userRole),
   );
@@ -74,6 +74,7 @@ function SettingsNav({
 
         return (
           <button
+            type="button"
             key={item.id}
             onClick={() => onSectionChange(item.id)}
             className={cn(
@@ -91,9 +92,9 @@ function SettingsNav({
       })}
     </nav>
   );
-}
+};
 
-function ProfileSettings() {
+const ProfileSettings = () => {
   const { user } = useAuthStore();
 
   return (
@@ -152,9 +153,9 @@ function ProfileSettings() {
       </div>
     </div>
   );
-}
+};
 
-function ProjectSettings() {
+const ProjectSettings = () => {
   return (
     <div className="space-y-6">
       <div>
@@ -219,9 +220,9 @@ function ProjectSettings() {
       </div>
     </div>
   );
-}
+};
 
-function TeamSettings() {
+const TeamSettings = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between">
@@ -316,9 +317,9 @@ function TeamSettings() {
       </Card>
     </div>
   );
-}
+};
 
-function NotificationSettings() {
+const NotificationSettings = () => {
   return (
     <div className="space-y-6">
       <div>
@@ -413,9 +414,9 @@ function NotificationSettings() {
       </div>
     </div>
   );
-}
+};
 
-function SecuritySettings() {
+const SecuritySettings = () => {
   const { clearAuth } = useAuthStore();
 
   return (
@@ -486,9 +487,9 @@ function SecuritySettings() {
       </Card>
     </div>
   );
-}
+};
 
-function AppearanceSettings() {
+const AppearanceSettings = () => {
   return (
     <div className="space-y-6">
       <div>
@@ -508,6 +509,7 @@ function AppearanceSettings() {
               { id: 'system', label: 'System' },
             ].map(theme => (
               <button
+                type="button"
                 key={theme.id}
                 className={cn(
                   'rounded-lg border-2 p-4 text-center transition-colors',
@@ -533,6 +535,7 @@ function AppearanceSettings() {
               { id: 'comfortable', label: 'Comfortable' },
             ].map(density => (
               <button
+                type="button"
                 key={density.id}
                 className={cn(
                   'rounded-lg border-2 p-4 text-center transition-colors',
@@ -553,9 +556,9 @@ function AppearanceSettings() {
       </div>
     </div>
   );
-}
+};
 
-function BillingSettings() {
+const BillingSettings = () => {
   return (
     <div className="space-y-6">
       <div>
@@ -612,9 +615,9 @@ function BillingSettings() {
               { date: 'Dec 15, 2024', amount: '$29.00', status: 'Paid' },
               { date: 'Nov 15, 2024', amount: '$29.00', status: 'Paid' },
               { date: 'Oct 15, 2024', amount: '$29.00', status: 'Paid' },
-            ].map((invoice, i) => (
+            ].map(invoice => (
               <div
-                key={i}
+                key={invoice.date}
                 className="flex items-center justify-between rounded-lg border p-3"
               >
                 <div>
@@ -638,9 +641,9 @@ function BillingSettings() {
       </Card>
     </div>
   );
-}
+};
 
-function IntegrationsSettings() {
+const IntegrationsSettings = () => {
   return (
     <div className="space-y-6">
       <div>
@@ -693,9 +696,9 @@ function IntegrationsSettings() {
       </div>
     </div>
   );
-}
+};
 
-function SettingsContent() {
+const SettingsContent = () => {
   const { user } = useAuthStore();
   const [activeSection, setActiveSection] =
     useState<SettingsSection>('profile');
@@ -761,7 +764,7 @@ function SettingsContent() {
       </div>
     </main>
   );
-}
+};
 
 export default function SettingsPage() {
   return <SettingsContent />;

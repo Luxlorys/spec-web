@@ -7,10 +7,9 @@ import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 
 import { QueryKeys } from 'shared/constants';
-import { formatRelativeTime } from 'shared/lib';
-import { mockNotifications } from 'shared/lib/mock-data';
+import { formatRelativeTime, mockNotifications } from 'shared/lib';
 import { useAuthStore } from 'shared/store';
-import { Badge, Button, Card } from 'shared/ui';
+import { Badge, Button } from 'shared/ui';
 
 export const NotificationCenter: FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -19,7 +18,7 @@ export const NotificationCenter: FC = () => {
 
   const { data: notifications = [] } = useQuery({
     queryKey: [QueryKeys.NOTIFICATIONS],
-    queryFn: async () => {
+    queryFn: () => {
       // Filter notifications for current user
       return mockNotifications.filter(n => n.userId === user?.id);
     },
@@ -75,6 +74,7 @@ export const NotificationCenter: FC = () => {
   return (
     <div className="relative" ref={dropdownRef}>
       <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
         className="relative rounded-lg p-2 hover:bg-gray-100 dark:hover:bg-gray-800"
       >
@@ -120,9 +120,9 @@ export const NotificationCenter: FC = () => {
                     href={notification.link || '#'}
                     onClick={() => setIsOpen(false)}
                     className={`block px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 ${
-                      !notification.read
-                        ? 'bg-purple-50 dark:bg-purple-900/10'
-                        : ''
+                      notification.read
+                        ? ''
+                        : 'bg-purple-50 dark:bg-purple-900/10'
                     }`}
                   >
                     <div className="flex gap-3">

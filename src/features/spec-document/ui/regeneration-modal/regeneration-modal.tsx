@@ -31,17 +31,17 @@ interface IProps {
 
 type ViewMode = 'summary' | 'diff';
 
-export function RegenerationModal({
+export const RegenerationModal = ({
   isOpen,
   onClose,
-  specId,
+  specId: _specId,
   preview,
   isLoadingPreview,
   previewError,
   onApprove,
   isCommitting,
   commitSuccess,
-}: IProps) {
+}: IProps) => {
   const [viewMode, setViewMode] = useState<ViewMode>('summary');
 
   // Reset view mode when modal opens
@@ -190,6 +190,7 @@ export function RegenerationModal({
                 <>
                   <div className="flex gap-2 border-b border-gray-200">
                     <button
+                      type="button"
                       onClick={() => setViewMode('summary')}
                       className={`border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
                         viewMode === 'summary'
@@ -200,6 +201,7 @@ export function RegenerationModal({
                       Summary
                     </button>
                     <button
+                      type="button"
                       onClick={() => setViewMode('diff')}
                       className={`border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
                         viewMode === 'diff'
@@ -250,4 +252,4 @@ export function RegenerationModal({
       </SheetContent>
     </Sheet>
   );
-}
+};

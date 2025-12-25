@@ -1,10 +1,11 @@
 import { delay, generateId } from 'shared/lib';
-import { mockConversations, mockFeatureRequests } from 'shared/lib/mock-data';
 import {
   aiQuestionFlow,
   generateEdgeCaseQuestions,
   generateSummary,
-} from 'shared/lib/mock-data/ai-responses';
+  mockConversations,
+  mockFeatureRequests,
+} from 'shared/lib/mock-data';
 import {
   IAIConversation,
   IConversationMessage,

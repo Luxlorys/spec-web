@@ -4,10 +4,9 @@ import { FC } from 'react';
 
 import Link from 'next/link';
 
-import { Calendar, User, UserCheck } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 
-import { cn, formatRelativeTime } from 'shared/lib';
-import { mockUsers } from 'shared/lib/mock-data';
+import { cn, formatRelativeTime, mockUsers } from 'shared/lib';
 import { IFeatureRequest } from 'shared/types';
 import { Avatar, Badge, Card } from 'shared/ui';
 
@@ -19,7 +18,6 @@ interface IProps {
 }
 
 export const FeatureCard: FC<IProps> = ({ feature, variant = 'grid' }) => {
-  const creator = mockUsers.find(u => u.id === feature.createdBy);
   const assignee = feature.assignedTo
     ? mockUsers.find(u => u.id === feature.assignedTo)
     : null;

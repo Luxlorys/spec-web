@@ -2,7 +2,10 @@ import { mockUsers } from 'shared/lib/mock-data';
 import { IUser, UserRole } from 'shared/types';
 
 // Simulate network delay
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const delay = (ms: number) =>
+  new Promise<void>(resolve => {
+    setTimeout(resolve, ms);
+  });
 
 export const usersApi = {
   getById: async (id: string): Promise<IUser> => {

@@ -1,27 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { useQuery } from '@tanstack/react-query';
-import { BookOpen, FileText, Upload } from 'lucide-react';
+import { BookOpen, FileText } from 'lucide-react';
 
 import { QueryKeys } from 'shared/constants';
-import { mockDocumentationData } from 'shared/lib/mock-data';
+import { mockDocumentationData } from 'shared/lib';
 import { useAuthStore } from 'shared/store';
-import { Button, Card, EmptyState } from 'shared/ui';
+import { Card, EmptyState } from 'shared/ui';
 
 type DocumentationType = 'project-context' | 'feature-specs' | 'technical-docs';
-
-interface Documentation {
-  id: string;
-  title: string;
-  content: string;
-  type: DocumentationType;
-  createdAt: string;
-  updatedAt: string;
-  authorId: string;
-  projectId: string;
-}
 
 const documentationTypes: {
   value: DocumentationType;
@@ -46,6 +35,18 @@ const documentationTypes: {
   },
 ];
 
+const getEmptyStateDescription = (type: DocumentationType): string => {
+  if (type === 'project-context') {
+    return 'Project context documentation will appear here once uploaded during project setup.';
+  }
+
+  if (type === 'feature-specs') {
+    return 'Feature specifications will be automatically generated as features are completed.';
+  }
+
+  return 'Additional technical documentation can be added to help your team understand the project better.';
+};
+
 export default function DocumentationPage() {
   const { user } = useAuthStore();
   const [selectedType, setSelectedType] =
@@ -57,7 +58,7 @@ export default function DocumentationPage() {
       user?.organizationId || user?.id,
       selectedType,
     ],
-    queryFn: async () => {
+    queryFn: () => {
       // In a real app, this would fetch from an API
       return mockDocumentationData.filter(
         doc =>
@@ -78,11 +79,13 @@ export default function DocumentationPage() {
 
   const formatContent = (content: string) => {
     // Simple markdown-like formatting
-    return content.split('\n').map((line, index) => {
+    return content.split('\n').map((line, idx) => {
+      const key = `line-${idx}-${line.slice(0, 20).replace(/\s/g, '')}`;
+
       if (line.startsWith('# ')) {
         return (
           <h2
-            key={index}
+            key={key}
             className="mb-2 mt-4 text-xl font-semibold text-primary"
           >
             {line.slice(2)}
@@ -91,24 +94,24 @@ export default function DocumentationPage() {
       }
       if (line.startsWith('## ')) {
         return (
-          <h3 key={index} className="mb-2 mt-3 text-lg font-medium">
+          <h3 key={key} className="mb-2 mt-3 text-lg font-medium">
             {line.slice(3)}
           </h3>
         );
       }
       if (line.startsWith('- ')) {
         return (
-          <li key={index} className="mb-1 ml-4">
+          <li key={key} className="mb-1 ml-4">
             {line.slice(2)}
           </li>
         );
       }
       if (line.trim() === '') {
-        return <br key={index} />;
+        return <br key={key} />;
       }
 
       return (
-        <p key={index} className="mb-2 text-gray-700 dark:text-gray-300">
+        <p key={key} className="mb-2 text-gray-700 dark:text-gray-300">
           {line}
         </p>
       );
@@ -137,6 +140,7 @@ export default function DocumentationPage() {
         <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700">
           {documentationTypes.map(type => (
             <button
+              type="button"
               key={type.value}
               onClick={() => setSelectedType(type.value)}
               className={`border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
@@ -159,10 +163,10 @@ export default function DocumentationPage() {
       </div>
 
       {/* Documentation Content */}
-      {isLoading ? (
+      {isLoading && (
         <div className="grid gap-4">
-          {[...Array(3)].map((_, i) => (
-            <Card key={i} className="animate-pulse p-6">
+          {['skeleton-1', 'skeleton-2', 'skeleton-3'].map(key => (
+            <Card key={key} className="animate-pulse p-6">
               <div className="mb-2 h-4 rounded bg-gray-200 dark:bg-gray-700" />
               <div className="mb-4 h-3 w-3/4 rounded bg-gray-200 dark:bg-gray-700" />
               <div className="space-y-2">
@@ -172,7 +176,9 @@ export default function DocumentationPage() {
             </Card>
           ))}
         </div>
-      ) : documentation.length > 0 ? (
+      )}
+
+      {!isLoading && documentation.length > 0 && (
         <div className="grid gap-6">
           {documentation.map(doc => (
             <Card key={doc.id} className="p-6">
@@ -201,17 +207,13 @@ export default function DocumentationPage() {
             </Card>
           ))}
         </div>
-      ) : (
+      )}
+
+      {!isLoading && documentation.length === 0 && (
         <EmptyState
           icon={<BookOpen className="h-12 w-12" />}
           title={`No ${documentationTypes.find(t => t.value === selectedType)?.label?.toLowerCase()} found`}
-          description={
-            selectedType === 'project-context'
-              ? 'Project context documentation will appear here once uploaded during project setup.'
-              : selectedType === 'feature-specs'
-                ? 'Feature specifications will be automatically generated as features are completed.'
-                : 'Additional technical documentation can be added to help your team understand the project better.'
-          }
+          description={getEmptyStateDescription(selectedType)}
         />
       )}
     </div>

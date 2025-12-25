@@ -7,7 +7,7 @@ interface IProps {
   changes: IProposedChange[];
 }
 
-export function SummaryView({ changes }: IProps) {
+export const SummaryView = ({ changes }: IProps) => {
   // Group changes by type
   const modified = changes.filter(c => c.changeType === 'modified');
   const added = changes.filter(c => c.changeType === 'added');
@@ -44,13 +44,13 @@ export function SummaryView({ changes }: IProps) {
           <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-900">
             <Badge variant="purple">Modified</Badge>
             <span>
-              {modified.length} section{modified.length !== 1 ? 's' : ''}
+              {modified.length} section{modified.length === 1 ? '' : 's'}
             </span>
           </h3>
           <div className="space-y-3">
-            {modified.map((change, index) => (
+            {modified.map(change => (
               <div
-                key={`modified-${index}`}
+                key={`modified-${change.section}`}
                 className="rounded-lg border border-purple-200 bg-purple-50 p-4"
               >
                 <div className="mb-2 flex items-start justify-between">
@@ -71,13 +71,13 @@ export function SummaryView({ changes }: IProps) {
           <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-900">
             <Badge variant="green">Added</Badge>
             <span>
-              {added.length} section{added.length !== 1 ? 's' : ''}
+              {added.length} section{added.length === 1 ? '' : 's'}
             </span>
           </h3>
           <div className="space-y-3">
-            {added.map((change, index) => (
+            {added.map(change => (
               <div
-                key={`added-${index}`}
+                key={`added-${change.section}`}
                 className="rounded-lg border border-green-200 bg-green-50 p-4"
               >
                 <div className="mb-2 flex items-start justify-between">
@@ -98,13 +98,13 @@ export function SummaryView({ changes }: IProps) {
           <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-900">
             <Badge variant="red">Removed</Badge>
             <span>
-              {removed.length} section{removed.length !== 1 ? 's' : ''}
+              {removed.length} section{removed.length === 1 ? '' : 's'}
             </span>
           </h3>
           <div className="space-y-3">
-            {removed.map((change, index) => (
+            {removed.map(change => (
               <div
-                key={`removed-${index}`}
+                key={`removed-${change.section}`}
                 className="rounded-lg border border-red-200 bg-red-50 p-4"
               >
                 <div className="mb-2 flex items-start justify-between">
@@ -127,4 +127,4 @@ export function SummaryView({ changes }: IProps) {
       )}
     </div>
   );
-}
+};

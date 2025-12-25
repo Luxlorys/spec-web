@@ -6,21 +6,22 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 
 import { StatusBadge } from 'features/feature-requests';
 import { SpecView } from 'features/spec-document';
-import { featureRequestsApi } from 'shared/api/feature-requests';
-import { specDocumentsApi } from 'shared/api/spec-documents';
-import { usersApi } from 'shared/api/users';
+import { featureRequestsApi, specDocumentsApi, usersApi } from 'shared/api';
 import { QueryKeys } from 'shared/constants';
-import { formatRelativeTime, queryClient , formatRelativeTime } from 'shared/lib';
-import { mockUsers } from 'shared/lib/mock-data';
+import { formatRelativeTime, mockUsers, queryClient } from 'shared/lib';
 import { FeatureStatus } from 'shared/types';
-import { Avatar, Button, Card, EmptyState, Tabs } from 'shared/ui';
 import {
+  Avatar,
+  Button,
+  Card,
+  EmptyState,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from 'shared/ui/select';
+  Tabs,
+} from 'shared/ui';
 
 const statusOptions: { value: FeatureStatus; label: string }[] = [
   { value: 'draft', label: 'Draft' },
@@ -33,9 +34,7 @@ interface IProps {
   featureId: string;
 }
 
-export function FeatureDetailClient({ featureId }: IProps) {
-  const { user: currentUser } = useAuthStore();
-
+export const FeatureDetailClient = ({ featureId }: IProps) => {
   const { data: feature, isLoading: featureLoading } = useQuery({
     queryKey: [QueryKeys.FEATURE_REQUEST_BY_ID, featureId],
     queryFn: () => featureRequestsApi.getById(featureId),
@@ -96,15 +95,37 @@ export function FeatureDetailClient({ featureId }: IProps) {
   }
 
   const creator = mockUsers.find(u => u.id === feature.createdBy);
-  const assignee = feature.assignedTo
-    ? mockUsers.find(u => u.id === feature.assignedTo)
-    : null;
-
   const createdAt = new Date(feature.createdAt);
   const updatedAt = new Date(feature.updatedAt);
 
   const hasSpec = !!spec;
   const hasConversation = !!feature.conversationId;
+
+  const renderSpecificationContent = () => {
+    if (specLoading) {
+      return (
+        <div className="flex h-64 items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        </div>
+      );
+    }
+
+    if (hasSpec && spec) {
+      return <SpecView spec={spec} />;
+    }
+
+    return (
+      <EmptyState
+        title="No specification yet"
+        description="Complete the AI conversation to generate a specification document"
+        action={
+          <Link href={`/features/${featureId}/conversation`}>
+            <Button>Start Conversation</Button>
+          </Link>
+        }
+      />
+    );
+  };
 
   const tabs = [
     {
@@ -233,23 +254,7 @@ export function FeatureDetailClient({ featureId }: IProps) {
     {
       id: 'specification',
       label: 'Specification',
-      content: specLoading ? (
-        <div className="flex h-64 items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-        </div>
-      ) : hasSpec && spec ? (
-        <SpecView spec={spec} />
-      ) : (
-        <EmptyState
-          title="No specification yet"
-          description="Complete the AI conversation to generate a specification document"
-          action={
-            <Link href={`/features/${featureId}/conversation`}>
-              <Button>Start Conversation</Button>
-            </Link>
-          }
-        />
-      ),
+      content: renderSpecificationContent(),
     },
 
     {
@@ -348,4 +353,4 @@ export function FeatureDetailClient({ featureId }: IProps) {
       <Tabs tabs={tabs} defaultTab="overview" />
     </>
   );
-}
+};

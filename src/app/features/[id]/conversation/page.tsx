@@ -7,11 +7,11 @@ import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 
 import { ChatInterface } from 'features/ai-conversation';
-import { featureRequestsApi } from 'shared/api/feature-requests';
+import { featureRequestsApi } from 'shared/api';
 import { QueryKeys } from 'shared/constants';
 import { Button } from 'shared/ui';
 
-function ConversationContent({ featureId }: { featureId: string }) {
+const ConversationContent = ({ featureId }: { featureId: string }) => {
   const { data: feature, isLoading } = useQuery({
     queryKey: [QueryKeys.FEATURE_REQUEST_BY_ID, featureId],
     queryFn: () => featureRequestsApi.getById(featureId),
@@ -72,7 +72,7 @@ function ConversationContent({ featureId }: { featureId: string }) {
       <ChatInterface featureId={featureId} />
     </main>
   );
-}
+};
 
 interface IProps {
   params: Promise<{ id: string }>;

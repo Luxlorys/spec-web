@@ -15,7 +15,7 @@ interface ICommentButtonProps {
 }
 
 export const CommentButton: FC<ICommentButtonProps> = ({
-  sectionId,
+  sectionId: _sectionId,
   commentCount,
   onClick,
   className,
@@ -24,6 +24,7 @@ export const CommentButton: FC<ICommentButtonProps> = ({
 
   return (
     <button
+      type="button"
       onClick={onClick}
       aria-label={`${commentCount} ${commentCount === 1 ? 'comment' : 'comments'} on this section`}
       className={cn(

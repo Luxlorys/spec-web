@@ -113,10 +113,8 @@ export const authApi = {
 
     // Process uploaded context files and create documentation entries
     if (data.contextFiles && data.contextFiles.length > 0) {
-      for (const file of data.contextFiles) {
-        // In a real implementation, you would read the file content and process it
-        // For this mock, we'll simulate file processing
-        const fileContent = await new Promise<string>(resolve => {
+      const readFile = (file: File): Promise<string> =>
+        new Promise(resolve => {
           const reader = new FileReader();
 
           reader.onload = e => {
@@ -125,7 +123,12 @@ export const authApi = {
           reader.readAsText(file);
         });
 
-        // Create documentation entry for each uploaded file
+      const fileContents = await Promise.all(
+        data.contextFiles.map(file => readFile(file)),
+      );
+
+      data.contextFiles.forEach((file, index) => {
+        const fileContent = fileContents[index];
         const docId = generateId();
 
         mockDocumentationData.push({
@@ -140,7 +143,7 @@ export const authApi = {
           authorId: userId,
           projectId: organizationId,
         });
-      }
+      });
     }
 
     // Create new user as founder
@@ -213,7 +216,7 @@ export const authApi = {
     mockUsers.push(newUser);
 
     // Increment usage count
-    inviteCode.usedCount++;
+    inviteCode.usedCount += 1;
 
     return {
       user: newUser,

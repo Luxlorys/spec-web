@@ -7,17 +7,17 @@ import { IUser } from 'shared/types';
 const AUTH_COOKIE_NAME = 'auth-token';
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 
-function setAuthCookie(token: string) {
+const setAuthCookie = (token: string) => {
   if (typeof document !== 'undefined') {
     document.cookie = `${AUTH_COOKIE_NAME}=${token}; path=/; max-age=${COOKIE_MAX_AGE}; SameSite=Lax`;
   }
-}
+};
 
-function removeAuthCookie() {
+const removeAuthCookie = () => {
   if (typeof document !== 'undefined') {
     document.cookie = `${AUTH_COOKIE_NAME}=; path=/; max-age=0`;
   }
-}
+};
 
 interface IAuthStore {
   user: IUser | null;
