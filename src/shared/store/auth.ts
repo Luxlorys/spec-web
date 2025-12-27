@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-import { IMembership, IOrganizationSummary, IUser } from 'shared/types';
+import { IOrganization, IUser } from 'shared/types';
 
 // Cookie configuration
 export const ACCESS_TOKEN_COOKIE = 'access-token';
@@ -33,8 +33,7 @@ interface IAuthStore {
   clearAuth: () => void;
 
   // Helpers
-  getCurrentMembership: () => IMembership | null;
-  getCurrentOrganization: () => IOrganizationSummary | null;
+  getCurrentOrganization: () => IOrganization | null;
 }
 
 export const useAuthStore = create<IAuthStore>()(
@@ -76,16 +75,10 @@ export const useAuthStore = create<IAuthStore>()(
         });
       },
 
-      getCurrentMembership: () => {
-        const { user } = get();
-
-        return user?.memberships[0] ?? null;
-      },
-
       getCurrentOrganization: () => {
         const { user } = get();
 
-        return user?.memberships[0]?.organization ?? null;
+        return user?.organization ?? null;
       },
     }),
     {

@@ -1,10 +1,4 @@
-export interface IOrganization {
-  id: string;
-  name: string;
-  description: string;
-  createdBy: string;
-  createdAt: Date;
-}
+// IOrganization is defined in user.ts and exported from there
 
 export interface ICreateOrganizationRequest {
   name: string;

@@ -7,22 +7,14 @@ export type UserRole =
   | 'DEVELOPER'
   | 'DESIGNER';
 
-// Organization summary for memberships
-export interface IOrganizationSummary {
+// Organization
+export interface IOrganization {
   id: number;
   name: string;
   slug: string;
 }
 
-// User membership in an organization
-export interface IMembership {
-  organizationId: number;
-  role: UserRole;
-  isFounder: boolean;
-  organization: IOrganizationSummary;
-}
-
-// User interface matching API response
+// User interface matching API response (simplified - no memberships)
 export interface IUser {
   id: number;
   email: string;
@@ -33,21 +25,14 @@ export interface IUser {
   createdAt: string;
   updatedAt: string;
   lastLoginAt: string | null;
-  memberships: IMembership[];
+  role: UserRole;
+  isFounder: boolean;
+  organization: IOrganization | null;
 }
 
 // Helper to get full name from user
 export const getFullName = (user: IUser): string =>
   `${user.firstName} ${user.lastName}`.trim();
-
-// Helper to get primary role from user's first membership
-export const getPrimaryRole = (user: IUser): UserRole | null =>
-  user.memberships[0]?.role ?? null;
-
-// Helper to get primary organization from user's first membership
-export const getPrimaryOrganization = (
-  user: IUser,
-): IOrganizationSummary | null => user.memberships[0]?.organization ?? null;
 
 // Login request
 export interface ILoginRequest {
@@ -92,7 +77,7 @@ export interface IResendVerificationRequest {
 // Invite code validation response
 export interface IInviteCodeValidation {
   valid: boolean;
-  organization?: IOrganizationSummary;
+  organization?: IOrganization;
   defaultRole?: UserRole;
 }
 
