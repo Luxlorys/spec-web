@@ -48,22 +48,19 @@ const getEmptyStateDescription = (type: DocumentationType): string => {
 };
 
 export default function DocumentationPage() {
-  const { user } = useAuthStore();
+  const { user, getCurrentOrganization } = useAuthStore();
+  const currentOrg = getCurrentOrganization();
   const [selectedType, setSelectedType] =
     useState<DocumentationType>('project-context');
 
+  const projectId = currentOrg?.id ?? user?.id;
+
   const { data: documentation = [], isLoading } = useQuery({
-    queryKey: [
-      QueryKeys.DOCUMENTATION,
-      user?.organizationId || user?.id,
-      selectedType,
-    ],
+    queryKey: [QueryKeys.DOCUMENTATION, projectId, selectedType],
     queryFn: () => {
       // In a real app, this would fetch from an API
       return mockDocumentationData.filter(
-        doc =>
-          doc.projectId === (user?.organizationId || user?.id) &&
-          doc.type === selectedType,
+        doc => doc.projectId === String(projectId) && doc.type === selectedType,
       );
     },
     enabled: !!user,

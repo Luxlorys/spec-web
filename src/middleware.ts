@@ -1,28 +1,27 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
+// Cookie name must match the one in shared/store/auth.ts
+const ACCESS_TOKEN_COOKIE = 'access-token';
+
 const PROTECTED_PATHS = [
   '/dashboard',
   '/features',
   '/settings',
   '/team',
   '/notifications',
+  '/documentation',
 ];
-
-const PUBLIC_PATHS = ['/login', '/signup', '/'];
 
 export const middleware = (request: NextRequest) => {
   const { pathname } = request.nextUrl;
-  const authToken = request.cookies.get('auth-token')?.value;
+  const accessToken = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
 
   const isProtectedPath = PROTECTED_PATHS.some(path =>
     pathname.startsWith(path),
   );
-  const isPublicPath = PUBLIC_PATHS.some(
-    path => pathname === path || (path !== '/' && pathname.startsWith(path)),
-  );
 
   // Redirect to login if accessing protected route without auth
-  if (isProtectedPath && !authToken) {
+  if (isProtectedPath && !accessToken) {
     const loginUrl = new URL('/login', request.url);
 
     loginUrl.searchParams.set('redirect', pathname);
@@ -31,11 +30,8 @@ export const middleware = (request: NextRequest) => {
   }
 
   // Redirect to dashboard if accessing login/signup while authenticated
-  if (
-    isPublicPath &&
-    authToken &&
-    (pathname === '/login' || pathname === '/signup')
-  ) {
+  // Don't redirect for verify-email, forgot-password, reset-password
+  if (accessToken && (pathname === '/login' || pathname === '/signup')) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 

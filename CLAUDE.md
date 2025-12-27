@@ -45,6 +45,7 @@ src/
 ```
 
 **Import Rules (Enforced by ESLint):**
+
 - `app` → can import from anywhere
 - `widgets` → can import from `features`, `entities`, `shared`
 - `features` → can import from `entities`, `shared`
@@ -60,6 +61,7 @@ src/
 ### API Architecture
 
 Currently using mock data with easy migration path:
+
 1. Mock handlers in `shared/api/mock/handlers/`
 2. Type-safe API client in `shared/api/client.ts`
 3. Replace mock with real backend by updating base URL in env
@@ -85,6 +87,7 @@ Currently using mock data with easy migration path:
 ### Creating New Features
 
 Use generators for consistency:
+
 ```bash
 yarn generate:feature feature-name  # Creates feature structure
 yarn generate:entity entity-name    # Creates entity with CRUD
@@ -95,6 +98,7 @@ yarn generate:entity entity-name    # Creates entity with CRUD
 1. Check existing components in `shared/ui/` before creating new ones
 2. Follow shadcn/ui patterns for consistency
 3. Use design tokens from Tailwind config
+4. Always use shadcn for new components and try avoiding custom components
 
 ### API Integration
 
@@ -107,21 +111,20 @@ yarn generate:entity entity-name    # Creates entity with CRUD
 
 ```typescript
 // Import UI components
-import { Button, Card } from 'shared/ui'
-
-// Import icons
-import { IconName } from 'shared/icons'
-
-// Use API
-import { api } from 'shared/api'
 
 // Access auth state
-import { useAuthStore } from 'features/auth'
+import { useAuthStore } from 'features/auth';
+// Use API
+import { api } from 'shared/api';
+// Import icons
+import { IconName } from 'shared/icons';
+import { Button, Card } from 'shared/ui';
 ```
 
 ## Environment Configuration
 
 Required environment variables (see `.env.example`):
+
 - `NEXT_PUBLIC_API_URL`: Backend API URL (defaults to mock)
 - `NEXT_PUBLIC_APP_URL`: Application URL
 

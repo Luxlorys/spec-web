@@ -9,7 +9,8 @@ import { SpecView } from 'features/spec-document';
 import { featureRequestsApi, specDocumentsApi, usersApi } from 'shared/api';
 import { QueryKeys } from 'shared/constants';
 import { formatRelativeTime, mockUsers, queryClient } from 'shared/lib';
-import { FeatureStatus } from 'shared/types';
+import { useAuthStore } from 'shared/store';
+import { FeatureStatus, getFullName } from 'shared/types';
 import {
   Avatar,
   Button,
@@ -35,6 +36,9 @@ interface IProps {
 }
 
 export const FeatureDetailClient = ({ featureId }: IProps) => {
+  const { getCurrentOrganization } = useAuthStore();
+  const currentOrg = getCurrentOrganization();
+
   const { data: feature, isLoading: featureLoading } = useQuery({
     queryKey: [QueryKeys.FEATURE_REQUEST_BY_ID, featureId],
     queryFn: () => featureRequestsApi.getById(featureId),
@@ -47,9 +51,9 @@ export const FeatureDetailClient = ({ featureId }: IProps) => {
   });
 
   const { data: teamMembers } = useQuery({
-    queryKey: [QueryKeys.USERS, feature?.organizationId],
-    queryFn: () => usersApi.getByOrganization(feature!.organizationId),
-    enabled: !!feature?.organizationId,
+    queryKey: [QueryKeys.USERS, currentOrg?.id],
+    queryFn: () => usersApi.getByOrganization(currentOrg!.id),
+    enabled: !!currentOrg?.id,
   });
 
   const updateStatusMutation = useMutation({
@@ -94,7 +98,8 @@ export const FeatureDetailClient = ({ featureId }: IProps) => {
     );
   }
 
-  const creator = mockUsers.find(u => u.id === feature.createdBy);
+  const creator = mockUsers.find(u => String(u.id) === feature.createdBy);
+  const creatorName = creator ? getFullName(creator) : 'Unknown';
   const createdAt = new Date(feature.createdAt);
   const updatedAt = new Date(feature.updatedAt);
 
@@ -184,14 +189,14 @@ export const FeatureDetailClient = ({ featureId }: IProps) => {
                     <SelectContent>
                       <SelectItem value="unassigned">Unassigned</SelectItem>
                       {teamMembers?.map(member => (
-                        <SelectItem key={member.id} value={member.id}>
+                        <SelectItem key={member.id} value={String(member.id)}>
                           <div className="flex items-center gap-2">
                             <Avatar
-                              src={member.avatarUrl}
-                              alt={member.name}
+                              src={member.avatarUrl ?? undefined}
+                              alt={getFullName(member)}
                               size="xs"
                             />
-                            <span>{member.name}</span>
+                            <span>{getFullName(member)}</span>
                           </div>
                         </SelectItem>
                       ))}
@@ -205,7 +210,7 @@ export const FeatureDetailClient = ({ featureId }: IProps) => {
                   Created By
                 </dt>
                 <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                  {creator?.name || 'Unknown'}
+                  {creatorName}
                 </dd>
               </div>
 
@@ -285,7 +290,7 @@ export const FeatureDetailClient = ({ featureId }: IProps) => {
               </div>
               <div className="flex-1">
                 <p className="text-sm text-gray-900 dark:text-gray-100">
-                  <span className="font-medium">{creator?.name}</span> created
+                  <span className="font-medium">{creatorName}</span> created
                   this feature
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">

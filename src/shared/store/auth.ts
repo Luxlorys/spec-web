@@ -1,61 +1,110 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-import { IUser } from 'shared/types';
+import { IMembership, IOrganizationSummary, IUser } from 'shared/types';
 
-// Cookie helpers for middleware auth
-const AUTH_COOKIE_NAME = 'auth-token';
-const COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
+// Cookie configuration
+export const ACCESS_TOKEN_COOKIE = 'access-token';
+export const REFRESH_TOKEN_COOKIE = 'refresh-token';
+const ACCESS_TOKEN_MAX_AGE = 60 * 60 * 24 * 3; // 3 days (matches API)
+const REFRESH_TOKEN_MAX_AGE = 60 * 60 * 24 * 5; // 5 days (matches API)
 
-const setAuthCookie = (token: string) => {
+const setCookie = (name: string, value: string, maxAge: number) => {
   if (typeof document !== 'undefined') {
-    document.cookie = `${AUTH_COOKIE_NAME}=${token}; path=/; max-age=${COOKIE_MAX_AGE}; SameSite=Lax`;
+    document.cookie = `${name}=${value}; path=/; max-age=${maxAge}; SameSite=Lax`;
   }
 };
 
-const removeAuthCookie = () => {
+const removeCookie = (name: string) => {
   if (typeof document !== 'undefined') {
-    document.cookie = `${AUTH_COOKIE_NAME}=; path=/; max-age=0`;
+    document.cookie = `${name}=; path=/; max-age=0`;
   }
 };
 
 interface IAuthStore {
   user: IUser | null;
-  token: string | null;
+  accessToken: string | null;
+  refreshToken: string | null;
   isAuthenticated: boolean;
-  setAuth: (user: IUser, token: string) => void;
+
+  // Actions
+  setAuth: (user: IUser, accessToken: string, refreshToken: string) => void;
+  setTokens: (accessToken: string, refreshToken: string) => void;
   clearAuth: () => void;
+
+  // Helpers
+  getCurrentMembership: () => IMembership | null;
+  getCurrentOrganization: () => IOrganizationSummary | null;
 }
 
 export const useAuthStore = create<IAuthStore>()(
   persist(
-    set => ({
+    (set, get) => ({
       user: null,
-      token: null,
+      accessToken: null,
+      refreshToken: null,
       isAuthenticated: false,
-      setAuth: (user, token) => {
-        setAuthCookie(token);
+
+      setAuth: (user, accessToken, refreshToken) => {
+        setCookie(ACCESS_TOKEN_COOKIE, accessToken, ACCESS_TOKEN_MAX_AGE);
+        setCookie(REFRESH_TOKEN_COOKIE, refreshToken, REFRESH_TOKEN_MAX_AGE);
         set({
           user,
-          token,
+          accessToken,
+          refreshToken,
           isAuthenticated: true,
         });
       },
+
+      setTokens: (accessToken, refreshToken) => {
+        setCookie(ACCESS_TOKEN_COOKIE, accessToken, ACCESS_TOKEN_MAX_AGE);
+        setCookie(REFRESH_TOKEN_COOKIE, refreshToken, REFRESH_TOKEN_MAX_AGE);
+        set({
+          accessToken,
+          refreshToken,
+        });
+      },
+
       clearAuth: () => {
-        removeAuthCookie();
+        removeCookie(ACCESS_TOKEN_COOKIE);
+        removeCookie(REFRESH_TOKEN_COOKIE);
         set({
           user: null,
-          token: null,
+          accessToken: null,
+          refreshToken: null,
           isAuthenticated: false,
         });
+      },
+
+      getCurrentMembership: () => {
+        const { user } = get();
+
+        return user?.memberships[0] ?? null;
+      },
+
+      getCurrentOrganization: () => {
+        const { user } = get();
+
+        return user?.memberships[0]?.organization ?? null;
       },
     }),
     {
       name: 'auth-storage',
       onRehydrateStorage: () => state => {
-        // Sync cookie on rehydration if token exists
-        if (state?.token) {
-          setAuthCookie(state.token);
+        // Sync cookies on rehydration if tokens exist
+        if (state?.accessToken) {
+          setCookie(
+            ACCESS_TOKEN_COOKIE,
+            state.accessToken,
+            ACCESS_TOKEN_MAX_AGE,
+          );
+        }
+        if (state?.refreshToken) {
+          setCookie(
+            REFRESH_TOKEN_COOKIE,
+            state.refreshToken,
+            REFRESH_TOKEN_MAX_AGE,
+          );
         }
       },
     },

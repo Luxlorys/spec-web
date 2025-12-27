@@ -8,72 +8,44 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowLeft, CheckCircle2, Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 
-import { authApi } from 'shared/api/auth';
-import { useAuthStore } from 'shared/store';
-import { IInviteCode, TeamMemberRole } from 'shared/types';
+import { authApi, formatRole } from 'shared/api';
+import { showApiError } from 'shared/lib';
+import { IInviteCodeValidation } from 'shared/types';
 import { Button, Input } from 'shared/ui';
 
-import { MemberSignupInput, memberSignupSchema } from '../../lib';
+import {
+  MemberSignupInput,
+  memberSignupSchema,
+  PASSWORD_REQUIREMENTS,
+} from '../../lib';
 
 interface IProps {
   onBack: () => void;
 }
 
-const roleOptions: {
-  value: TeamMemberRole;
-  label: string;
-  description: string;
-}[] = [
-  {
-    value: 'developer',
-    label: 'Developer',
-    description: 'Build and implement features',
-  },
-  {
-    value: 'ba',
-    label: 'Business Analyst',
-    description: 'Define requirements and specs',
-  },
-  {
-    value: 'pm',
-    label: 'Project Manager',
-    description: 'Coordinate and manage projects',
-  },
-  {
-    value: 'designer',
-    label: 'Designer',
-    description: 'Design UI/UX and visuals',
-  },
-];
-
 export const MemberSignupForm: FC<IProps> = ({ onBack }) => {
   const router = useRouter();
-  const { setAuth } = useAuthStore();
-  const [error, setError] = useState<string>('');
-  const [validatedInvite, setValidatedInvite] = useState<IInviteCode | null>(
-    null,
-  );
+  const [validatedInvite, setValidatedInvite] =
+    useState<IInviteCodeValidation | null>(null);
   const [isValidating, setIsValidating] = useState(false);
 
   const {
     register,
     handleSubmit,
     watch,
-    setValue,
     formState: { errors, isSubmitting },
   } = useForm<MemberSignupInput>({
     resolver: zodResolver(memberSignupSchema),
     defaultValues: {
       inviteCode: '',
-      name: '',
+      firstName: '',
+      lastName: '',
       email: '',
       password: '',
-      role: undefined,
     },
   });
 
   const inviteCode = watch('inviteCode');
-  const selectedRole = watch('role');
 
   const validateInviteCode = async () => {
     if (!inviteCode.trim()) {
@@ -81,15 +53,18 @@ export const MemberSignupForm: FC<IProps> = ({ onBack }) => {
     }
 
     setIsValidating(true);
-    setError('');
     setValidatedInvite(null);
 
     try {
-      const invite = await authApi.validateInviteCode(inviteCode.trim());
+      const invite = await authApi.verifyInviteCode(inviteCode.trim());
 
-      setValidatedInvite(invite);
+      if (invite.valid) {
+        setValidatedInvite(invite);
+      } else {
+        showApiError(new Error('Invalid invite code'));
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Invalid invite code');
+      showApiError(err);
     } finally {
       setIsValidating(false);
     }
@@ -97,19 +72,23 @@ export const MemberSignupForm: FC<IProps> = ({ onBack }) => {
 
   const onSubmit = async (values: MemberSignupInput) => {
     if (!validatedInvite) {
-      setError('Please validate your invite code first');
+      showApiError(new Error('Please validate your invite code first'));
 
       return;
     }
 
     try {
-      setError('');
-      const response = await authApi.signupWithInvite(values);
-
-      setAuth(response.user, response.token);
-      router.push('/dashboard');
+      await authApi.registerWithInvite({
+        email: values.email,
+        password: values.password,
+        firstName: values.firstName,
+        lastName: values.lastName,
+        inviteCode: values.inviteCode,
+      });
+      // Redirect to verification page - user must verify email before logging in
+      router.push(`/verify-email?email=${encodeURIComponent(values.email)}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Signup failed');
+      showApiError(err);
     }
   };
 
@@ -155,12 +134,19 @@ export const MemberSignupForm: FC<IProps> = ({ onBack }) => {
             )}
           </div>
 
-          {validatedInvite && (
+          {validatedInvite && validatedInvite.organization && (
             <div className="flex items-center gap-2 rounded-lg bg-green-50 p-3 text-sm text-green-800 dark:bg-green-900/20 dark:text-green-400">
               <CheckCircle2 className="h-4 w-4 shrink-0" />
               <span>
                 You&apos;re joining{' '}
-                <strong>{validatedInvite.organizationName}</strong>
+                <strong>{validatedInvite.organization.name}</strong>
+                {validatedInvite.defaultRole && (
+                  <>
+                    {' '}
+                    as{' '}
+                    <strong>{formatRole(validatedInvite.defaultRole)}</strong>
+                  </>
+                )}
               </span>
             </div>
           )}
@@ -169,15 +155,28 @@ export const MemberSignupForm: FC<IProps> = ({ onBack }) => {
         {/* Only show rest of form after invite validation */}
         {validatedInvite && (
           <>
-            <div>
-              <Input
-                {...register('name')}
-                type="text"
-                label="Full Name"
-                placeholder="John Doe"
-                error={errors.name?.message}
-                autoComplete="name"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Input
+                  {...register('firstName')}
+                  type="text"
+                  label="First Name"
+                  placeholder="John"
+                  error={errors.firstName?.message}
+                  autoComplete="given-name"
+                />
+              </div>
+
+              <div>
+                <Input
+                  {...register('lastName')}
+                  type="text"
+                  label="Last Name"
+                  placeholder="Doe"
+                  error={errors.lastName?.message}
+                  autoComplete="family-name"
+                />
+              </div>
             </div>
 
             <div>
@@ -198,50 +197,11 @@ export const MemberSignupForm: FC<IProps> = ({ onBack }) => {
                 label="Password"
                 placeholder="********"
                 error={errors.password?.message}
-                helperText="Minimum 8 characters"
+                helperText={PASSWORD_REQUIREMENTS}
                 autoComplete="new-password"
               />
             </div>
-
-            {/* Role Selection */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">
-                Your Role
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                {roleOptions.map(role => (
-                  <button
-                    key={role.value}
-                    type="button"
-                    onClick={() =>
-                      setValue('role', role.value, { shouldValidate: true })
-                    }
-                    className={`rounded-lg border p-3 text-left transition-colors ${
-                      selectedRole === role.value
-                        ? 'border-primary bg-primary/5 ring-1 ring-primary'
-                        : 'border-border hover:border-primary/50 hover:bg-muted/50'
-                    }`}
-                  >
-                    <div className="text-sm font-medium">{role.label}</div>
-                    <div className="mt-0.5 text-xs text-muted-foreground">
-                      {role.description}
-                    </div>
-                  </button>
-                ))}
-              </div>
-              {errors.role?.message && (
-                <p className="text-sm text-red-600 dark:text-red-400">
-                  {errors.role.message}
-                </p>
-              )}
-            </div>
           </>
-        )}
-
-        {error && (
-          <div className="rounded-lg bg-red-50 p-3 text-sm text-red-800 dark:bg-red-900/20 dark:text-red-400">
-            {error}
-          </div>
         )}
 
         <Button
@@ -250,7 +210,7 @@ export const MemberSignupForm: FC<IProps> = ({ onBack }) => {
           isLoading={isSubmitting}
           disabled={!validatedInvite}
         >
-          Join Project
+          Join Organization
         </Button>
       </form>
     </div>
