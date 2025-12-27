@@ -11,6 +11,7 @@ export enum QueryKeys {
   // Feature Requests
   FEATURE_REQUESTS = 'featureRequests',
   FEATURE_REQUEST_BY_ID = 'featureRequestById',
+  FEATURE_ACTIVITIES = 'featureActivities',
 
   // Conversations
   CONVERSATION_BY_FEATURE = 'conversationByFeature',

@@ -1,9 +1,70 @@
+/**
+ * Specification document returned from API
+ * GET /features/:id/specification
+ */
+export interface ISpecDocument {
+  id: number;
+  featureId: number;
+  version: number;
+  isLatest: boolean;
+  overview: string;
+  problemStatement: string;
+  userStories: string[];
+  acceptanceCriteria: string[];
+  scopeIncluded: string[];
+  scopeExcluded: string[];
+  technicalConsiderations: string[];
+  regeneratedFromVersion: number | null;
+  regenerationReason: string | null;
+  generatedAt: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Section keys that can be updated
+ */
+export type SpecSectionKey =
+  | 'overview'
+  | 'problemStatement'
+  | 'userStories'
+  | 'acceptanceCriteria'
+  | 'scopeIncluded'
+  | 'scopeExcluded'
+  | 'technicalConsiderations';
+
+/**
+ * Request type for updating a spec section
+ */
+export interface IUpdateSpecSection {
+  section: SpecSectionKey;
+  value: string | string[];
+}
+
+/**
+ * API response wrapper for specification
+ */
+export interface IGetSpecificationResponse {
+  specification: ISpecDocument;
+}
+
+// ============================================================================
+// Legacy types - kept for backward compatibility with unused components
+// These will be removed when the corresponding features are implemented
+// ============================================================================
+
+/**
+ * @deprecated Legacy type - will be updated when acceptance criteria feature is implemented
+ */
 export interface IAcceptanceCriteria {
   id: string;
   description: string;
   completed: boolean;
 }
 
+/**
+ * @deprecated Legacy type - will be updated when open questions feature is implemented
+ */
 export interface IOpenQuestion {
   id: string;
   question: string;
@@ -13,62 +74,41 @@ export interface IOpenQuestion {
   resolved: boolean;
 }
 
+/**
+ * @deprecated Legacy type - will be updated when edge cases feature is implemented
+ */
 export interface IEdgeCase {
   scenario: string;
   expectedBehavior: string;
 }
 
-export interface ISpecDocument {
-  id: string;
-  featureRequestId: string;
-  overview: string;
-  problemStatement: string;
-  userStories: string[];
-  acceptanceCriteria: IAcceptanceCriteria[];
-  scopeIncluded: string[];
-  scopeExcluded: string[];
-  technicalConsiderations: string[];
-  openQuestions: IOpenQuestion[];
-  edgeCases: IEdgeCase[];
-  assumptions: string[];
-  version: number;
-  generatedAt: Date;
-  updatedAt: Date;
-}
-
-export interface IUpdateSpecSection {
-  section: keyof Pick<
-    ISpecDocument,
-    | 'overview'
-    | 'problemStatement'
-    | 'userStories'
-    | 'scopeIncluded'
-    | 'scopeExcluded'
-    | 'technicalConsiderations'
-    | 'assumptions'
-  >;
-  value: string | string[];
-}
-
-// Version history types for spec regeneration
+/**
+ * @deprecated Legacy type - will be updated when version history feature is implemented
+ */
 export interface ISpecVersion {
   id: string;
   specDocumentId: string;
   version: number;
-  snapshot: Omit<ISpecDocument, 'id' | 'featureRequestId' | 'version'>;
+  snapshot: Record<string, unknown>;
   changeDescription: string;
   createdBy: string;
   createdAt: Date;
 }
 
+/**
+ * @deprecated Legacy type - will be updated when regeneration feature is implemented
+ */
 export interface IProposedChange {
   section: string;
-  currentValue: string | string[] | IAcceptanceCriteria[] | IEdgeCase[] | any;
-  proposedValue: string | string[] | IAcceptanceCriteria[] | IEdgeCase[] | any;
+  currentValue: unknown;
+  proposedValue: unknown;
   changeType: 'modified' | 'added' | 'removed' | 'unchanged';
   reason: string;
 }
 
+/**
+ * @deprecated Legacy type - will be updated when regeneration feature is implemented
+ */
 export interface IRegenerationPreview {
   currentVersion: number;
   nextVersion: number;

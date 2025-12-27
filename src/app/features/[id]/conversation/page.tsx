@@ -12,9 +12,12 @@ import { QueryKeys } from 'shared/constants';
 import { Button } from 'shared/ui';
 
 const ConversationContent = ({ featureId }: { featureId: string }) => {
+  const numericId = parseInt(featureId, 10);
+
   const { data: feature, isLoading } = useQuery({
     queryKey: [QueryKeys.FEATURE_REQUEST_BY_ID, featureId],
-    queryFn: () => featureRequestsApi.getById(featureId),
+    queryFn: () => featureRequestsApi.getById(numericId),
+    enabled: !Number.isNaN(numericId),
   });
 
   if (isLoading) {

@@ -18,3 +18,4 @@ export * from './separator';
 export * from './tooltip';
 export * from './dropdown-menu';
 export * from './skeleton';
+export * from './skeletons';

@@ -1,133 +1,118 @@
-import { delay, generateId } from 'shared/lib';
+import { api } from 'shared/lib';
 import {
-  mockConversations,
-  mockFeatureRequests,
-  mockSpecDocuments,
-} from 'shared/lib/mock-data';
-import {
+  IActivity,
   ICreateFeatureRequest,
+  ICreateFeatureResponse,
+  IDeleteFeatureResponse,
+  IFeatureListResponse,
   IFeatureRequest,
   IFeatureRequestFilters,
-  IUpdateFeatureRequest,
+  IGetActivitiesResponse,
+  IGetFeatureResponse,
+  IGetSpecificationResponse,
+  ISpecDocument,
+  IUpdateFeatureStatusRequest,
+  IUpdateFeatureStatusResponse,
 } from 'shared/types';
 
 export const featureRequestsApi = {
+  /**
+   * Get paginated list of features
+   * GET /features
+   */
   getAll: async (
     filters?: IFeatureRequestFilters,
-  ): Promise<IFeatureRequest[]> => {
-    await delay(300);
+  ): Promise<IFeatureListResponse> => {
+    const { data } = await api.get<IFeatureListResponse>('/features', {
+      params: filters,
+    });
 
-    let results = [...mockFeatureRequests];
-
-    // Apply filters
-    if (filters?.status) {
-      results = results.filter(f => f.status === filters.status);
-    }
-
-    if (filters?.assignedTo) {
-      results = results.filter(f => f.assignedTo === filters.assignedTo);
-    }
-
-    if (filters?.search) {
-      const searchLower = filters.search.toLowerCase();
-
-      results = results.filter(
-        f =>
-          f.title.toLowerCase().includes(searchLower) ||
-          f.initialContext?.toLowerCase().includes(searchLower),
-      );
-    }
-
-    // Sort by last activity (most recent first)
-    results.sort(
-      (a, b) => b.lastActivityAt.getTime() - a.lastActivityAt.getTime(),
-    );
-
-    return results;
+    return data;
   },
 
-  getById: async (id: string): Promise<IFeatureRequest> => {
-    await delay(200);
+  /**
+   * Get feature by ID
+   * GET /features/:id
+   */
+  getById: async (id: number): Promise<IFeatureRequest> => {
+    const { data } = await api.get<IGetFeatureResponse>(`/features/${id}`);
 
-    const feature = mockFeatureRequests.find(f => f.id === id);
-
-    if (!feature) {
-      throw new Error('Feature request not found');
-    }
-
-    return feature;
+    return data.feature;
   },
 
-  create: async (data: ICreateFeatureRequest): Promise<IFeatureRequest> => {
-    await delay(500);
-
-    const newFeature: IFeatureRequest = {
-      id: generateId(),
-      ...data,
-      organizationId: 'org-1', // Mock: Use current user's org
-      createdBy: 'user-1', // Mock: Use current user
-      status: 'draft',
-      openQuestionsCount: 0,
-      lastActivityAt: new Date(),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    mockFeatureRequests.unshift(newFeature);
-
-    return newFeature;
-  },
-
-  update: async (
-    id: string,
-    data: IUpdateFeatureRequest,
+  /**
+   * Create a new feature
+   * POST /features
+   */
+  create: async (
+    requestData: ICreateFeatureRequest,
   ): Promise<IFeatureRequest> => {
-    await delay(400);
+    const { data } = await api.post<ICreateFeatureResponse>(
+      '/features',
+      requestData,
+    );
 
-    const index = mockFeatureRequests.findIndex(f => f.id === id);
-
-    if (index === -1) {
-      throw new Error('Feature request not found');
-    }
-
-    const updated = {
-      ...mockFeatureRequests[index],
-      ...data,
-      updatedAt: new Date(),
-      lastActivityAt: new Date(),
-    };
-
-    mockFeatureRequests[index] = updated;
-
-    return updated;
+    return data.feature;
   },
 
-  delete: async (id: string): Promise<void> => {
-    await delay(300);
-
-    const index = mockFeatureRequests.findIndex(f => f.id === id);
-
-    if (index === -1) {
-      throw new Error('Feature request not found');
-    }
-
-    mockFeatureRequests.splice(index, 1);
-
-    // Also remove related conversation and spec
-    const convIndex = mockConversations.findIndex(
-      c => c.featureRequestId === id,
+  /**
+   * Update feature status
+   * PATCH /features/:id/status
+   */
+  updateStatus: async (
+    id: number,
+    requestData: IUpdateFeatureStatusRequest,
+  ): Promise<IFeatureRequest> => {
+    const { data } = await api.post<IUpdateFeatureStatusResponse>(
+      `/features/${id}/status`,
+      requestData,
     );
 
-    if (convIndex !== -1) {
-      mockConversations.splice(convIndex, 1);
-    }
+    return data.feature;
+  },
 
-    const specIndex = mockSpecDocuments.findIndex(
-      s => s.featureRequestId === id,
+  /**
+   * Delete feature (soft delete)
+   * DELETE /features/:id
+   */
+  delete: async (id: number): Promise<boolean> => {
+    const { data } = await api.delete<IDeleteFeatureResponse>(
+      `/features/${id}`,
     );
 
-    if (specIndex !== -1) {
-      mockSpecDocuments.splice(specIndex, 1);
+    return data.success;
+  },
+
+  /**
+   * Get the latest specification for a feature
+   * GET /features/:id/specification
+   */
+  getSpecification: async (
+    featureId: number,
+  ): Promise<ISpecDocument | null> => {
+    try {
+      const { data } = await api.get<IGetSpecificationResponse>(
+        `/features/${featureId}/specification`,
+      );
+
+      return data.specification;
+    } catch (error: any) {
+      if (error?.response?.status === 404) {
+        return null;
+      }
+      throw error;
     }
+  },
+
+  /**
+   * Get activities for a feature
+   * GET /features/:id/activities
+   */
+  getActivities: async (featureId: number): Promise<IActivity[]> => {
+    const { data } = await api.get<IGetActivitiesResponse>(
+      `/features/${featureId}/activities`,
+    );
+
+    return data.activities;
   },
 };

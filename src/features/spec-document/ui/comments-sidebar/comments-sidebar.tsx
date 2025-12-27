@@ -2,6 +2,8 @@
 
 import { FC } from 'react';
 
+import { MessageCircle } from 'lucide-react';
+
 import {
   Sheet,
   SheetContent,
@@ -10,22 +12,15 @@ import {
   SheetTitle,
 } from 'shared/ui';
 
-import { CommentForm } from '../comment-form';
-import { CommentList } from '../comment-list';
-
 interface ICommentsSidebarProps {
   isOpen: boolean;
   onClose: () => void;
-  specDocumentId: string;
-  section: string;
   sectionTitle: string;
 }
 
 export const CommentsSidebar: FC<ICommentsSidebarProps> = ({
   isOpen,
   onClose,
-  specDocumentId,
-  section,
   sectionTitle,
 }) => {
   return (
@@ -42,14 +37,18 @@ export const CommentsSidebar: FC<ICommentsSidebarProps> = ({
           </SheetDescription>
         </SheetHeader>
 
-        {/* Content - Scrollable */}
-        <div className="flex-1 overflow-y-auto p-4">
-          <CommentList specDocumentId={specDocumentId} section={section} />
-        </div>
-
-        {/* Footer - Comment Form */}
-        <div className="border-t border-border p-4">
-          <CommentForm specDocumentId={specDocumentId} section={section} />
+        {/* Content - Coming Soon */}
+        <div className="flex flex-1 flex-col items-center justify-center p-8 text-center">
+          <div className="mb-4 rounded-full bg-gray-100 p-4 dark:bg-gray-800">
+            <MessageCircle className="h-8 w-8 text-gray-400" />
+          </div>
+          <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-gray-100">
+            Comments coming soon
+          </h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            The ability to add and view comments on specification sections will
+            be available in a future update.
+          </p>
         </div>
       </SheetContent>
     </Sheet>

@@ -14,10 +14,11 @@ const statusConfig: Record<
     variant: 'gray' | 'blue' | 'purple' | 'green';
   }
 > = {
-  draft: { label: 'Draft', variant: 'gray' },
-  spec_generated: { label: 'Spec Generated', variant: 'purple' },
-  ready_to_build: { label: 'Ready to Build', variant: 'blue' },
-  completed: { label: 'Completed', variant: 'green' },
+  DRAFT: { label: 'Draft', variant: 'gray' },
+  SPEC_GENERATED: { label: 'Spec Generated', variant: 'purple' },
+  READY_TO_BUILD: { label: 'Ready to Build', variant: 'blue' },
+  COMPLETED: { label: 'Completed', variant: 'green' },
+  ARCHIVED: { label: 'Archived', variant: 'gray' },
 };
 
 export const StatusBadge: FC<IProps> = ({ status }) => {

@@ -6,9 +6,9 @@ import Link from 'next/link';
 
 import { Calendar } from 'lucide-react';
 
-import { cn, formatRelativeTime, mockUsers } from 'shared/lib';
-import { getFullName, IFeatureRequest } from 'shared/types';
-import { Avatar, Badge, Card } from 'shared/ui';
+import { cn, formatRelativeTime } from 'shared/lib';
+import { IFeatureRequest } from 'shared/types';
+import { Avatar, Card } from 'shared/ui';
 
 import { StatusBadge } from '../status-badge';
 
@@ -18,10 +18,7 @@ interface IProps {
 }
 
 export const FeatureCard: FC<IProps> = ({ feature, variant = 'grid' }) => {
-  const assignee = feature.assignedTo
-    ? mockUsers.find(u => String(u.id) === feature.assignedTo)
-    : null;
-  const assigneeName = assignee ? getFullName(assignee) : '';
+  const creatorName = `${feature.createdBy.firstName} ${feature.createdBy.lastName}`;
 
   if (variant === 'list') {
     return (
@@ -43,26 +40,17 @@ export const FeatureCard: FC<IProps> = ({ feature, variant = 'grid' }) => {
             </div>
 
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              {feature.openQuestionsCount > 0 && (
-                <Badge variant="yellow" size="sm">
-                  {feature.openQuestionsCount} Q
-                </Badge>
-              )}
-              {assignee ? (
-                <div className="flex items-center gap-1.5">
-                  <Avatar
-                    src={assignee.avatarUrl ?? undefined}
-                    alt={assigneeName}
-                    size="xs"
-                  />
-                  <span>{assigneeName}</span>
-                </div>
-              ) : (
-                <span className="text-muted-foreground/60">Unassigned</span>
-              )}
+              <div className="flex items-center gap-1.5">
+                <Avatar
+                  src={feature.createdBy.avatarUrl ?? undefined}
+                  alt={creatorName}
+                  size="xs"
+                />
+                <span>{creatorName}</span>
+              </div>
               <div className="flex items-center gap-1">
                 <Calendar className="h-3 w-3" />
-                <span>{formatRelativeTime(feature.lastActivityAt)}</span>
+                <span>{formatRelativeTime(new Date(feature.updatedAt))}</span>
               </div>
             </div>
           </div>
@@ -82,11 +70,6 @@ export const FeatureCard: FC<IProps> = ({ feature, variant = 'grid' }) => {
         {/* Header with badges */}
         <div className="mb-3 flex items-start justify-between gap-2">
           <StatusBadge status={feature.status} />
-          {feature.openQuestionsCount > 0 && (
-            <Badge variant="yellow" size="sm">
-              {feature.openQuestionsCount} Q
-            </Badge>
-          )}
         </div>
 
         {/* Title and description */}
@@ -103,21 +86,17 @@ export const FeatureCard: FC<IProps> = ({ feature, variant = 'grid' }) => {
 
         {/* Footer */}
         <div className="flex items-center justify-between border-t pt-3 text-xs text-muted-foreground">
-          {assignee ? (
-            <div className="flex items-center gap-1.5">
-              <Avatar
-                src={assignee.avatarUrl ?? undefined}
-                alt={assigneeName}
-                size="xs"
-              />
-              <span>{assigneeName}</span>
-            </div>
-          ) : (
-            <span className="text-muted-foreground/60">Unassigned</span>
-          )}
+          <div className="flex items-center gap-1.5">
+            <Avatar
+              src={feature.createdBy.avatarUrl ?? undefined}
+              alt={creatorName}
+              size="xs"
+            />
+            <span>{creatorName}</span>
+          </div>
           <div className="flex items-center gap-1.5">
             <Calendar className="h-3 w-3" />
-            <span>{formatRelativeTime(feature.lastActivityAt)}</span>
+            <span>{formatRelativeTime(new Date(feature.updatedAt))}</span>
           </div>
         </div>
       </Card>

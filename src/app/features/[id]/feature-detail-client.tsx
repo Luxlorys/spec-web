@@ -4,61 +4,42 @@ import Link from 'next/link';
 
 import { useMutation, useQuery } from '@tanstack/react-query';
 
-import { StatusBadge } from 'features/feature-requests';
+import { ActivityList, FeatureOverview } from 'features/feature-details';
 import { SpecView } from 'features/spec-document';
-import { featureRequestsApi, specDocumentsApi, usersApi } from 'shared/api';
+import { featureRequestsApi } from 'shared/api';
 import { QueryKeys } from 'shared/constants';
-import { formatRelativeTime, mockUsers, queryClient } from 'shared/lib';
-import { useAuthStore } from 'shared/store';
-import { FeatureStatus, getFullName } from 'shared/types';
-import {
-  Avatar,
-  Button,
-  Card,
-  EmptyState,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Tabs,
-} from 'shared/ui';
-
-const statusOptions: { value: FeatureStatus; label: string }[] = [
-  { value: 'draft', label: 'Draft' },
-  { value: 'spec_generated', label: 'Spec Generated' },
-  { value: 'ready_to_build', label: 'Ready to Build' },
-  { value: 'completed', label: 'Completed' },
-];
+import { queryClient, showApiError } from 'shared/lib';
+import { FeatureStatus } from 'shared/types';
+import { Button, EmptyState, Tabs } from 'shared/ui';
 
 interface IProps {
   featureId: string;
 }
 
 export const FeatureDetailClient = ({ featureId }: IProps) => {
-  const { getCurrentOrganization } = useAuthStore();
-  const currentOrg = getCurrentOrganization();
+  const numericId = parseInt(featureId, 10);
 
   const { data: feature, isLoading: featureLoading } = useQuery({
     queryKey: [QueryKeys.FEATURE_REQUEST_BY_ID, featureId],
-    queryFn: () => featureRequestsApi.getById(featureId),
+    queryFn: () => featureRequestsApi.getById(numericId),
+    enabled: !Number.isNaN(numericId),
   });
 
   const { data: spec, isLoading: specLoading } = useQuery({
-    queryKey: [QueryKeys.SPEC_BY_FEATURE, featureId],
-    queryFn: () => specDocumentsApi.getByFeatureId(featureId),
-    enabled: !!feature?.specDocumentId,
+    queryKey: [QueryKeys.SPEC_BY_FEATURE, numericId],
+    queryFn: () => featureRequestsApi.getSpecification(numericId),
+    enabled: !!feature,
   });
 
-  const { data: teamMembers } = useQuery({
-    queryKey: [QueryKeys.USERS, currentOrg?.id],
-    queryFn: () => usersApi.getByOrganization(currentOrg!.id),
-    enabled: !!currentOrg?.id,
+  const { data: activities, isLoading: activitiesLoading } = useQuery({
+    queryKey: [QueryKeys.FEATURE_ACTIVITIES, numericId],
+    queryFn: () => featureRequestsApi.getActivities(numericId),
+    enabled: !!feature,
   });
 
   const updateStatusMutation = useMutation({
     mutationFn: (status: FeatureStatus) =>
-      featureRequestsApi.update(featureId, { status }),
+      featureRequestsApi.updateStatus(numericId, { status }),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: [QueryKeys.FEATURE_REQUEST_BY_ID, featureId],
@@ -67,18 +48,8 @@ export const FeatureDetailClient = ({ featureId }: IProps) => {
         queryKey: [QueryKeys.FEATURE_REQUESTS],
       });
     },
-  });
-
-  const updateAssigneeMutation = useMutation({
-    mutationFn: (assignedTo: string | undefined) =>
-      featureRequestsApi.update(featureId, { assignedTo }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: [QueryKeys.FEATURE_REQUEST_BY_ID, featureId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: [QueryKeys.FEATURE_REQUESTS],
-      });
+    onError: error => {
+      showApiError(error);
     },
   });
 
@@ -98,13 +69,7 @@ export const FeatureDetailClient = ({ featureId }: IProps) => {
     );
   }
 
-  const creator = mockUsers.find(u => String(u.id) === feature.createdBy);
-  const creatorName = creator ? getFullName(creator) : 'Unknown';
-  const createdAt = new Date(feature.createdAt);
-  const updatedAt = new Date(feature.updatedAt);
-
   const hasSpec = !!spec;
-  const hasConversation = !!feature.conversationId;
 
   const renderSpecificationContent = () => {
     if (specLoading) {
@@ -137,122 +102,12 @@ export const FeatureDetailClient = ({ featureId }: IProps) => {
       id: 'overview',
       label: 'Overview',
       content: (
-        <div className="space-y-6">
-          <Card>
-            <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
-              Feature Information
-            </h3>
-            <dl className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <dt className="mb-1 text-sm font-medium text-gray-500 dark:text-gray-400">
-                  Status
-                </dt>
-                <dd>
-                  <Select
-                    value={feature.status}
-                    onValueChange={value =>
-                      updateStatusMutation.mutate(value as FeatureStatus)
-                    }
-                    disabled={updateStatusMutation.isPending}
-                  >
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {statusOptions.map(option => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </dd>
-              </div>
-
-              <div>
-                <dt className="mb-1 text-sm font-medium text-gray-500 dark:text-gray-400">
-                  Assigned To
-                </dt>
-                <dd>
-                  <Select
-                    value={feature.assignedTo || 'unassigned'}
-                    onValueChange={value =>
-                      updateAssigneeMutation.mutate(
-                        value === 'unassigned' ? undefined : value,
-                      )
-                    }
-                    disabled={updateAssigneeMutation.isPending}
-                  >
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Select assignee" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="unassigned">Unassigned</SelectItem>
-                      {teamMembers?.map(member => (
-                        <SelectItem key={member.id} value={String(member.id)}>
-                          <div className="flex items-center gap-2">
-                            <Avatar
-                              src={member.avatarUrl ?? undefined}
-                              alt={getFullName(member)}
-                              size="xs"
-                            />
-                            <span>{getFullName(member)}</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </dd>
-              </div>
-
-              <div>
-                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                  Created By
-                </dt>
-                <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                  {creatorName}
-                </dd>
-              </div>
-
-              <div>
-                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                  Last Activity
-                </dt>
-                <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                  {formatRelativeTime(feature.lastActivityAt)}
-                </dd>
-              </div>
-            </dl>
-          </Card>
-
-          {feature.initialContext && (
-            <Card>
-              <h3 className="mb-3 text-lg font-semibold text-gray-900 dark:text-gray-100">
-                Initial Context
-              </h3>
-              <p className="text-gray-700 dark:text-gray-300">
-                {feature.initialContext}
-              </p>
-            </Card>
-          )}
-
-          <Card>
-            <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
-              Quick Actions
-            </h3>
-            <div className="flex flex-wrap gap-3">
-              {hasConversation ? (
-                <Link href={`/features/${featureId}/conversation`}>
-                  <Button variant="outline">View Conversation</Button>
-                </Link>
-              ) : (
-                <Link href={`/features/${featureId}/conversation`}>
-                  <Button>Start AI Conversation</Button>
-                </Link>
-              )}
-            </div>
-          </Card>
-        </div>
+        <FeatureOverview
+          feature={feature}
+          featureId={featureId}
+          onStatusChange={status => updateStatusMutation.mutate(status)}
+          isStatusChangePending={updateStatusMutation.isPending}
+        />
       ),
     },
 
@@ -265,7 +120,6 @@ export const FeatureDetailClient = ({ featureId }: IProps) => {
     {
       id: 'comments',
       label: 'Comments',
-      badge: feature.openQuestionsCount,
       content: (
         <EmptyState
           title="Comments Coming Soon"
@@ -278,49 +132,7 @@ export const FeatureDetailClient = ({ featureId }: IProps) => {
       id: 'activity',
       label: 'Activity',
       content: (
-        <Card>
-          <div className="space-y-4">
-            <div className="flex gap-3">
-              <div className="flex-shrink-0">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/50">
-                  <span className="text-sm text-purple-600 dark:text-purple-300">
-                    📝
-                  </span>
-                </div>
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-gray-900 dark:text-gray-100">
-                  <span className="font-medium">{creatorName}</span> created
-                  this feature
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {formatRelativeTime(createdAt)}
-                </p>
-              </div>
-            </div>
-
-            {updatedAt.getTime() !== createdAt.getTime() && (
-              <div className="flex gap-3">
-                <div className="flex-shrink-0">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900">
-                    <span className="text-sm text-purple-600 dark:text-purple-300">
-                      🔄
-                    </span>
-                  </div>
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm text-gray-900 dark:text-gray-100">
-                    Feature status updated to{' '}
-                    <StatusBadge status={feature.status} />
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {formatRelativeTime(updatedAt)}
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        </Card>
+        <ActivityList activities={activities} isLoading={activitiesLoading} />
       ),
     },
   ];

@@ -11,11 +11,11 @@ import { FeatureCard } from 'features/feature-requests';
 import { featureRequestsApi } from 'shared/api';
 import { QueryKeys } from 'shared/constants';
 import { cn } from 'shared/lib';
-import { FeatureStatus } from 'shared/types';
+import { FeatureStatus, IFeatureRequest } from 'shared/types';
 import {
   Button,
-  Card,
   EmptyState,
+  FeatureCardSkeleton,
   TabsContent,
   TabsList,
   TabsRoot,
@@ -24,17 +24,17 @@ import {
 
 type TabFilter =
   | 'all'
-  | 'draft'
-  | 'spec_generated'
-  | 'ready_to_build'
-  | 'completed';
+  | 'DRAFT'
+  | 'SPEC_GENERATED'
+  | 'READY_TO_BUILD'
+  | 'COMPLETED';
 
 const tabToStatuses: Record<TabFilter, FeatureStatus[] | null> = {
   all: null,
-  draft: ['draft'],
-  spec_generated: ['spec_generated'],
-  ready_to_build: ['ready_to_build'],
-  completed: ['completed'],
+  DRAFT: ['DRAFT'],
+  SPEC_GENERATED: ['SPEC_GENERATED'],
+  READY_TO_BUILD: ['READY_TO_BUILD'],
+  COMPLETED: ['COMPLETED'],
 };
 
 const FeaturesList = ({
@@ -43,11 +43,7 @@ const FeaturesList = ({
   isLoading,
   showCreateButton,
 }: {
-  features: ReturnType<typeof featureRequestsApi.getAll> extends Promise<
-    infer T
-  >
-    ? T
-    : never;
+  features: IFeatureRequest[];
   viewMode: 'grid' | 'list';
   isLoading: boolean;
   showCreateButton: boolean;
@@ -62,10 +58,8 @@ const FeaturesList = ({
             : 'grid',
         )}
       >
-        {[1, 2, 3].map(i => (
-          <Card key={i} padding="md" className="h-40 animate-pulse border">
-            <div />
-          </Card>
+        {[1, 2].map(i => (
+          <FeatureCardSkeleton key={i} />
         ))}
       </div>
     );
@@ -110,10 +104,12 @@ const FeaturesList = ({
 const DashboardContent = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  const { data: features, isLoading } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: [QueryKeys.FEATURE_REQUESTS],
     queryFn: () => featureRequestsApi.getAll({}),
   });
+
+  const features = data?.features ?? [];
 
   const getFilteredFeatures = (tab: TabFilter) => {
     if (!features) {
@@ -157,22 +153,22 @@ const DashboardContent = () => {
             <TabsTrigger value="all" badge={getTabCount('all')}>
               All
             </TabsTrigger>
-            <TabsTrigger value="draft" badge={getTabCount('draft')}>
+            <TabsTrigger value="DRAFT" badge={getTabCount('DRAFT')}>
               Draft
             </TabsTrigger>
             <TabsTrigger
-              value="spec_generated"
-              badge={getTabCount('spec_generated')}
+              value="SPEC_GENERATED"
+              badge={getTabCount('SPEC_GENERATED')}
             >
               Spec Generated
             </TabsTrigger>
             <TabsTrigger
-              value="ready_to_build"
-              badge={getTabCount('ready_to_build')}
+              value="READY_TO_BUILD"
+              badge={getTabCount('READY_TO_BUILD')}
             >
               Ready to Build
             </TabsTrigger>
-            <TabsTrigger value="completed" badge={getTabCount('completed')}>
+            <TabsTrigger value="COMPLETED" badge={getTabCount('COMPLETED')}>
               Completed
             </TabsTrigger>
           </TabsList>
@@ -221,36 +217,36 @@ const DashboardContent = () => {
           />
         </TabsContent>
 
-        <TabsContent value="draft">
+        <TabsContent value="DRAFT">
           <FeaturesList
-            features={getFilteredFeatures('draft')}
+            features={getFilteredFeatures('DRAFT')}
             viewMode={viewMode}
             isLoading={isLoading}
             showCreateButton={false}
           />
         </TabsContent>
 
-        <TabsContent value="spec_generated">
+        <TabsContent value="SPEC_GENERATED">
           <FeaturesList
-            features={getFilteredFeatures('spec_generated')}
+            features={getFilteredFeatures('SPEC_GENERATED')}
             viewMode={viewMode}
             isLoading={isLoading}
             showCreateButton={false}
           />
         </TabsContent>
 
-        <TabsContent value="ready_to_build">
+        <TabsContent value="READY_TO_BUILD">
           <FeaturesList
-            features={getFilteredFeatures('ready_to_build')}
+            features={getFilteredFeatures('READY_TO_BUILD')}
             viewMode={viewMode}
             isLoading={isLoading}
             showCreateButton={false}
           />
         </TabsContent>
 
-        <TabsContent value="completed">
+        <TabsContent value="COMPLETED">
           <FeaturesList
-            features={getFilteredFeatures('completed')}
+            features={getFilteredFeatures('COMPLETED')}
             viewMode={viewMode}
             isLoading={isLoading}
             showCreateButton={false}

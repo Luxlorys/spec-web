@@ -2,7 +2,7 @@ import * as React from 'react';
 
 const MOBILE_BREAKPOINT = 768;
 
-export const useIsMobile = () => {
+export const useIsMobile = (): boolean | undefined => {
   const [isMobile, setIsMobile] = React.useState<boolean | undefined>(
     undefined,
   );
@@ -19,5 +19,7 @@ export const useIsMobile = () => {
     return () => mql.removeEventListener('change', onChange);
   }, []);
 
-  return !!isMobile;
+  // Return undefined during SSR/initial hydration to allow consumers
+  // to render consistently before mobile detection completes
+  return isMobile;
 };
