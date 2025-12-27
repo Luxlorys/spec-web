@@ -7,19 +7,19 @@ import Link from 'next/link';
 import { formatDate } from 'shared/lib';
 import { mockUsers } from 'shared/lib/mock-data';
 import { useAuthStore } from 'shared/store';
+import { getFullName, getPrimaryRole, UserRole } from 'shared/types';
 import { Avatar, Badge, Button, Card, EmptyState, Input } from 'shared/ui';
 
 const TeamContent = () => {
-  const { user: currentUser } = useAuthStore();
+  const { user: currentUser, getCurrentOrganization } = useAuthStore();
+  const currentOrg = getCurrentOrganization();
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
-  const [inviteRole, setInviteRole] = useState<'developer' | 'founder'>(
-    'developer',
-  );
+  const [inviteRole, setInviteRole] = useState<UserRole>('DEVELOPER');
 
   // Mock team members - filter by current user's organization
-  const teamMembers = mockUsers.filter(
-    u => u.organizationId === currentUser?.organizationId,
+  const teamMembers = mockUsers.filter(u =>
+    u.memberships.some(m => m.organizationId === currentOrg?.id),
   );
 
   const handleInvite = () => {
@@ -66,14 +66,14 @@ const TeamContent = () => {
               </label>
               <select
                 value={inviteRole}
-                onChange={e =>
-                  setInviteRole(e.target.value as 'developer' | 'founder')
-                }
+                onChange={e => setInviteRole(e.target.value as UserRole)}
                 className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
               >
-                <option value="developer">Developer</option>
-                <option value="founder">Founder</option>
-                <option value="admin">Admin</option>
+                <option value="DEVELOPER">Developer</option>
+                <option value="DESIGNER">Designer</option>
+                <option value="PM">Project Manager</option>
+                <option value="BA">Business Analyst</option>
+                <option value="ADMIN">Admin</option>
               </select>
             </div>
 
@@ -99,47 +99,56 @@ const TeamContent = () => {
       )}
 
       <div className="grid gap-4">
-        {teamMembers.map(member => (
-          <Card key={member.id}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <Avatar src={member.avatarUrl} alt={member.name} size="lg" />
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-gray-900 dark:text-gray-100">
-                      {member.name}
-                    </h3>
-                    {member.id === currentUser?.id && (
-                      <Badge variant="blue" size="sm">
-                        You
-                      </Badge>
-                    )}
+        {teamMembers.map(member => {
+          const memberName = getFullName(member);
+          const memberRole = getPrimaryRole(member);
+
+          return (
+            <Card key={member.id}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <Avatar
+                    src={member.avatarUrl ?? undefined}
+                    alt={memberName}
+                    size="lg"
+                  />
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                        {memberName}
+                      </h3>
+                      {member.id === currentUser?.id && (
+                        <Badge variant="blue" size="sm">
+                          You
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {member.email}
+                    </p>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
+                      Joined {formatDate(new Date(member.createdAt))}
+                    </p>
                   </div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {member.email}
-                  </p>
-                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
-                    Joined {formatDate(member.createdAt)}
-                  </p>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <Badge variant="purple" className="capitalize">
+                    {memberRole?.toLowerCase()}
+                  </Badge>
+
+                  {member.id !== currentUser?.id && (
+                    <Link href={`/team/${member.id}`}>
+                      <Button variant="outline" size="sm">
+                        Manage
+                      </Button>
+                    </Link>
+                  )}
                 </div>
               </div>
-
-              <div className="flex items-center gap-4">
-                <Badge variant="purple" className="capitalize">
-                  {member.role}
-                </Badge>
-
-                {member.id !== currentUser?.id && (
-                  <Link href={`/team/${member.id}`}>
-                    <Button variant="outline" size="sm">
-                      Manage
-                    </Button>
-                  </Link>
-                )}
-              </div>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          );
+        })}
       </div>
 
       {teamMembers.length === 0 && (

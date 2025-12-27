@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 import { Urbanist } from 'next/font/google';
 
 import { cn } from 'shared/lib';
-import { TanStackQueryProvider } from 'shared/providers';
+import { TanStackQueryProvider, ToasterProvider } from 'shared/providers';
 
 import 'app/styles/global.css';
 
@@ -33,7 +33,10 @@ const RootLayout = ({ children }: Props) => {
           urbanist.className,
         )}
       >
-        <TanStackQueryProvider>{children}</TanStackQueryProvider>
+        <TanStackQueryProvider>
+          {children}
+          <ToasterProvider />
+        </TanStackQueryProvider>
       </body>
     </html>
   );

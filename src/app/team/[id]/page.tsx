@@ -6,19 +6,13 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import {
-  AlertTriangle,
-  ArrowLeft,
-  Shield,
-  Sparkles,
-  Trash2,
-} from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Shield, Trash2 } from 'lucide-react';
 
 import { usersApi } from 'shared/api/users';
 import { QueryKeys } from 'shared/constants';
 import { formatDate } from 'shared/lib';
 import { useAuthStore } from 'shared/store';
-import { UserRole } from 'shared/types';
+import { getFullName, getPrimaryRole, UserRole } from 'shared/types';
 import { Avatar, Badge, Button, Card, Label } from 'shared/ui';
 import {
   Select,
@@ -30,32 +24,32 @@ import {
 
 const roleOptions: { value: UserRole; label: string; description: string }[] = [
   {
-    value: 'founder',
+    value: 'FOUNDER',
     label: 'Founder',
     description: 'Full access to all features and settings',
   },
   {
-    value: 'admin',
+    value: 'ADMIN',
     label: 'Admin',
     description: 'Can manage team members and settings',
   },
   {
-    value: 'pm',
+    value: 'PM',
     label: 'Project Manager',
     description: 'Can manage features and specifications',
   },
   {
-    value: 'ba',
+    value: 'BA',
     label: 'Business Analyst',
     description: 'Can create and edit specifications',
   },
   {
-    value: 'developer',
+    value: 'DEVELOPER',
     label: 'Developer',
     description: 'Can view and comment on specifications',
   },
   {
-    value: 'designer',
+    value: 'DESIGNER',
     label: 'Designer',
     description: 'Can view and comment on specifications',
   },
@@ -79,8 +73,9 @@ const TeamMemberContent = () => {
   const params = useParams();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { user: currentUser } = useAuthStore();
-  const memberId = params.id as string;
+  const { user: currentUser, getCurrentOrganization } = useAuthStore();
+  const currentOrg = getCurrentOrganization();
+  const memberId = Number(params.id);
 
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -91,24 +86,22 @@ const TeamMemberContent = () => {
     enabled: !!memberId,
   });
 
+  const memberName = member ? getFullName(member) : '';
+  const memberRole = member ? getPrimaryRole(member) : null;
+  const currentUserRole = currentUser ? getPrimaryRole(currentUser) : null;
+
   const updateRoleMutation = useMutation({
-    mutationFn: (role: UserRole) => usersApi.updateRole(memberId, role),
+    mutationFn: (role: UserRole) =>
+      usersApi.updateRole(memberId, role, currentOrg?.id ?? 0),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QueryKeys.USERS] });
       setSelectedRole(null);
     },
   });
 
-  const updateCanCreateFeaturesMutation = useMutation({
-    mutationFn: (canCreateFeatures: boolean) =>
-      usersApi.updateCanCreateFeatures(memberId, canCreateFeatures),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QueryKeys.USERS] });
-    },
-  });
-
   const removeMemberMutation = useMutation({
-    mutationFn: () => usersApi.remove(memberId, currentUser?.id || ''),
+    mutationFn: () =>
+      usersApi.remove(memberId, currentUser?.id ?? 0, currentOrg?.id ?? 0),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QueryKeys.USERS] });
       router.push('/team');
@@ -116,7 +109,7 @@ const TeamMemberContent = () => {
   });
 
   const handleSaveRole = () => {
-    if (selectedRole && selectedRole !== member?.role) {
+    if (selectedRole && selectedRole !== memberRole) {
       updateRoleMutation.mutate(selectedRole);
     }
   };
@@ -126,8 +119,8 @@ const TeamMemberContent = () => {
   };
 
   const isCurrentUserAdmin =
-    currentUser?.role === 'founder' || currentUser?.role === 'admin';
-  const isFounder = member?.role === 'founder';
+    currentUserRole === 'FOUNDER' || currentUserRole === 'ADMIN';
+  const isFounder = memberRole === 'FOUNDER';
   const isSelf = member?.id === currentUser?.id;
   const canChangeRole = isCurrentUserAdmin && !isFounder;
   const canDelete = isCurrentUserAdmin && !isFounder && !isSelf;
@@ -192,11 +185,15 @@ const TeamMemberContent = () => {
       {/* Member Info Card */}
       <Card className="mb-6 border" padding="lg">
         <div className="flex items-start gap-4">
-          <Avatar src={member.avatarUrl} alt={member.name} size="lg" />
+          <Avatar
+            src={member.avatarUrl ?? undefined}
+            alt={memberName}
+            size="lg"
+          />
           <div className="flex-1">
             <div className="flex items-center gap-2">
               <h2 className="text-xl font-semibold text-foreground">
-                {member.name}
+                {memberName}
               </h2>
               {isSelf && (
                 <Badge variant="blue" size="sm">
@@ -206,11 +203,11 @@ const TeamMemberContent = () => {
             </div>
             <p className="text-muted-foreground">{member.email}</p>
             <p className="mt-2 text-sm text-muted-foreground">
-              Joined {formatDate(member.createdAt)}
+              Joined {formatDate(new Date(member.createdAt))}
             </p>
           </div>
           <Badge variant="purple" className="capitalize">
-            {member.role}
+            {memberRole?.toLowerCase()}
           </Badge>
         </div>
       </Card>
@@ -227,7 +224,7 @@ const TeamMemberContent = () => {
             <div>
               <Label className="mb-2 block">Role</Label>
               <Select
-                value={selectedRole || member.role}
+                value={selectedRole || memberRole || 'DEVELOPER'}
                 onValueChange={value => setSelectedRole(value as UserRole)}
               >
                 <SelectTrigger className="w-full max-w-xs">
@@ -235,7 +232,7 @@ const TeamMemberContent = () => {
                 </SelectTrigger>
                 <SelectContent>
                   {roleOptions
-                    .filter(r => r.value !== 'founder')
+                    .filter(r => r.value !== 'FOUNDER')
                     .map(role => (
                       <SelectItem key={role.value} value={role.value}>
                         <div className="flex flex-col">
@@ -248,13 +245,13 @@ const TeamMemberContent = () => {
               <p className="mt-2 text-sm text-muted-foreground">
                 {
                   roleOptions.find(
-                    r => r.value === (selectedRole || member.role),
+                    r => r.value === (selectedRole || memberRole),
                   )?.description
                 }
               </p>
             </div>
 
-            {selectedRole && selectedRole !== member.role && (
+            {selectedRole && selectedRole !== memberRole && (
               <div className="flex gap-3">
                 <Button
                   onClick={handleSaveRole}
@@ -273,38 +270,6 @@ const TeamMemberContent = () => {
                 {(updateRoleMutation.error as Error).message}
               </p>
             )}
-
-            {/* Allow Feature Requests Toggle */}
-            <div className="border-t pt-4">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="flex items-center gap-2 text-sm font-medium">
-                    <Sparkles className="h-4 w-4 text-purple-500" />
-                    Allow feature requests
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    When enabled, this member can create new feature requests
-                  </p>
-                </div>
-                <label className="relative inline-flex cursor-pointer items-center">
-                  <input
-                    type="checkbox"
-                    checked={member.canCreateFeatures}
-                    onChange={e => {
-                      updateCanCreateFeaturesMutation.mutate(e.target.checked);
-                    }}
-                    disabled={updateCanCreateFeaturesMutation.isPending}
-                    className="peer sr-only"
-                  />
-                  <div className="h-5 w-9 rounded-full bg-muted after:absolute after:left-[2px] after:top-[2px] after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-all peer-checked:bg-primary peer-checked:after:translate-x-4 peer-disabled:cursor-not-allowed peer-disabled:opacity-50" />
-                </label>
-              </div>
-              {updateCanCreateFeaturesMutation.isError && (
-                <p className="mt-2 text-sm text-red-600 dark:text-red-400">
-                  {(updateCanCreateFeaturesMutation.error as Error).message}
-                </p>
-              )}
-            </div>
           </div>
         ) : (
           <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-900/50 dark:bg-yellow-900/20">
@@ -331,7 +296,7 @@ const TeamMemberContent = () => {
           {showDeleteConfirm ? (
             <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900/50 dark:bg-red-900/20">
               <p className="mb-4 text-sm text-red-800 dark:text-red-200">
-                Are you sure you want to remove <strong>{member.name}</strong>{' '}
+                Are you sure you want to remove <strong>{memberName}</strong>{' '}
                 from the team? This action cannot be undone.
               </p>
               <div className="flex gap-3">

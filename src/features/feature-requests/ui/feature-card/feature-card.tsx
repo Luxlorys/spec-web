@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { Calendar } from 'lucide-react';
 
 import { cn, formatRelativeTime, mockUsers } from 'shared/lib';
-import { IFeatureRequest } from 'shared/types';
+import { getFullName, IFeatureRequest } from 'shared/types';
 import { Avatar, Badge, Card } from 'shared/ui';
 
 import { StatusBadge } from '../status-badge';
@@ -19,8 +19,9 @@ interface IProps {
 
 export const FeatureCard: FC<IProps> = ({ feature, variant = 'grid' }) => {
   const assignee = feature.assignedTo
-    ? mockUsers.find(u => u.id === feature.assignedTo)
+    ? mockUsers.find(u => String(u.id) === feature.assignedTo)
     : null;
+  const assigneeName = assignee ? getFullName(assignee) : '';
 
   if (variant === 'list') {
     return (
@@ -50,11 +51,11 @@ export const FeatureCard: FC<IProps> = ({ feature, variant = 'grid' }) => {
               {assignee ? (
                 <div className="flex items-center gap-1.5">
                   <Avatar
-                    src={assignee.avatarUrl}
-                    alt={assignee.name}
+                    src={assignee.avatarUrl ?? undefined}
+                    alt={assigneeName}
                     size="xs"
                   />
-                  <span>{assignee.name}</span>
+                  <span>{assigneeName}</span>
                 </div>
               ) : (
                 <span className="text-muted-foreground/60">Unassigned</span>
@@ -104,8 +105,12 @@ export const FeatureCard: FC<IProps> = ({ feature, variant = 'grid' }) => {
         <div className="flex items-center justify-between border-t pt-3 text-xs text-muted-foreground">
           {assignee ? (
             <div className="flex items-center gap-1.5">
-              <Avatar src={assignee.avatarUrl} alt={assignee.name} size="xs" />
-              <span>{assignee.name}</span>
+              <Avatar
+                src={assignee.avatarUrl ?? undefined}
+                alt={assigneeName}
+                size="xs"
+              />
+              <span>{assigneeName}</span>
             </div>
           ) : (
             <span className="text-muted-foreground/60">Unassigned</span>

@@ -8,17 +8,20 @@ import { useRouter } from 'next/navigation';
 import { NotificationCenter } from 'features/notifications';
 import { authApi } from 'shared/api/auth';
 import { useAuthStore } from 'shared/store';
+import { getFullName, getPrimaryRole } from 'shared/types';
 import { Avatar, Button } from 'shared/ui';
 
 export const AppHeader: FC = () => {
   const router = useRouter();
-  const { user, clearAuth } = useAuthStore();
+  const { user } = useAuthStore();
 
-  const handleLogout = async () => {
-    await authApi.logout();
-    clearAuth();
+  const handleLogout = () => {
+    authApi.logout();
     router.push('/login');
   };
+
+  const userName = user ? getFullName(user) : '';
+  const userRole = user ? getPrimaryRole(user) : null;
 
   return (
     <header className="border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
@@ -55,13 +58,17 @@ export const AppHeader: FC = () => {
             <div className="flex items-center gap-3">
               <div className="hidden text-right sm:block">
                 <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                  {user.name}
+                  {userName}
                 </p>
                 <p className="text-xs capitalize text-gray-500 dark:text-gray-400">
-                  {user.role}
+                  {userRole?.toLowerCase()}
                 </p>
               </div>
-              <Avatar src={user.avatarUrl} alt={user.name} size="md" />
+              <Avatar
+                src={user.avatarUrl ?? undefined}
+                alt={userName}
+                size="md"
+              />
               <Button variant="ghost" size="sm" onClick={handleLogout}>
                 Logout
               </Button>

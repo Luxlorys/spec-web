@@ -18,7 +18,7 @@ import {
 
 import { cn } from 'shared/lib';
 import { useAuthStore } from 'shared/store';
-import { UserRole } from 'shared/types';
+import { getFullName, getPrimaryRole, UserRole } from 'shared/types';
 import { Avatar, Button, Card, Input } from 'shared/ui';
 
 type SettingsSection =
@@ -50,7 +50,7 @@ const navItems: NavItem[] = [
 ];
 
 const isAdminRole = (role: UserRole): boolean => {
-  return role === 'founder' || role === 'admin';
+  return role === 'FOUNDER' || role === 'ADMIN';
 };
 
 const SettingsNav = ({
@@ -96,6 +96,8 @@ const SettingsNav = ({
 
 const ProfileSettings = () => {
   const { user } = useAuthStore();
+  const userName = user ? getFullName(user) : 'User';
+  const userRole = user ? getPrimaryRole(user) : null;
 
   return (
     <div className="space-y-6">
@@ -108,7 +110,7 @@ const ProfileSettings = () => {
 
       <Card className="border" padding="lg">
         <div className="flex items-start gap-6">
-          <Avatar alt={user?.name || 'User'} size="xl" />
+          <Avatar alt={userName} size="xl" />
           <div className="flex-1 space-y-4">
             <div>
               <Button variant="outline" size="sm">
@@ -127,7 +129,7 @@ const ProfileSettings = () => {
           <div className="grid gap-4 sm:grid-cols-2">
             <Input
               label="Full Name"
-              defaultValue={user?.name}
+              defaultValue={userName}
               placeholder="Your name"
             />
             <Input
@@ -141,7 +143,7 @@ const ProfileSettings = () => {
           </div>
           <Input
             label="Role"
-            defaultValue={user?.role}
+            defaultValue={userRole ?? ''}
             disabled
             helperText="Your role in the organization"
           />
@@ -702,7 +704,7 @@ const SettingsContent = () => {
   const { user } = useAuthStore();
   const [activeSection, setActiveSection] =
     useState<SettingsSection>('profile');
-  const userRole = user?.role || 'developer';
+  const userRole = user ? (getPrimaryRole(user) ?? 'DEVELOPER') : 'DEVELOPER';
 
   const renderSection = () => {
     switch (activeSection) {

@@ -201,7 +201,7 @@ const NotificationsContent = () => {
   const { data: notifications = [] } = useQuery({
     queryKey: [QueryKeys.NOTIFICATIONS],
     queryFn: () => {
-      return mockNotifications.filter(n => n.userId === user?.id);
+      return mockNotifications.filter(n => n.userId === String(user?.id));
     },
     enabled: !!user,
   });

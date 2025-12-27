@@ -20,7 +20,7 @@ export const NotificationCenter: FC = () => {
     queryKey: [QueryKeys.NOTIFICATIONS],
     queryFn: () => {
       // Filter notifications for current user
-      return mockNotifications.filter(n => n.userId === user?.id);
+      return mockNotifications.filter(n => n.userId === String(user?.id));
     },
     enabled: !!user,
   });

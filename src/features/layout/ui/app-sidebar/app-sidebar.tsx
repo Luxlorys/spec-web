@@ -20,6 +20,11 @@ import { authApi } from 'shared/api/auth';
 import { QueryKeys } from 'shared/constants';
 import { mockNotifications } from 'shared/lib/mock-data';
 import { useAuthStore } from 'shared/store';
+import {
+  getFullName,
+  getPrimaryOrganization,
+  getPrimaryRole,
+} from 'shared/types';
 import { Avatar, Button } from 'shared/ui';
 import {
   DropdownMenu,
@@ -67,23 +72,26 @@ const navItems = [
 export const AppSidebar: FC = () => {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, clearAuth } = useAuthStore();
+  const { user } = useAuthStore();
 
   const { data: notifications = [] } = useQuery({
     queryKey: [QueryKeys.NOTIFICATIONS],
     queryFn: () => {
-      return mockNotifications.filter(n => n.userId === user?.id);
+      return mockNotifications.filter(n => n.userId === String(user?.id));
     },
     enabled: !!user,
   });
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
-  const handleLogout = async () => {
-    await authApi.logout();
-    clearAuth();
+  const handleLogout = () => {
+    authApi.logout();
     router.push('/login');
   };
+
+  const userName = user ? getFullName(user) : '';
+  const userRole = user ? getPrimaryRole(user) : null;
+  const userOrg = user ? getPrimaryOrganization(user) : null;
 
   return (
     <Sidebar>
@@ -95,7 +103,7 @@ export const AppSidebar: FC = () => {
           <div className="flex flex-col">
             <span className="text-lg font-bold">SpecFlow</span>
             <span className="text-xs text-muted-foreground">
-              {user?.organizationId ? 'TechFlow Workspace' : 'Personal'}
+              {userOrg?.name ?? 'Personal'}
             </span>
           </div>
         </Link>
@@ -152,13 +160,17 @@ export const AppSidebar: FC = () => {
                 >
                   {user && (
                     <>
-                      <Avatar src={user.avatarUrl} alt={user.name} size="sm" />
+                      <Avatar
+                        src={user.avatarUrl ?? undefined}
+                        alt={userName}
+                        size="sm"
+                      />
                       <div className="grid flex-1 text-left text-sm leading-tight">
                         <span className="truncate font-semibold">
-                          {user.name}
+                          {userName}
                         </span>
                         <span className="truncate text-xs capitalize text-muted-foreground">
-                          {user.role}
+                          {userRole?.toLowerCase()}
                         </span>
                       </div>
                       <ChevronUp className="ml-auto h-4 w-4" />

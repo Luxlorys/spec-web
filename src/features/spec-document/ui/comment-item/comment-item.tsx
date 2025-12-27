@@ -8,7 +8,7 @@ import { useDeleteComment, useUpdateComment } from 'shared/hooks';
 import { formatRelativeTime } from 'shared/lib';
 import { mockUsers } from 'shared/lib/mock-data';
 import { useAuthStore } from 'shared/store';
-import { IComment } from 'shared/types';
+import { getFullName, IComment } from 'shared/types';
 import { Avatar, Button } from 'shared/ui';
 
 interface ICommentItemProps {
@@ -30,8 +30,11 @@ export const CommentItem: FC<ICommentItemProps> = ({
   const deleteMutation = useDeleteComment();
 
   // Get author info
-  const author = mockUsers.find(u => u.id === comment.authorId);
-  const isOwner = currentUser?.id === comment.authorId;
+  const author = mockUsers.find(u => String(u.id) === comment.authorId);
+  const authorName = author ? getFullName(author) : 'Unknown User';
+  const isOwner =
+    currentUser?.id !== undefined &&
+    String(currentUser.id) === comment.authorId;
   const isUpdated = comment.createdAt.getTime() !== comment.updatedAt.getTime();
 
   // Handlers
@@ -83,15 +86,15 @@ export const CommentItem: FC<ICommentItemProps> = ({
       {/* Header */}
       <div className="mb-2 flex items-start gap-3">
         <Avatar
-          src={author?.avatarUrl}
-          alt={author?.name || 'User'}
+          src={author?.avatarUrl ?? undefined}
+          alt={authorName}
           size="sm"
         />
 
         <div className="flex-1">
           <div className="flex items-baseline gap-2">
             <span className="font-medium text-gray-900 dark:text-gray-100">
-              {author?.name || 'Unknown User'}
+              {authorName}
             </span>
             <span className="text-sm text-gray-500 dark:text-gray-400">
               {formatRelativeTime(comment.createdAt)}

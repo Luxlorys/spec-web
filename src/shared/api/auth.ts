@@ -1,246 +1,151 @@
-import { delay, generateId } from 'shared/lib';
+import { api } from 'shared/lib';
+import { useAuthStore } from 'shared/store';
 import {
-  DEMO_EMAIL,
-  DEMO_PASSWORD,
-  mockDocumentationData,
-  mockInviteCodes,
-  mockOrganizations,
-  mockUsers,
-} from 'shared/lib/mock-data';
-import {
-  IAdminSignupRequest,
   IAuthResponse,
-  IInviteCode,
+  IFounderSignupRequest,
+  IInviteCodeValidation,
   ILoginRequest,
   IMemberSignupRequest,
-  ISignupRequest,
+  ISuccessResponse,
+  ITokenRefreshResponse,
 } from 'shared/types';
 
 export const authApi = {
+  /**
+   * Login with email and password
+   * May throw 403 with EMAIL_NOT_VERIFIED if email not verified
+   */
   login: async (credentials: ILoginRequest): Promise<IAuthResponse> => {
-    await delay(800);
+    const { data } = await api.post<IAuthResponse>('/auth/login', credentials);
 
-    // Demo authentication
-    if (
-      credentials.email === DEMO_EMAIL &&
-      credentials.password === DEMO_PASSWORD
-    ) {
-      const user = mockUsers[0];
-
-      return {
-        user,
-        token: `mock-token-${user.id}`,
-      };
-    }
-
-    // Check against mock users
-    const user = mockUsers.find(u => u.email === credentials.email);
-
-    if (user && credentials.password === 'password') {
-      return {
-        user,
-        token: `mock-token-${user.id}`,
-      };
-    }
-
-    throw new Error('Invalid email or password');
+    return data;
   },
 
-  signup: async (data: ISignupRequest): Promise<IAuthResponse> => {
-    await delay(1000);
-
-    // Check if email already exists
-    const existingUser = mockUsers.find(u => u.email === data.email);
-
-    if (existingUser) {
-      throw new Error('Email already in use');
-    }
-
-    // Create new organization if provided
-    let organizationId = mockOrganizations[0].id;
-
-    if (data.organizationName) {
-      organizationId = generateId();
-      mockOrganizations.push({
-        id: organizationId,
-        name: data.organizationName,
-        description: '',
-        createdBy: generateId(),
-        createdAt: new Date(),
-      });
-    }
-
-    // Create new user
-    const newUser = {
-      id: generateId(),
-      email: data.email,
-      name: data.name,
-      role: 'founder' as const,
-      organizationId,
-      createdAt: new Date(),
-      canCreateFeatures: true,
-    };
-
-    mockUsers.push(newUser);
-
-    return {
-      user: newUser,
-      token: `mock-token-${newUser.id}`,
-    };
+  /**
+   * Register a new founder account (creates organization)
+   * Returns void - user must verify email before logging in
+   */
+  register: async (data: IFounderSignupRequest): Promise<void> => {
+    await api.post('/auth/register', data);
   },
 
-  signupAsAdmin: async (data: IAdminSignupRequest): Promise<IAuthResponse> => {
-    await delay(1000);
-
-    // Check if email already exists
-    const existingUser = mockUsers.find(u => u.email === data.email);
-
-    if (existingUser) {
-      throw new Error('Email already in use');
-    }
-
-    // Create new organization
-    const userId = generateId();
-    const organizationId = generateId();
-
-    mockOrganizations.push({
-      id: organizationId,
-      name: data.projectName,
-      description: '',
-      createdBy: userId,
-      createdAt: new Date(),
-    });
-
-    // Process uploaded context files and create documentation entries
-    if (data.contextFiles && data.contextFiles.length > 0) {
-      const readFile = (file: File): Promise<string> =>
-        new Promise(resolve => {
-          const reader = new FileReader();
-
-          reader.onload = e => {
-            resolve((e.target?.result as string) || '');
-          };
-          reader.readAsText(file);
-        });
-
-      const fileContents = await Promise.all(
-        data.contextFiles.map(file => readFile(file)),
-      );
-
-      data.contextFiles.forEach((file, index) => {
-        const fileContent = fileContents[index];
-        const docId = generateId();
-
-        mockDocumentationData.push({
-          id: docId,
-          title: file.name.replace(/\.[^/.]+$/, ''), // Remove file extension
-          content:
-            fileContent ||
-            `# ${file.name}\n\nContent of uploaded file: ${file.name}\n\nFile size: ${Math.round(file.size / 1024)} KB`,
-          type: 'project-context',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          authorId: userId,
-          projectId: organizationId,
-        });
-      });
-    }
-
-    // Create new user as founder
-    const newUser = {
-      id: userId,
-      name: data.name,
-      email: data.email,
-      role: 'founder' as const,
-      organizationId,
-      createdAt: new Date(),
-      canCreateFeatures: true,
-    };
-
-    mockUsers.push(newUser);
-
-    return {
-      user: newUser,
-      token: `mock-token-${newUser.id}`,
-    };
+  /**
+   * Register with invite code (joins existing organization)
+   * Role is determined by the invite code's defaultRole
+   * Returns void - user must verify email before logging in
+   */
+  registerWithInvite: async (data: IMemberSignupRequest): Promise<void> => {
+    await api.post('/auth/register-with-invite', data);
   },
 
-  validateInviteCode: async (code: string): Promise<IInviteCode> => {
-    await delay(500);
-
-    const inviteCode = mockInviteCodes.find(
-      ic => ic.code.toLowerCase() === code.toLowerCase(),
+  /**
+   * Verify an invite code before showing full registration form
+   * Returns organization info and default role
+   */
+  verifyInviteCode: async (code: string): Promise<IInviteCodeValidation> => {
+    const { data } = await api.get<IInviteCodeValidation>(
+      `/auth/invite-code/${encodeURIComponent(code)}/verify`,
     );
 
-    if (!inviteCode) {
-      throw new Error('Invalid invite code');
-    }
-
-    if (new Date() > inviteCode.expiresAt) {
-      throw new Error('Invite code has expired');
-    }
-
-    if (inviteCode.usedCount >= inviteCode.maxUses) {
-      throw new Error('Invite code has reached maximum uses');
-    }
-
-    return inviteCode;
+    return data;
   },
 
-  signupWithInvite: async (
-    data: IMemberSignupRequest,
-  ): Promise<IAuthResponse> => {
-    await delay(1000);
+  /**
+   * Verify email using 6-character alphanumeric code
+   * On success, returns success response
+   */
+  verifyEmail: async (code: string): Promise<ISuccessResponse> => {
+    const { data } = await api.post<ISuccessResponse>('/auth/verify-email', {
+      token: code,
+    });
 
-    // Validate invite code first
-    const inviteCode = await authApi.validateInviteCode(data.inviteCode);
-
-    // Check if email already exists
-    const existingUser = mockUsers.find(u => u.email === data.email);
-
-    if (existingUser) {
-      throw new Error('Email already in use');
-    }
-
-    // Create new user with the specified role
-    const newUser = {
-      id: generateId(),
-      email: data.email,
-      name: data.name,
-      role: data.role,
-      organizationId: inviteCode.organizationId,
-      createdAt: new Date(),
-      canCreateFeatures: true,
-    };
-
-    mockUsers.push(newUser);
-
-    // Increment usage count
-    inviteCode.usedCount += 1;
-
-    return {
-      user: newUser,
-      token: `mock-token-${newUser.id}`,
-    };
+    return data;
   },
 
-  logout: async (): Promise<void> => {
-    await delay(300);
+  /**
+   * Resend verification email
+   * Always returns success to prevent email enumeration
+   */
+  resendVerification: async (email: string): Promise<ISuccessResponse> => {
+    const { data } = await api.post<ISuccessResponse>(
+      '/auth/resend-verification',
+      { email },
+    );
+
+    return data;
   },
 
-  getCurrentUser: async (token: string): Promise<IAuthResponse> => {
-    await delay(500);
+  /**
+   * Request password reset email
+   * Always returns success to prevent email enumeration
+   */
+  forgotPassword: async (email: string): Promise<ISuccessResponse> => {
+    const { data } = await api.post<ISuccessResponse>('/auth/forgot-password', {
+      email,
+    });
 
-    const userId = token.replace('mock-token-', '');
-    const user = mockUsers.find(u => u.id === userId);
+    return data;
+  },
 
-    if (!user) {
-      throw new Error('Invalid token');
-    }
-
-    return {
-      user,
+  /**
+   * Reset password using token from reset email
+   */
+  resetPassword: async (
+    token: string,
+    password: string,
+  ): Promise<ISuccessResponse> => {
+    const { data } = await api.post<ISuccessResponse>('/auth/reset-password', {
       token,
-    };
+      password,
+    });
+
+    return data;
   },
+
+  /**
+   * Refresh access token using refresh token
+   */
+  refreshToken: async (
+    refreshToken: string,
+  ): Promise<ITokenRefreshResponse> => {
+    const { data } = await api.post<ITokenRefreshResponse>(
+      '/auth/refresh-token',
+      { refreshToken },
+    );
+
+    return data;
+  },
+
+  /**
+   * Delete the authenticated user's account
+   */
+  deleteAccount: async (): Promise<ISuccessResponse> => {
+    const { data } = await api.delete<ISuccessResponse>('/auth/account');
+
+    return data;
+  },
+
+  /**
+   * Logout - clears auth state and tokens
+   * This is a client-side only operation (JWT tokens are stateless)
+   */
+  logout: (): void => {
+    useAuthStore.getState().clearAuth();
+  },
+};
+
+/**
+ * Format role for display (e.g., "DEVELOPER" -> "Developer")
+ */
+export const formatRole = (role: string): string => {
+  const roleMap: Record<string, string> = {
+    FOUNDER: 'Founder',
+    ADMIN: 'Admin',
+    PM: 'Project Manager',
+    BA: 'Business Analyst',
+    DEVELOPER: 'Developer',
+    DESIGNER: 'Designer',
+  };
+
+  return roleMap[role] || role;
 };
