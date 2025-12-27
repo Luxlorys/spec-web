@@ -7,31 +7,14 @@ const delay = (ms: number) =>
     setTimeout(resolve, ms);
   });
 
-// Helper to get user's role in a specific organization
-export const getUserRole = (
-  user: IUser,
-  organizationId?: number,
-): UserRole | null => {
-  if (!organizationId) {
-    return user.memberships[0]?.role ?? null;
-  }
-  const membership = user.memberships.find(
-    m => m.organizationId === organizationId,
-  );
-
-  return membership?.role ?? null;
+// Helper to get user's role
+export const getUserRole = (user: IUser): UserRole => {
+  return user.role;
 };
 
 // Helper to check if user is founder
-export const isFounder = (user: IUser, organizationId?: number): boolean => {
-  if (!organizationId) {
-    return user.memberships[0]?.isFounder ?? false;
-  }
-  const membership = user.memberships.find(
-    m => m.organizationId === organizationId,
-  );
-
-  return membership?.isFounder ?? false;
+export const isFounder = (user: IUser): boolean => {
+  return user.isFounder;
 };
 
 export const usersApi = {
@@ -49,15 +32,13 @@ export const usersApi = {
   getByOrganization: async (organizationId: number): Promise<IUser[]> => {
     await delay(200);
 
-    return mockUsers.filter(u =>
-      u.memberships.some(m => m.organizationId === organizationId),
-    );
+    return mockUsers.filter(u => u.organization?.id === organizationId);
   },
 
   updateRole: async (
     id: number,
     role: UserRole,
-    organizationId: number,
+    _organizationId: number,
   ): Promise<IUser> => {
     await delay(300);
     const userIndex = mockUsers.findIndex(u => u.id === id);
@@ -67,31 +48,24 @@ export const usersApi = {
     }
 
     const user = mockUsers[userIndex];
-    const membershipIndex = user.memberships.findIndex(
-      m => m.organizationId === organizationId,
-    );
 
-    if (membershipIndex === -1) {
-      throw new Error('User is not a member of this organization');
-    }
-
-    if (user.memberships[membershipIndex].isFounder) {
+    if (user.isFounder) {
       throw new Error('Cannot change the role of the founder');
     }
 
-    // Update the membership role
-    user.memberships[membershipIndex] = {
-      ...user.memberships[membershipIndex],
+    // Update the user role
+    mockUsers[userIndex] = {
+      ...user,
       role,
     };
 
-    return user;
+    return mockUsers[userIndex];
   },
 
   remove: async (
     id: number,
     currentUserId: number,
-    organizationId: number,
+    _organizationId: number,
   ): Promise<void> => {
     await delay(300);
     const userIndex = mockUsers.findIndex(u => u.id === id);
@@ -106,23 +80,12 @@ export const usersApi = {
       throw new Error('You cannot remove yourself from the team');
     }
 
-    const membership = user.memberships.find(
-      m => m.organizationId === organizationId,
-    );
-
-    if (membership?.isFounder) {
+    if (user.isFounder) {
       throw new Error('Cannot remove the founder from the team');
     }
 
-    // Remove membership from the organization (not the user entirely)
-    user.memberships = user.memberships.filter(
-      m => m.organizationId !== organizationId,
-    );
-
-    // If user has no memberships left, remove them from the mock data
-    if (user.memberships.length === 0) {
-      mockUsers.splice(userIndex, 1);
-    }
+    // Remove user from the mock data
+    mockUsers.splice(userIndex, 1);
   },
 
   // Helper re-exports for backward compatibility

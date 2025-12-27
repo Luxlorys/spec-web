@@ -12,7 +12,7 @@ import { usersApi } from 'shared/api/users';
 import { QueryKeys } from 'shared/constants';
 import { formatDate } from 'shared/lib';
 import { useAuthStore } from 'shared/store';
-import { getFullName, getPrimaryRole, UserRole } from 'shared/types';
+import { getFullName, UserRole } from 'shared/types';
 import { Avatar, Badge, Button, Card, Label } from 'shared/ui';
 import {
   Select,
@@ -87,8 +87,8 @@ const TeamMemberContent = () => {
   });
 
   const memberName = member ? getFullName(member) : '';
-  const memberRole = member ? getPrimaryRole(member) : null;
-  const currentUserRole = currentUser ? getPrimaryRole(currentUser) : null;
+  const memberRole = member?.role ?? null;
+  const currentUserRole = currentUser?.role ?? null;
 
   const updateRoleMutation = useMutation({
     mutationFn: (role: UserRole) =>

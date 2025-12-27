@@ -20,11 +20,7 @@ import { authApi } from 'shared/api/auth';
 import { QueryKeys } from 'shared/constants';
 import { mockNotifications } from 'shared/lib/mock-data';
 import { useAuthStore } from 'shared/store';
-import {
-  getFullName,
-  getPrimaryOrganization,
-  getPrimaryRole,
-} from 'shared/types';
+import { getFullName } from 'shared/types';
 import { Avatar, Button } from 'shared/ui';
 import {
   DropdownMenu,
@@ -90,8 +86,8 @@ export const AppSidebar: FC = () => {
   };
 
   const userName = user ? getFullName(user) : '';
-  const userRole = user ? getPrimaryRole(user) : null;
-  const userOrg = user ? getPrimaryOrganization(user) : null;
+  const userRole = user?.role ?? null;
+  const userOrg = user?.organization ?? null;
 
   return (
     <Sidebar>

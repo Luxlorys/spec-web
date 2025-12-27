@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { formatDate } from 'shared/lib';
 import { mockUsers } from 'shared/lib/mock-data';
 import { useAuthStore } from 'shared/store';
-import { getFullName, getPrimaryRole, UserRole } from 'shared/types';
+import { getFullName, UserRole } from 'shared/types';
 import { Avatar, Badge, Button, Card, EmptyState, Input } from 'shared/ui';
 
 const TeamContent = () => {
@@ -18,8 +18,8 @@ const TeamContent = () => {
   const [inviteRole, setInviteRole] = useState<UserRole>('DEVELOPER');
 
   // Mock team members - filter by current user's organization
-  const teamMembers = mockUsers.filter(u =>
-    u.memberships.some(m => m.organizationId === currentOrg?.id),
+  const teamMembers = mockUsers.filter(
+    u => u.organization?.id === currentOrg?.id,
   );
 
   const handleInvite = () => {
@@ -101,7 +101,7 @@ const TeamContent = () => {
       <div className="grid gap-4">
         {teamMembers.map(member => {
           const memberName = getFullName(member);
-          const memberRole = getPrimaryRole(member);
+          const memberRole = member.role;
 
           return (
             <Card key={member.id}>

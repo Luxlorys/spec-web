@@ -15,7 +15,6 @@ import {
   TeamSettings,
 } from 'features/settings';
 import { useAuthStore } from 'shared/store';
-import { getPrimaryRole } from 'shared/types';
 import { TabsContent, TabsRoot } from 'shared/ui';
 
 const sectionComponents: Record<SettingsSection, React.ReactNode> = {
@@ -31,7 +30,7 @@ export default function SettingsPage() {
   const { user } = useAuthStore();
   const [activeSection, setActiveSection] =
     useState<SettingsSection>('profile');
-  const userRole = user ? (getPrimaryRole(user) ?? 'DEVELOPER') : 'DEVELOPER';
+  const userRole = user?.role ?? 'DEVELOPER';
 
   return (
     <main className="p-6">

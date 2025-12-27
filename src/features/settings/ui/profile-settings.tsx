@@ -1,13 +1,13 @@
 'use client';
 
 import { useAuthStore } from 'shared/store';
-import { getFullName, getPrimaryRole } from 'shared/types';
+import { getFullName } from 'shared/types';
 import { Avatar, Button, Card, Input } from 'shared/ui';
 
 export const ProfileSettings = () => {
   const { user } = useAuthStore();
   const userName = user ? getFullName(user) : 'User';
-  const userRole = user ? getPrimaryRole(user) : null;
+  const userRole = user?.role ?? null;
 
   return (
     <div className="space-y-6">

@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import { NotificationCenter } from 'features/notifications';
 import { authApi } from 'shared/api/auth';
 import { useAuthStore } from 'shared/store';
-import { getFullName, getPrimaryRole } from 'shared/types';
+import { getFullName } from 'shared/types';
 import { Avatar, Button } from 'shared/ui';
 
 export const AppHeader: FC = () => {
@@ -21,7 +21,7 @@ export const AppHeader: FC = () => {
   };
 
   const userName = user ? getFullName(user) : '';
-  const userRole = user ? getPrimaryRole(user) : null;
+  const userRole = user?.role ?? null;
 
   return (
     <header className="border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
