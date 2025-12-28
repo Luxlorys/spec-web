@@ -1,4 +1,5 @@
 import { api } from 'shared/lib';
+
 import {
   IActivity,
   ICreateFeatureRequest,
@@ -9,11 +10,9 @@ import {
   IFeatureRequestFilters,
   IGetActivitiesResponse,
   IGetFeatureResponse,
-  IGetSpecificationResponse,
-  ISpecDocument,
   IUpdateFeatureStatusRequest,
   IUpdateFeatureStatusResponse,
-} from 'shared/types';
+} from './types';
 
 export const featureRequestsApi = {
   /**
@@ -81,27 +80,6 @@ export const featureRequestsApi = {
     );
 
     return data.success;
-  },
-
-  /**
-   * Get the latest specification for a feature
-   * GET /features/:id/specification
-   */
-  getSpecification: async (
-    featureId: number,
-  ): Promise<ISpecDocument | null> => {
-    try {
-      const { data } = await api.get<IGetSpecificationResponse>(
-        `/features/${featureId}/specification`,
-      );
-
-      return data.specification;
-    } catch (error: any) {
-      if (error?.response?.status === 404) {
-        return null;
-      }
-      throw error;
-    }
   },
 
   /**

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useMutation, useQuery } from '@tanstack/react-query';
 
 import { ActivityList, FeatureOverview } from 'features/feature-details';
-import { SpecView } from 'features/spec-document';
+import { SpecView, useGetSpecification } from 'features/spec-document';
 import { featureRequestsApi } from 'shared/api';
 import { QueryKeys } from 'shared/constants';
 import { queryClient, showApiError } from 'shared/lib';
@@ -25,11 +25,10 @@ export const FeatureDetailClient = ({ featureId }: IProps) => {
     enabled: !Number.isNaN(numericId),
   });
 
-  const { data: spec, isLoading: specLoading } = useQuery({
-    queryKey: [QueryKeys.SPEC_BY_FEATURE, numericId],
-    queryFn: () => featureRequestsApi.getSpecification(numericId),
-    enabled: !!feature,
-  });
+  const { data: spec, isLoading: specLoading } = useGetSpecification(
+    numericId,
+    { enabled: !!feature },
+  );
 
   const { data: activities, isLoading: activitiesLoading } = useQuery({
     queryKey: [QueryKeys.FEATURE_ACTIVITIES, numericId],
