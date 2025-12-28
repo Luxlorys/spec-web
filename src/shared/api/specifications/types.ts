@@ -75,7 +75,6 @@ export interface IOpenQuestion {
   askedByUser: IQuestionAuthor | null;
   isResolved: boolean;
   acceptedAnswerId: number | null;
-  sequenceNumber: number;
   createdAt: string;
   updatedAt: string;
   answers: IQuestionAnswer[];
