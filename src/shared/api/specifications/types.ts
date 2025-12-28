@@ -65,6 +65,7 @@ export interface IQuestionAnswer {
 
 /**
  * Open question with answers
+ * Note: When isResolved=true, the question and its accepted answer cannot be edited, only deleted
  */
 export interface IOpenQuestion {
   id: number;
@@ -75,6 +76,7 @@ export interface IOpenQuestion {
   askedByUser: IQuestionAuthor | null;
   isResolved: boolean;
   acceptedAnswerId: number | null;
+  sequenceNumber: number;
   createdAt: string;
   updatedAt: string;
   answers: IQuestionAnswer[];

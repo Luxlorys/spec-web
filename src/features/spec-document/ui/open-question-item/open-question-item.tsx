@@ -270,17 +270,20 @@ export const OpenQuestionItem: FC<IOpenQuestionItemProps> = ({
           </div>
 
           {/* Only show edit/delete for question owner */}
+          {/* Note: Resolved questions cannot be edited, only deleted */}
           {!isEditingQuestion && isQuestionOwner && (
             <div className="flex gap-1">
-              <button
-                onClick={() => setIsEditingQuestion(true)}
-                className="rounded p-1 transition-colors hover:bg-black/5 dark:hover:bg-white/5"
-                title="Edit question"
-                aria-label="Edit question"
-                type="button"
-              >
-                <Pencil className="h-4 w-4 text-gray-500" />
-              </button>
+              {!isResolved && (
+                <button
+                  onClick={() => setIsEditingQuestion(true)}
+                  className="rounded p-1 transition-colors hover:bg-black/5 dark:hover:bg-white/5"
+                  title="Edit question"
+                  aria-label="Edit question"
+                  type="button"
+                >
+                  <Pencil className="h-4 w-4 text-gray-500" />
+                </button>
+              )}
               <button
                 onClick={handleDeleteQuestion}
                 className="rounded p-1 transition-colors hover:bg-black/5 dark:hover:bg-white/5"
@@ -384,17 +387,20 @@ export const OpenQuestionItem: FC<IOpenQuestionItemProps> = ({
 
                     <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                       {/* Only show edit/delete for answer owner */}
+                      {/* Note: Accepted answers on resolved questions cannot be edited, only deleted */}
                       {canEditAnswer && (
                         <>
-                          <button
-                            onClick={() => handleStartEditAnswer(answer)}
-                            className="rounded p-1 transition-colors hover:bg-black/5 dark:hover:bg-white/5"
-                            title="Edit answer"
-                            aria-label="Edit answer"
-                            type="button"
-                          >
-                            <Pencil className="h-3 w-3 text-gray-500" />
-                          </button>
+                          {!(isResolved && isAccepted) && (
+                            <button
+                              onClick={() => handleStartEditAnswer(answer)}
+                              className="rounded p-1 transition-colors hover:bg-black/5 dark:hover:bg-white/5"
+                              title="Edit answer"
+                              aria-label="Edit answer"
+                              type="button"
+                            >
+                              <Pencil className="h-3 w-3 text-gray-500" />
+                            </button>
+                          )}
                           <button
                             onClick={() => handleDeleteAnswer(answer.id)}
                             className="rounded p-1 transition-colors hover:bg-black/5 dark:hover:bg-white/5"
