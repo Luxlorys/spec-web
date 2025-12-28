@@ -1,21 +1,20 @@
-// @ts-nocheck
-// This component is not currently used - kept for future implementation
-// Type checking is disabled until feature is implemented
-
 'use client';
 
 import { FC, useState } from 'react';
 
 import { Plus } from 'lucide-react';
 
-import { useCreateOpenQuestion } from 'shared/hooks';
 import { Button, Textarea } from 'shared/ui';
 
+import { useCreateOpenQuestion } from '../../api';
+
 interface IOpenQuestionFormProps {
-  specId: string;
+  specificationId: number;
 }
 
-export const OpenQuestionForm: FC<IOpenQuestionFormProps> = ({ specId }) => {
+export const OpenQuestionForm: FC<IOpenQuestionFormProps> = ({
+  specificationId,
+}) => {
   const [isAdding, setIsAdding] = useState(false);
   const [questionText, setQuestionText] = useState('');
 
@@ -30,7 +29,7 @@ export const OpenQuestionForm: FC<IOpenQuestionFormProps> = ({ specId }) => {
 
     createMutation.mutate(
       {
-        specId,
+        specificationId,
         data: { question: questionText },
       },
       {

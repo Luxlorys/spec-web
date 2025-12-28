@@ -1,10 +1,14 @@
+// Generic types
 export * from './api';
+
+// Mock/legacy types (kept for compatibility)
 export * from './todos';
-export * from './user';
-export * from './organization';
-export * from './feature-request';
 export * from './conversation';
-export * from './spec-document';
 export * from './comment';
 export * from './notification';
 export * from './team';
+
+// Re-export types from API services for backward compatibility
+export * from '../api/auth/types';
+export * from '../api/feature-requests/types';
+export * from '../api/specifications/types';

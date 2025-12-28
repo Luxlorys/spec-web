@@ -3,14 +3,16 @@
 import { FC, ReactNode, useState } from 'react';
 
 import { formatDate } from 'shared/lib';
-import { ISpecDocument } from 'shared/types';
+import { ISpecificationWithQuestions } from 'shared/types';
 import { Badge, Card } from 'shared/ui';
 
 import { CommentsSidebar } from '../comments-sidebar';
+import { OpenQuestionForm } from '../open-question-form';
+import { OpenQuestionItem } from '../open-question-item';
 import { SpecSection } from '../spec-section';
 
 interface IProps {
-  spec: ISpecDocument;
+  spec: ISpecificationWithQuestions;
 }
 
 const EmptyPlaceholder = () => (
@@ -67,6 +69,9 @@ export const SpecView: FC<IProps> = ({ spec }) => {
       setActiveSectionTitle('');
     }, 300);
   };
+
+  const openQuestions = spec.openQuestions ?? [];
+  const unresolvedCount = openQuestions.filter(q => !q.isResolved).length;
 
   return (
     <div className="space-y-6">
@@ -173,6 +178,36 @@ export const SpecView: FC<IProps> = ({ spec }) => {
         }
       >
         {renderListOrEmpty(spec.technicalConsiderations, '⚙️', 'text-gray-400')}
+      </SpecSection>
+
+      {/* Open Questions */}
+      <SpecSection
+        title={
+          unresolvedCount > 0
+            ? `Open Questions (${unresolvedCount} unresolved)`
+            : 'Open Questions'
+        }
+        sectionId="open-questions"
+        onCommentClick={sectionId =>
+          handleCommentClick(sectionId, 'Open Questions')
+        }
+      >
+        <OpenQuestionForm specificationId={spec.id} />
+        {openQuestions.length === 0 ? (
+          <p className="text-sm italic text-muted-foreground">
+            No open questions yet. Add a question to clarify the specification.
+          </p>
+        ) : (
+          <ul className="space-y-4">
+            {openQuestions.map(question => (
+              <OpenQuestionItem
+                key={question.id}
+                question={question}
+                specificationId={spec.id}
+              />
+            ))}
+          </ul>
+        )}
       </SpecSection>
 
       {/* Comments Sidebar */}

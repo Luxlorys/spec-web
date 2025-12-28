@@ -1,4 +1,4 @@
-import { IUser } from './user';
+import { IUser } from '../api/auth/types';
 
 export interface ITeamMember extends IUser {
   joinedAt: Date;

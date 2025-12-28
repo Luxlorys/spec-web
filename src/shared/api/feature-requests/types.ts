@@ -257,17 +257,3 @@ export type IActivity =
 export interface IGetActivitiesResponse {
   activities: IActivity[];
 }
-
-// ============================================================================
-// Legacy types - kept for backward compatibility
-// ============================================================================
-
-/**
- * @deprecated Use IUpdateFeatureStatusRequest instead
- */
-export interface IUpdateFeatureRequest {
-  title?: string;
-  status?: FeatureStatus;
-  assignedTo?: string;
-  targetDate?: Date;
-}

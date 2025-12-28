@@ -102,10 +102,37 @@ yarn generate:entity entity-name    # Creates entity with CRUD
 
 ### API Integration
 
-1. Define types in `shared/api/types/`
-2. Add mock handlers in `shared/api/mock/handlers/`
-3. Use API client methods from `shared/api/client.ts`
-4. Wrap API calls with TanStack Query hooks
+**Real API Services (organized in folders):**
+Each real API service has its own folder with types and service:
+```
+shared/api/
+├── auth/
+│   ├── types.ts      # Auth types (IUser, ILoginRequest, etc.)
+│   ├── service.ts    # Auth API methods
+│   └── index.ts      # Re-exports
+├── feature-requests/
+│   ├── types.ts      # Feature types (IFeatureRequest, etc.)
+│   ├── service.ts    # Feature API methods
+│   └── index.ts
+├── specifications/
+│   ├── types.ts      # Specification types (ISpecDocument, etc.)
+│   ├── service.ts    # Specification API methods
+│   └── index.ts
+└── index.ts          # Re-exports all services
+```
+
+**Creating a new API service:**
+1. Create folder `shared/api/<service-name>/`
+2. Add `types.ts` with request/response types
+3. Add `service.ts` with API methods
+4. Add `index.ts` that exports both
+5. Update `shared/api/index.ts` to export the new service
+6. Add re-export in `shared/types/index.ts` for backward compatibility
+
+**React Query Hooks:**
+- Create hooks in `features/<feature-name>/api/`
+- Export hooks from feature's `index.ts` for external use
+- Internal components use relative imports `../../api` to avoid circular dependencies
 
 ### Common Patterns
 

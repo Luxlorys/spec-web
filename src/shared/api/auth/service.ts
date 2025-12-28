@@ -1,5 +1,6 @@
 import { api } from 'shared/lib';
 import { useAuthStore } from 'shared/store';
+
 import {
   IAuthResponse,
   IFounderSignupRequest,
@@ -8,7 +9,7 @@ import {
   IMemberSignupRequest,
   ISuccessResponse,
   ITokenRefreshResponse,
-} from 'shared/types';
+} from './types';
 
 export const authApi = {
   /**

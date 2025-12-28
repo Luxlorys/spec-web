@@ -16,8 +16,8 @@ export enum QueryKeys {
   // Conversations
   CONVERSATION_BY_FEATURE = 'conversationByFeature',
 
-  // Specs
-  SPEC_BY_FEATURE = 'specByFeature',
+  // Specifications
+  SPECIFICATION_BY_FEATURE = 'specificationByFeature',
   SPEC_REGENERATION_PREVIEW = 'specRegenerationPreview',
   SPEC_VERSION_HISTORY = 'specVersionHistory',
 
