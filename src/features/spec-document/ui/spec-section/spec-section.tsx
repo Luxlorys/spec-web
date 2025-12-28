@@ -10,6 +10,7 @@ interface IProps {
   title: string;
   children: ReactNode;
   sectionId: string;
+  commentCount?: number;
   onCommentClick?: (sectionId: string) => void;
 }
 
@@ -17,6 +18,7 @@ export const SpecSection: FC<IProps> = ({
   title,
   children,
   sectionId,
+  commentCount = 0,
   onCommentClick,
 }) => {
   const handleCommentClick = () => {
@@ -29,7 +31,9 @@ export const SpecSection: FC<IProps> = ({
         <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
           {title}
         </h3>
-        <CommentButton onClick={handleCommentClick} />
+        {onCommentClick && (
+          <CommentButton onClick={handleCommentClick} count={commentCount} />
+        )}
       </div>
       <div className="text-gray-700 dark:text-gray-300">{children}</div>
     </Card>

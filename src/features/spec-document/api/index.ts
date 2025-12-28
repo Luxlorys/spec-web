@@ -8,3 +8,11 @@ export {
   useEditAnswer,
   useDeleteAnswer,
 } from './use-specifications';
+
+export {
+  useGetComments,
+  useGetCommentsBySection,
+  useCreateComment,
+  useUpdateComment,
+  useDeleteComment,
+} from './use-comments';

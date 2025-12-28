@@ -2,10 +2,12 @@
 
 import { FC, ReactNode, useState } from 'react';
 
+import { SectionType } from 'shared/api/comments';
 import { formatDate } from 'shared/lib';
 import { ISpecificationWithQuestions } from 'shared/types';
 import { Badge, Card } from 'shared/ui';
 
+import { useGetComments } from '../../api';
 import { CommentsSidebar } from '../comments-sidebar';
 import { OpenQuestionForm } from '../open-question-form';
 import { OpenQuestionItem } from '../open-question-item';
@@ -49,13 +51,27 @@ const renderTextOrEmpty = (text: string | null | undefined) => {
 };
 
 export const SpecView: FC<IProps> = ({ spec }) => {
+  // Fetch comments to get counts
+  const { data: commentsBySection } = useGetComments(spec.id);
+
+  // Helper to get comment count for a section
+  const getCommentCount = (sectionType: SectionType): number => {
+    if (!commentsBySection) {
+      return 0;
+    }
+
+    return commentsBySection[sectionType]?.length ?? 0;
+  };
+
   // Comments sidebar state
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
+  const [activeSectionId, setActiveSectionId] = useState<SectionType | null>(
+    null,
+  );
   const [activeSectionTitle, setActiveSectionTitle] = useState<string>('');
 
   // Handler for opening sidebar
-  const handleCommentClick = (sectionId: string, sectionTitle: string) => {
+  const handleCommentClick = (sectionId: SectionType, sectionTitle: string) => {
     setActiveSectionId(sectionId);
     setActiveSectionTitle(sectionTitle);
     setIsSidebarOpen(true);
@@ -95,7 +111,10 @@ export const SpecView: FC<IProps> = ({ spec }) => {
       <SpecSection
         title="Overview"
         sectionId="overview"
-        onCommentClick={sectionId => handleCommentClick(sectionId, 'Overview')}
+        commentCount={getCommentCount('overview')}
+        onCommentClick={sectionId =>
+          handleCommentClick(sectionId as SectionType, 'Overview')
+        }
       >
         {renderTextOrEmpty(spec.overview)}
       </SpecSection>
@@ -103,9 +122,10 @@ export const SpecView: FC<IProps> = ({ spec }) => {
       {/* Problem Statement */}
       <SpecSection
         title="Problem Statement"
-        sectionId="problem-statement"
+        sectionId="problemStatement"
+        commentCount={getCommentCount('problemStatement')}
         onCommentClick={sectionId =>
-          handleCommentClick(sectionId, 'Problem Statement')
+          handleCommentClick(sectionId as SectionType, 'Problem Statement')
         }
       >
         {renderTextOrEmpty(spec.problemStatement)}
@@ -114,9 +134,10 @@ export const SpecView: FC<IProps> = ({ spec }) => {
       {/* User Stories */}
       <SpecSection
         title="User Stories"
-        sectionId="user-stories"
+        sectionId="userStories"
+        commentCount={getCommentCount('userStories')}
         onCommentClick={sectionId =>
-          handleCommentClick(sectionId, 'User Stories')
+          handleCommentClick(sectionId as SectionType, 'User Stories')
         }
       >
         {renderListOrEmpty(
@@ -129,9 +150,10 @@ export const SpecView: FC<IProps> = ({ spec }) => {
       {/* Acceptance Criteria */}
       <SpecSection
         title="Acceptance Criteria"
-        sectionId="acceptance-criteria"
+        sectionId="acceptanceCriteria"
+        commentCount={getCommentCount('acceptanceCriteria')}
         onCommentClick={sectionId =>
-          handleCommentClick(sectionId, 'Acceptance Criteria')
+          handleCommentClick(sectionId as SectionType, 'Acceptance Criteria')
         }
       >
         {renderListOrEmpty(
@@ -144,8 +166,11 @@ export const SpecView: FC<IProps> = ({ spec }) => {
       {/* Scope - Included */}
       <SpecSection
         title="Scope: Included"
-        sectionId="scope-included"
-        onCommentClick={() => handleCommentClick('scope', 'Scope')}
+        sectionId="scopeIncluded"
+        commentCount={getCommentCount('scopeIncluded')}
+        onCommentClick={sectionId =>
+          handleCommentClick(sectionId as SectionType, 'Scope: Included')
+        }
       >
         {renderListOrEmpty(
           spec.scopeIncluded,
@@ -157,9 +182,10 @@ export const SpecView: FC<IProps> = ({ spec }) => {
       {/* Scope - Excluded */}
       <SpecSection
         title="Scope: Excluded"
-        sectionId="scope-excluded"
-        onCommentClick={() =>
-          handleCommentClick('scope-excluded', 'Scope: Excluded')
+        sectionId="scopeExcluded"
+        commentCount={getCommentCount('scopeExcluded')}
+        onCommentClick={sectionId =>
+          handleCommentClick(sectionId as SectionType, 'Scope: Excluded')
         }
       >
         {renderListOrEmpty(
@@ -172,25 +198,26 @@ export const SpecView: FC<IProps> = ({ spec }) => {
       {/* Technical Considerations */}
       <SpecSection
         title="Technical Considerations"
-        sectionId="technical"
+        sectionId="technicalConsiderations"
+        commentCount={getCommentCount('technicalConsiderations')}
         onCommentClick={sectionId =>
-          handleCommentClick(sectionId, 'Technical Considerations')
+          handleCommentClick(
+            sectionId as SectionType,
+            'Technical Considerations',
+          )
         }
       >
         {renderListOrEmpty(spec.technicalConsiderations, '⚙️', 'text-gray-400')}
       </SpecSection>
 
-      {/* Open Questions */}
+      {/* Open Questions - No comment button since API doesn't support this section */}
       <SpecSection
         title={
           unresolvedCount > 0
             ? `Open Questions (${unresolvedCount} unresolved)`
             : 'Open Questions'
         }
-        sectionId="open-questions"
-        onCommentClick={sectionId =>
-          handleCommentClick(sectionId, 'Open Questions')
-        }
+        sectionId="openQuestions"
       >
         <OpenQuestionForm specificationId={spec.id} />
         {openQuestions.length === 0 ? (
@@ -216,6 +243,8 @@ export const SpecView: FC<IProps> = ({ spec }) => {
           isOpen={isSidebarOpen}
           onClose={handleCloseSidebar}
           sectionTitle={activeSectionTitle}
+          specificationId={spec.id}
+          sectionType={activeSectionId}
         />
       )}
     </div>
