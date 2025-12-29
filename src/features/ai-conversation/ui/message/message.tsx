@@ -2,15 +2,15 @@
 
 import { FC } from 'react';
 
+import { IConversationMessage } from 'shared/api';
 import { cn, formatDateTime } from 'shared/lib';
-import { IConversationMessage } from 'shared/types';
 
 interface IProps {
   message: IConversationMessage;
 }
 
 export const Message: FC<IProps> = ({ message }) => {
-  const isUser = message.role === 'user';
+  const isUser = message.role === 'USER';
 
   return (
     <div className={cn('flex', isUser ? 'justify-end' : 'justify-start')}>
@@ -33,7 +33,7 @@ export const Message: FC<IProps> = ({ message }) => {
             isUser ? 'text-right' : 'text-left',
           )}
         >
-          {formatDateTime(message.timestamp)}
+          {formatDateTime(new Date(message.createdAt))}
         </p>
       </div>
     </div>
