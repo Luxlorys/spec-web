@@ -10,7 +10,6 @@ import {
 } from 'lucide-react';
 
 import { cn } from 'shared/lib';
-import { UserRole } from 'shared/types';
 
 export type SettingsSection =
   | 'profile'
@@ -34,24 +33,18 @@ const navItems: NavItem[] = [
   { id: 'security', label: 'Security', icon: Shield },
 ];
 
-const isFounderRole = (role: UserRole): boolean => {
-  return role === 'FOUNDER';
-};
-
 interface SettingsNavProps {
   activeSection: SettingsSection;
   onSectionChange: (section: SettingsSection) => void;
-  userRole: UserRole;
+  isFounder: boolean;
 }
 
 export const SettingsNav = ({
   activeSection,
   onSectionChange,
-  userRole,
+  isFounder,
 }: SettingsNavProps) => {
-  const filteredItems = navItems.filter(
-    item => !item.founderOnly || isFounderRole(userRole),
-  );
+  const filteredItems = navItems.filter(item => !item.founderOnly || isFounder);
 
   return (
     <nav className="space-y-1">

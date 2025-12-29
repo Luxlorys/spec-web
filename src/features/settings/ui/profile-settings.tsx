@@ -1,44 +1,22 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-
 import { useAuthStore } from 'shared/store';
 import { getFullName } from 'shared/types';
 import { Avatar, Button, Card, Input } from 'shared/ui';
 
-import { useUpdateProfile } from '../api';
+import { useProfileForm } from '../hooks';
 
 export const ProfileSettings = () => {
   const { user } = useAuthStore();
-  const updateProfileMutation = useUpdateProfile();
+  const { form, onSubmit, isLoading, isSuccess, error } = useProfileForm();
 
-  const [firstName, setFirstName] = useState(user?.firstName ?? '');
-  const [lastName, setLastName] = useState(user?.lastName ?? '');
-
-  // Sync form state with user data
-  useEffect(() => {
-    if (user) {
-      setFirstName(user.firstName);
-      setLastName(user.lastName);
-    }
-  }, [user]);
+  const {
+    register,
+    formState: { errors, isDirty },
+  } = form;
 
   const userName = user ? getFullName(user) : 'User';
   const userRole = user?.role ?? null;
-
-  const hasChanges =
-    firstName !== user?.firstName || lastName !== user?.lastName;
-
-  const handleSave = async () => {
-    if (!hasChanges) {
-      return;
-    }
-
-    await updateProfileMutation.mutateAsync({
-      firstName,
-      lastName,
-    });
-  };
 
   return (
     <div className="space-y-6">
@@ -65,60 +43,58 @@ export const ProfileSettings = () => {
         </div>
       </Card>
 
-      <Card className="border" padding="lg">
-        <div className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
+      <form onSubmit={onSubmit}>
+        <Card className="border" padding="lg">
+          <div className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Input
+                {...register('firstName')}
+                label="First Name"
+                placeholder="Your first name"
+                error={errors.firstName?.message}
+              />
+              <Input
+                {...register('lastName')}
+                label="Last Name"
+                placeholder="Your last name"
+                error={errors.lastName?.message}
+              />
+            </div>
             <Input
-              label="First Name"
-              value={firstName}
-              onChange={e => setFirstName(e.target.value)}
-              placeholder="Your first name"
+              label="Email"
+              type="email"
+              defaultValue={user?.email}
+              placeholder="your@email.com"
+              disabled
+              helperText="Contact support to change your email"
             />
             <Input
-              label="Last Name"
-              value={lastName}
-              onChange={e => setLastName(e.target.value)}
-              placeholder="Your last name"
+              label="Role"
+              defaultValue={userRole ?? ''}
+              disabled
+              helperText="Your role in the organization"
             />
           </div>
-          <Input
-            label="Email"
-            type="email"
-            defaultValue={user?.email}
-            placeholder="your@email.com"
-            disabled
-            helperText="Contact support to change your email"
-          />
-          <Input
-            label="Role"
-            defaultValue={userRole ?? ''}
-            disabled
-            helperText="Your role in the organization"
-          />
+        </Card>
+
+        {error && (
+          <p className="mt-4 text-sm text-red-600 dark:text-red-400">
+            {error.message || 'Failed to update profile'}
+          </p>
+        )}
+
+        {isSuccess && (
+          <p className="mt-4 text-sm text-green-600 dark:text-green-400">
+            Profile updated successfully
+          </p>
+        )}
+
+        <div className="mt-6 flex justify-end">
+          <Button type="submit" disabled={!isDirty || isLoading}>
+            {isLoading ? 'Saving...' : 'Save Changes'}
+          </Button>
         </div>
-      </Card>
-
-      {updateProfileMutation.isError && (
-        <p className="text-sm text-red-600 dark:text-red-400">
-          {(updateProfileMutation.error as Error).message ||
-            'Failed to update profile'}
-        </p>
-      )}
-
-      {updateProfileMutation.isSuccess && (
-        <p className="text-sm text-green-600 dark:text-green-400">
-          Profile updated successfully
-        </p>
-      )}
-
-      <div className="flex justify-end">
-        <Button
-          onClick={handleSave}
-          disabled={!hasChanges || updateProfileMutation.isPending}
-        >
-          {updateProfileMutation.isPending ? 'Saving...' : 'Save Changes'}
-        </Button>
-      </div>
+      </form>
     </div>
   );
 };

@@ -28,7 +28,7 @@ export default function SettingsPage() {
   const { user } = useAuthStore();
   const [activeSection, setActiveSection] =
     useState<SettingsSection>('profile');
-  const userRole = user?.role ?? 'DEVELOPER';
+  const isFounder = user?.isFounder ?? false;
 
   return (
     <main className="p-6">
@@ -56,7 +56,7 @@ export default function SettingsPage() {
           <SettingsNav
             activeSection={activeSection}
             onSectionChange={setActiveSection}
-            userRole={userRole}
+            isFounder={isFounder}
           />
         </aside>
 

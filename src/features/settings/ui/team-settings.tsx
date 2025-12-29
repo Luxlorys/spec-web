@@ -30,8 +30,13 @@ export const TeamSettings = () => {
   };
 
   const handleRemoveMember = async (memberId: number) => {
-    await removeMemberMutation.mutateAsync(memberId);
-    setMemberToRemove(null);
+    try {
+      await removeMemberMutation.mutateAsync(memberId);
+      setMemberToRemove(null);
+    } catch {
+      // Error is handled by the mutation state, but we need to
+      // ensure the confirmation UI stays visible so user can retry
+    }
   };
 
   if (isLoading) {

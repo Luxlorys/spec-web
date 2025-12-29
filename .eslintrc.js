@@ -61,7 +61,6 @@ module.exports = {
     'no-negated-condition': 'error',
     'no-unneeded-ternary': 'error',
     'require-await': 'error',
-    'newline-per-chained-call': ['error', { ignoreChainWithDepth: 2 }],
     'func-style': ['error', 'expression'],
     'padding-line-between-statements': [
       'error',

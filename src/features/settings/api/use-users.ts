@@ -1,3 +1,5 @@
+import { useRouter } from 'next/navigation';
+
 import { useMutation, useQuery } from '@tanstack/react-query';
 
 import {
@@ -65,13 +67,14 @@ export const useChangePassword = () => {
  */
 export const useDeleteAccount = () => {
   const { clearAuth } = useAuthStore();
+  const router = useRouter();
 
   return useMutation({
     mutationFn: () => usersApi.deleteAccount(),
     onSuccess: () => {
       // Clear auth and redirect to login
       clearAuth();
-      window.location.href = '/login';
+      router.push('/login');
     },
   });
 };
@@ -114,13 +117,14 @@ export const useRemoveMember = () => {
  */
 export const useDeleteOrganization = () => {
   const { clearAuth } = useAuthStore();
+  const router = useRouter();
 
   return useMutation({
     mutationFn: () => usersApi.deleteOrganization(),
     onSuccess: () => {
       // Clear auth and redirect to login
       clearAuth();
-      window.location.href = '/login';
+      router.push('/login');
     },
   });
 };

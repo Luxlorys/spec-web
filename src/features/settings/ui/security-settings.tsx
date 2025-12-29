@@ -7,51 +7,28 @@ import { LogOut, Trash2 } from 'lucide-react';
 import { useAuthStore } from 'shared/store';
 import { Button, Card, Input } from 'shared/ui';
 
-import {
-  useChangePassword,
-  useDeleteAccount,
-  useDeleteOrganization,
-} from '../api';
+import { usePasswordForm } from '../hooks';
 
 export const SecuritySettings = () => {
-  const { user, clearAuth } = useAuthStore();
-  const changePasswordMutation = useChangePassword();
-  const deleteAccountMutation = useDeleteAccount();
-  const deleteOrganizationMutation = useDeleteOrganization();
+  const { clearAuth } = useAuthStore();
+  const {
+    form,
+    onSubmit,
+    handleDeleteAccount,
+    isFounder,
+    isLoading,
+    isSuccess,
+    error,
+    isDeleting,
+    deleteError,
+  } = usePasswordForm();
 
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const {
+    register,
+    formState: { errors, isDirty, isValid },
+  } = form;
+
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-
-  const isFounder = user?.isFounder ?? false;
-
-  const handleChangePassword = async () => {
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      return;
-    }
-
-    await changePasswordMutation.mutateAsync({
-      oldPassword: currentPassword,
-      newPassword,
-      confirmPassword,
-    });
-    setCurrentPassword('');
-    setNewPassword('');
-    setConfirmPassword('');
-  };
-
-  const handleDeleteAccount = async () => {
-    if (isFounder) {
-      await deleteOrganizationMutation.mutateAsync();
-    } else {
-      await deleteAccountMutation.mutateAsync();
-    }
-  };
-
-  const passwordsMatch = newPassword === confirmPassword;
-  const canChangePassword =
-    currentPassword && newPassword && confirmPassword && passwordsMatch;
 
   return (
     <div className="space-y-6">
@@ -62,60 +39,51 @@ export const SecuritySettings = () => {
         </p>
       </div>
 
-      <Card className="border" padding="lg">
-        <div className="space-y-4">
-          <h3 className="font-medium">Change Password</h3>
-          <Input
-            label="Current Password"
-            type="password"
-            placeholder="Enter current password"
-            value={currentPassword}
-            onChange={e => setCurrentPassword(e.target.value)}
-          />
-          <Input
-            label="New Password"
-            type="password"
-            placeholder="Enter new password"
-            value={newPassword}
-            onChange={e => setNewPassword(e.target.value)}
-            helperText="Minimum 8 characters with uppercase, lowercase, number, and special character"
-          />
-          <Input
-            label="Confirm New Password"
-            type="password"
-            placeholder="Confirm new password"
-            value={confirmPassword}
-            onChange={e => setConfirmPassword(e.target.value)}
-            error={
-              confirmPassword && !passwordsMatch
-                ? 'Passwords do not match'
-                : undefined
-            }
-          />
+      <form onSubmit={onSubmit}>
+        <Card className="border" padding="lg">
+          <div className="space-y-4">
+            <h3 className="font-medium">Change Password</h3>
+            <Input
+              {...register('currentPassword')}
+              type="password"
+              label="Current Password"
+              placeholder="Enter current password"
+              error={errors.currentPassword?.message}
+            />
+            <Input
+              {...register('newPassword')}
+              type="password"
+              label="New Password"
+              placeholder="Enter new password"
+              error={errors.newPassword?.message}
+              helperText="Minimum 8 characters with uppercase, lowercase, number, and special character"
+            />
+            <Input
+              {...register('confirmPassword')}
+              type="password"
+              label="Confirm New Password"
+              placeholder="Confirm new password"
+              error={errors.confirmPassword?.message}
+            />
 
-          {changePasswordMutation.isError && (
-            <p className="text-sm text-red-600 dark:text-red-400">
-              {(changePasswordMutation.error as Error).message ||
-                'Failed to change password'}
-            </p>
-          )}
+            {error && (
+              <p className="text-sm text-red-600 dark:text-red-400">
+                {error.message || 'Failed to change password'}
+              </p>
+            )}
 
-          {changePasswordMutation.isSuccess && (
-            <p className="text-sm text-green-600 dark:text-green-400">
-              Password changed successfully
-            </p>
-          )}
+            {isSuccess && (
+              <p className="text-sm text-green-600 dark:text-green-400">
+                Password changed successfully
+              </p>
+            )}
 
-          <Button
-            onClick={handleChangePassword}
-            disabled={!canChangePassword || changePasswordMutation.isPending}
-          >
-            {changePasswordMutation.isPending
-              ? 'Updating...'
-              : 'Update Password'}
-          </Button>
-        </div>
-      </Card>
+            <Button type="submit" disabled={!isDirty || !isValid || isLoading}>
+              {isLoading ? 'Updating...' : 'Update Password'}
+            </Button>
+          </div>
+        </Card>
+      </form>
 
       <Card className="border border-red-200 dark:border-red-900" padding="lg">
         <div className="flex items-center justify-between">
@@ -148,13 +116,9 @@ export const SecuritySettings = () => {
               </p>
             </div>
 
-            {(deleteAccountMutation.isError ||
-              deleteOrganizationMutation.isError) && (
+            {deleteError && (
               <p className="text-sm text-red-600 dark:text-red-400">
-                {(
-                  (deleteAccountMutation.error ||
-                    deleteOrganizationMutation.error) as Error
-                )?.message || 'Failed to delete account'}
+                {deleteError.message || 'Failed to delete account'}
               </p>
             )}
 
@@ -162,15 +126,9 @@ export const SecuritySettings = () => {
               <Button
                 variant="danger"
                 onClick={handleDeleteAccount}
-                disabled={
-                  deleteAccountMutation.isPending ||
-                  deleteOrganizationMutation.isPending
-                }
+                disabled={isDeleting}
               >
-                {deleteAccountMutation.isPending ||
-                deleteOrganizationMutation.isPending
-                  ? 'Deleting...'
-                  : 'Yes, Delete'}
+                {isDeleting ? 'Deleting...' : 'Yes, Delete'}
               </Button>
               <Button
                 variant="outline"

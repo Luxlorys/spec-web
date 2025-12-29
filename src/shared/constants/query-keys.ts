@@ -1,6 +1,4 @@
 export enum QueryKeys {
-  GET_TODOS,
-
   // Auth
   CURRENT_USER = 'currentUser',
 
