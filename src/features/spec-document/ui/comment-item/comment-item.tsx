@@ -2,25 +2,23 @@
 
 import { FC, useState } from 'react';
 
-import { Edit2, Reply, Trash2 } from 'lucide-react';
+import { Edit2, Trash2 } from 'lucide-react';
 
-import { useDeleteComment, useUpdateComment } from 'shared/hooks';
+import { IComment } from 'shared/api/comments';
 import { formatRelativeTime } from 'shared/lib';
-import { mockUsers } from 'shared/lib/mock-data';
 import { useAuthStore } from 'shared/store';
-import { getFullName, IComment } from 'shared/types';
 import { Avatar, Button } from 'shared/ui';
+
+import { useDeleteComment, useUpdateComment } from '../../api';
 
 interface ICommentItemProps {
   comment: IComment;
-  onReply: (commentId: string) => void;
-  isReply?: boolean;
+  specificationId: number;
 }
 
 export const CommentItem: FC<ICommentItemProps> = ({
   comment,
-  onReply,
-  isReply = false,
+  specificationId,
 }) => {
   const currentUser = useAuthStore(state => state.user);
   const [isEditing, setIsEditing] = useState(false);
@@ -29,13 +27,13 @@ export const CommentItem: FC<ICommentItemProps> = ({
   const updateMutation = useUpdateComment();
   const deleteMutation = useDeleteComment();
 
-  // Get author info
-  const author = mockUsers.find(u => String(u.id) === comment.authorId);
-  const authorName = author ? getFullName(author) : 'Unknown User';
+  // Get author info from comment.author object
+  const authorName = comment.author
+    ? `${comment.author.firstName} ${comment.author.lastName}`
+    : 'Unknown User';
   const isOwner =
-    currentUser?.id !== undefined &&
-    String(currentUser.id) === comment.authorId;
-  const isUpdated = comment.createdAt.getTime() !== comment.updatedAt.getTime();
+    currentUser?.id !== undefined && currentUser.id === comment.authorId;
+  const isUpdated = comment.createdAt !== comment.updatedAt;
 
   // Handlers
   const handleEdit = () => setIsEditing(true);
@@ -53,6 +51,7 @@ export const CommentItem: FC<ICommentItemProps> = ({
 
     try {
       await updateMutation.mutateAsync({
+        specificationId,
         commentId: comment.id,
         data: { content: editContent },
       });
@@ -71,9 +70,8 @@ export const CommentItem: FC<ICommentItemProps> = ({
 
     try {
       await deleteMutation.mutateAsync({
+        specificationId,
         commentId: comment.id,
-        specDocumentId: comment.specDocumentId,
-        section: comment.section,
       });
     } catch (error) {
       // eslint-disable-next-line no-console
@@ -81,23 +79,42 @@ export const CommentItem: FC<ICommentItemProps> = ({
     }
   };
 
+  // Styles based on ownership
+  const bubbleClassName = isOwner
+    ? 'bg-purple-50 dark:bg-purple-900/20' // Light purple for own comments
+    : 'bg-gray-100 dark:bg-gray-800/50'; // Light gray for others' comments
+
   return (
-    <div className="group rounded-lg p-3 hover:bg-gray-50 dark:hover:bg-gray-800/50">
-      {/* Header */}
-      <div className="mb-2 flex items-start gap-3">
+    <div
+      className={`flex w-full ${isOwner ? 'justify-end' : 'justify-start'}`}
+    >
+      <div
+        className={`group flex max-w-[80%] gap-2 ${isOwner ? 'flex-row-reverse' : 'flex-row'}`}
+      >
+        {/* Avatar */}
         <Avatar
-          src={author?.avatarUrl ?? undefined}
+          src={comment.author?.avatarUrl ?? undefined}
           alt={authorName}
           size="sm"
+          className="shrink-0"
         />
 
-        <div className="flex-1">
-          <div className="flex items-baseline gap-2">
+        {/* Comment bubble */}
+        <div className={`rounded-lg p-3 ${bubbleClassName}`}>
+          {/* Header */}
+          <div
+            className={`mb-1 flex items-baseline gap-2 ${isOwner ? 'flex-row-reverse' : 'flex-row'}`}
+          >
             <span className="font-medium text-gray-900 dark:text-gray-100">
               {authorName}
+              {isOwner && (
+                <span className="ml-1.5 text-xs font-normal text-purple-600 dark:text-purple-400">
+                  (you)
+                </span>
+              )}
             </span>
-            <span className="text-sm text-gray-500 dark:text-gray-400">
-              {formatRelativeTime(comment.createdAt)}
+            <span className="text-xs text-gray-500 dark:text-gray-400">
+              {formatRelativeTime(new Date(comment.createdAt))}
             </span>
             {isUpdated && (
               <span className="text-xs text-gray-400 dark:text-gray-500">
@@ -105,80 +122,61 @@ export const CommentItem: FC<ICommentItemProps> = ({
               </span>
             )}
           </div>
-        </div>
-      </div>
 
-      {/* Content */}
-      <div className="ml-11">
-        {isReply && (
-          <div className="mb-1 text-sm text-gray-400 dark:text-gray-500">
-            ...
-          </div>
-        )}
-
-        {isEditing ? (
-          <div className="space-y-2">
-            <textarea
-              value={editContent}
-              onChange={e => setEditContent(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 p-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-              rows={3}
-              // eslint-disable-next-line jsx-a11y/no-autofocus
-              autoFocus
-            />
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                onClick={handleSaveEdit}
-                isLoading={updateMutation.isPending}
-              >
-                Save
-              </Button>
-              <Button size="sm" variant="outline" onClick={handleCancelEdit}>
-                Cancel
-              </Button>
+          {/* Content */}
+          {isEditing ? (
+            <div className="space-y-2">
+              <textarea
+                value={editContent}
+                onChange={e => setEditContent(e.target.value)}
+                className="w-full rounded-lg border border-gray-300 bg-white p-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                rows={3}
+                // eslint-disable-next-line jsx-a11y/no-autofocus
+                autoFocus
+              />
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  onClick={handleSaveEdit}
+                  isLoading={updateMutation.isPending}
+                >
+                  Save
+                </Button>
+                <Button size="sm" variant="outline" onClick={handleCancelEdit}>
+                  Cancel
+                </Button>
+              </div>
             </div>
-          </div>
-        ) : (
-          <p className="text-gray-700 dark:text-gray-300">{comment.content}</p>
-        )}
+          ) : (
+            <p className="text-gray-700 dark:text-gray-300">{comment.content}</p>
+          )}
 
-        {/* Actions */}
-        {!isEditing && (
-          <div className="mt-2 flex gap-2 opacity-0 transition-opacity group-hover:opacity-100">
-            <button
-              type="button"
-              onClick={() => onReply(comment.id)}
-              className="flex items-center gap-1 text-sm text-gray-600 hover:text-purple-600 dark:text-gray-400 dark:hover:text-purple-400"
+          {/* Actions - Only show edit/delete for owner */}
+          {!isEditing && isOwner && (
+            <div
+              className={`mt-2 flex gap-2 opacity-0 transition-opacity group-hover:opacity-100 ${isOwner ? 'justify-end' : 'justify-start'}`}
             >
-              <Reply size={14} />
-              Reply
-            </button>
+              <button
+                type="button"
+                onClick={handleEdit}
+                className="flex items-center gap-1 text-sm text-gray-600 hover:text-purple-600 dark:text-gray-400 dark:hover:text-purple-400"
+              >
+                <Edit2 size={14} />
+                Edit
+              </button>
 
-            {isOwner && (
-              <>
-                <button
-                  type="button"
-                  onClick={handleEdit}
-                  className="flex items-center gap-1 text-sm text-gray-600 hover:text-purple-600 dark:text-gray-400 dark:hover:text-purple-400"
-                >
-                  <Edit2 size={14} />
-                  Edit
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleDelete}
-                  className="flex items-center gap-1 text-sm text-gray-600 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400"
-                  disabled={deleteMutation.isPending}
-                >
-                  <Trash2 size={14} />
-                  Delete
-                </button>
-              </>
-            )}
-          </div>
-        )}
+              <button
+                type="button"
+                onClick={handleDelete}
+                className="flex items-center gap-1 text-sm text-gray-600 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400"
+                disabled={deleteMutation.isPending}
+              >
+                <Trash2 size={14} />
+                Delete
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

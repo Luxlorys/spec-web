@@ -2,24 +2,23 @@
 
 import { FC, FormEvent, useState } from 'react';
 
-import { useCreateComment } from 'shared/hooks';
+import { SectionType } from 'shared/api/comments';
 import { Button, Textarea } from 'shared/ui';
 
+import { useCreateComment } from '../../api';
 import { validateCommentContent } from '../../lib/validation';
 
 interface ICommentFormProps {
-  specDocumentId: string;
-  section: string;
-  parentId?: string;
+  specificationId: number;
+  sectionType: SectionType;
   onSuccess?: () => void;
   placeholder?: string;
   autoFocus?: boolean;
 }
 
 export const CommentForm: FC<ICommentFormProps> = ({
-  specDocumentId,
-  section,
-  parentId,
+  specificationId,
+  sectionType,
   onSuccess,
   placeholder = 'Add a comment...',
   autoFocus = false,
@@ -43,11 +42,10 @@ export const CommentForm: FC<ICommentFormProps> = ({
 
     try {
       await createMutation.mutateAsync({
-        specDocumentId,
+        specificationId,
         data: {
-          section,
+          sectionType,
           content: content.trim(),
-          parentId,
         },
       });
 
@@ -63,14 +61,6 @@ export const CommentForm: FC<ICommentFormProps> = ({
       console.error('Failed to create comment:', err);
     }
   };
-
-  const handleCancel = () => {
-    setContent('');
-    setError(null);
-    onSuccess?.();
-  };
-
-  const isReply = !!parentId;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
@@ -94,26 +84,14 @@ export const CommentForm: FC<ICommentFormProps> = ({
           {content.length}/1000
         </span>
 
-        <div className="flex gap-2">
-          {isReply && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleCancel}
-            >
-              Cancel
-            </Button>
-          )}
-          <Button
-            type="submit"
-            size="sm"
-            disabled={!content.trim() || createMutation.isPending}
-            isLoading={createMutation.isPending}
-          >
-            {isReply ? 'Reply' : 'Comment'}
-          </Button>
-        </div>
+        <Button
+          type="submit"
+          size="sm"
+          disabled={!content.trim() || createMutation.isPending}
+          isLoading={createMutation.isPending}
+        >
+          Comment
+        </Button>
       </div>
     </form>
   );

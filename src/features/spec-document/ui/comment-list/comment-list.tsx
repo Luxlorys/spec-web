@@ -1,35 +1,28 @@
 'use client';
 
-import { FC, useState } from 'react';
+import { FC } from 'react';
 
-import { useGetCommentsBySection } from 'shared/hooks';
+import { SectionType } from 'shared/api/comments';
 import { EmptyState } from 'shared/ui';
 
-import { CommentForm } from '../comment-form';
+import { useGetCommentsBySection } from '../../api';
 import { CommentItem } from '../comment-item';
 
 interface ICommentListProps {
-  specDocumentId: string;
-  section: string;
+  specificationId: number;
+  sectionType: SectionType;
 }
 
 export const CommentList: FC<ICommentListProps> = ({
-  specDocumentId,
-  section,
+  specificationId,
+  sectionType,
 }) => {
   const {
     data: comments = [],
     isLoading,
     isError,
     refetch,
-  } = useGetCommentsBySection(specDocumentId, section);
-
-  const [replyingTo, setReplyingTo] = useState<string | null>(null);
-
-  // Separate top-level comments and replies
-  const topLevelComments = comments.filter(c => !c.parentId);
-  const getReplies = (commentId: string) =>
-    comments.filter(c => c.parentId === commentId);
+  } = useGetCommentsBySection(specificationId, sectionType);
 
   // Loading state
   if (isLoading) {
@@ -71,49 +64,13 @@ export const CommentList: FC<ICommentListProps> = ({
 
   return (
     <div className="space-y-2">
-      {topLevelComments.map(comment => {
-        const replies = getReplies(comment.id);
-        const isReplyFormOpen = replyingTo === comment.id;
-
-        return (
-          <div key={comment.id} className="space-y-2">
-            {/* Parent Comment */}
-            <CommentItem
-              comment={comment}
-              onReply={id => setReplyingTo(id)}
-              isReply={false}
-            />
-
-            {/* Replies */}
-            {replies.length > 0 && (
-              <div className="ml-8 space-y-2 border-l-2 border-gray-200 pl-4 dark:border-gray-700">
-                {replies.map(reply => (
-                  <CommentItem
-                    key={reply.id}
-                    comment={reply}
-                    onReply={id => setReplyingTo(id)}
-                    isReply
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* Reply Form */}
-            {isReplyFormOpen && (
-              <div className="ml-8 pl-4">
-                <CommentForm
-                  specDocumentId={specDocumentId}
-                  section={section}
-                  parentId={comment.id}
-                  placeholder="Write a reply..."
-                  autoFocus
-                  onSuccess={() => setReplyingTo(null)}
-                />
-              </div>
-            )}
-          </div>
-        );
-      })}
+      {comments.map(comment => (
+        <CommentItem
+          key={comment.id}
+          comment={comment}
+          specificationId={specificationId}
+        />
+      ))}
     </div>
   );
 };
