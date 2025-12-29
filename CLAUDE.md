@@ -78,9 +78,107 @@ Currently using mock data with easy migration path:
 1. **Server/Client Components**: Use `"use client"` only when needed (interactivity, hooks)
 2. **Environment Variables**: Type-safe with Zod validation in `src/env.ts`
 3. **SVG Handling**: SVGR transforms SVGs to React components
-4. **Form Handling**: React Hook Form + Zod for validation
+4. **Form Handling**: React Hook Form + Zod for validation (see Forms section below)
 5. **Data Fetching**: TanStack Query for all API calls
 6. **Routing**: File-based with Next.js App Router
+
+## Forms
+
+**IMPORTANT: Always use React Hook Form for all form handling.** Do NOT use `useState` for form fields.
+
+### Required Pattern
+
+```typescript
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+
+// 1. Define schema
+const formSchema = z.object({
+  fieldName: z.string().min(1, 'Field is required'),
+});
+
+type FormData = z.infer<typeof formSchema>;
+
+// 2. Use the form hook
+const {
+  register,
+  handleSubmit,
+  formState: { errors, isDirty, isSubmitting },
+  reset,
+} = useForm<FormData>({
+  resolver: zodResolver(formSchema),
+  defaultValues: { fieldName: '' },
+});
+
+// 3. Handle submission
+const onSubmit = async (data: FormData) => {
+  await api.mutateAsync(data);
+  reset(data); // Reset dirty state after successful save
+};
+```
+
+### Key Rules
+
+- **Never use `useState` for form fields** - use `register()` or controlled fields with `Controller`
+- **Always use Zod schemas** for validation instead of manual validation
+- **Use `isDirty`** to detect changes instead of manual comparison
+- **Use `isSubmitting`** for loading states instead of mutation.isPending
+- **Call `reset(data)`** after successful submission to sync form state
+- **Encapsulate form logic in custom hooks** - place form handlers in `features/<feature-name>/hooks/` folder to keep UI components clean and free of business logic
+
+### Form Hook Pattern
+
+**IMPORTANT:** All form business logic must be encapsulated in custom hooks. UI components should only contain render logic.
+
+```typescript
+// features/settings/hooks/use-profile-form.ts
+export const useProfileForm = () => {
+  const { user } = useAuthStore();
+  const updateProfileMutation = useUpdateProfile();
+
+  const form = useForm<ProfileFormData>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: { firstName: '', lastName: '' },
+  });
+
+  // Sync with external data
+  useEffect(() => {
+    if (user) {
+      form.reset({ firstName: user.firstName, lastName: user.lastName });
+    }
+  }, [user, form]);
+
+  const onSubmit = form.handleSubmit(async (data) => {
+    await updateProfileMutation.mutateAsync(data);
+    form.reset(data);
+  });
+
+  return {
+    form,
+    onSubmit,
+    isLoading: updateProfileMutation.isPending,
+    isSuccess: updateProfileMutation.isSuccess,
+    error: updateProfileMutation.error,
+  };
+};
+
+// features/settings/hooks/index.ts
+export * from './use-profile-form';
+
+// UI component stays clean - only render logic
+export const ProfileSettings = () => {
+  const { form, onSubmit, isLoading } = useProfileForm();
+  const { register, formState: { errors, isDirty } } = form;
+
+  return (
+    <form onSubmit={onSubmit}>
+      <Input {...register('firstName')} error={errors.firstName?.message} />
+      <Button type="submit" disabled={!isDirty || isLoading}>Save</Button>
+    </form>
+  );
+};
+```
 
 ## Development Patterns
 
@@ -133,6 +231,7 @@ shared/api/
 - Create hooks in `features/<feature-name>/api/`
 - Export hooks from feature's `index.ts` for external use
 - Internal components use relative imports `../../api` to avoid circular dependencies
+- **Always use `mutateAsync()` instead of `mutate()`** for mutations (POST, PATCH, PUT, DELETE operations)
 
 ### Common Patterns
 

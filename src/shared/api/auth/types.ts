@@ -1,17 +1,14 @@
 // User roles matching API format (uppercase)
-export type UserRole =
-  | 'FOUNDER'
-  | 'ADMIN'
-  | 'PM'
-  | 'BA'
-  | 'DEVELOPER'
-  | 'DESIGNER';
+// Note: ADMIN role removed - not supported by API
+export type UserRole = 'FOUNDER' | 'PM' | 'BA' | 'DEVELOPER' | 'DESIGNER';
 
-// Organization
+// Organization with full details
 export interface IOrganization {
   id: number;
   name: string;
   slug: string;
+  description: string | null;
+  website: string | null;
 }
 
 // User interface matching API response (simplified - no memberships)
@@ -27,12 +24,14 @@ export interface IUser {
   lastLoginAt: string | null;
   role: UserRole;
   isFounder: boolean;
-  organization: IOrganization | null;
+  organization: IOrganization;
 }
 
-// Helper to get full name from user
-export const getFullName = (user: IUser): string =>
-  `${user.firstName} ${user.lastName}`.trim();
+// Helper to get full name from any user-like object
+export const getFullName = (user: {
+  firstName: string;
+  lastName: string;
+}): string => `${user.firstName} ${user.lastName}`.trim();
 
 // Login request
 export interface ILoginRequest {

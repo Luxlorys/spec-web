@@ -85,9 +85,7 @@ export const CommentItem: FC<ICommentItemProps> = ({
     : 'bg-gray-100 dark:bg-gray-800/50'; // Light gray for others' comments
 
   return (
-    <div
-      className={`flex w-full ${isOwner ? 'justify-end' : 'justify-start'}`}
-    >
+    <div className={`flex w-full ${isOwner ? 'justify-end' : 'justify-start'}`}>
       <div
         className={`group flex max-w-[80%] gap-2 ${isOwner ? 'flex-row-reverse' : 'flex-row'}`}
       >
@@ -148,7 +146,9 @@ export const CommentItem: FC<ICommentItemProps> = ({
               </div>
             </div>
           ) : (
-            <p className="text-gray-700 dark:text-gray-300">{comment.content}</p>
+            <p className="text-gray-700 dark:text-gray-300">
+              {comment.content}
+            </p>
           )}
 
           {/* Actions - Only show edit/delete for owner */}

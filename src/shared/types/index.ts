@@ -2,7 +2,6 @@
 export * from './api';
 
 // Mock/legacy types (kept for compatibility)
-export * from './todos';
 export * from './conversation';
 export * from './notification';
 export * from './team';

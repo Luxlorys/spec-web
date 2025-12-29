@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  Bell,
   Building2,
   ChevronRight,
   CreditCard,
@@ -11,13 +10,11 @@ import {
 } from 'lucide-react';
 
 import { cn } from 'shared/lib';
-import { UserRole } from 'shared/types';
 
 export type SettingsSection =
   | 'profile'
   | 'project'
   | 'team'
-  | 'notifications'
   | 'security'
   | 'billing';
 
@@ -33,28 +30,21 @@ const navItems: NavItem[] = [
   { id: 'project', label: 'Project', icon: Building2, founderOnly: true },
   { id: 'team', label: 'Team', icon: Users, founderOnly: true },
   { id: 'billing', label: 'Billing', icon: CreditCard, founderOnly: true },
-  { id: 'notifications', label: 'Notifications', icon: Bell },
   { id: 'security', label: 'Security', icon: Shield },
 ];
-
-const isFounderRole = (role: UserRole): boolean => {
-  return role === 'FOUNDER';
-};
 
 interface SettingsNavProps {
   activeSection: SettingsSection;
   onSectionChange: (section: SettingsSection) => void;
-  userRole: UserRole;
+  isFounder: boolean;
 }
 
 export const SettingsNav = ({
   activeSection,
   onSectionChange,
-  userRole,
+  isFounder,
 }: SettingsNavProps) => {
-  const filteredItems = navItems.filter(
-    item => !item.founderOnly || isFounderRole(userRole),
-  );
+  const filteredItems = navItems.filter(item => !item.founderOnly || isFounder);
 
   return (
     <nav className="space-y-1">

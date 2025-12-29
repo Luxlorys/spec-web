@@ -1,5 +1,3 @@
-export * from './users';
-export * from './organizations';
 export * from './feature-requests';
 export * from './conversations';
 export * from './spec-documents';

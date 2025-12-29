@@ -2,14 +2,26 @@
 
 import { useState } from 'react';
 
-import { Copy } from 'lucide-react';
+import { Copy, Loader2 } from 'lucide-react';
 
-import { Avatar, Button, Card, Input } from 'shared/ui';
+import { getFullName } from 'shared/api';
+import { formatRole } from 'shared/api/auth';
+import { useAuthStore } from 'shared/store';
+import { Avatar, Button, Card } from 'shared/ui';
+
+import { useGetOrganizationMembers, useRemoveMember } from '../api';
 
 export const TeamSettings = () => {
-  const [inviteEmail, setInviteEmail] = useState('');
+  const { user } = useAuthStore();
+  const { data: members, isLoading, error } = useGetOrganizationMembers();
+  const removeMemberMutation = useRemoveMember();
+
   const [copied, setCopied] = useState(false);
-  const organizationInviteCode = 'SPECFLOW2025';
+  const [memberToRemove, setMemberToRemove] = useState<number | null>(null);
+
+  // Note: Invite code functionality would need a separate API endpoint
+  // For now, showing a placeholder
+  const organizationInviteCode = 'Contact admin for invite code';
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(organizationInviteCode);
@@ -17,43 +29,44 @@ export const TeamSettings = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleInvite = () => {
-    // Placeholder for invite functionality
-    setInviteEmail('');
+  const handleRemoveMember = async (memberId: number) => {
+    try {
+      await removeMemberMutation.mutateAsync(memberId);
+      setMemberToRemove(null);
+    } catch {
+      // Error is handled by the mutation state, but we need to
+      // ensure the confirmation UI stays visible so user can retry
+    }
   };
 
-  const teamMembers = [
-    {
-      name: 'John Doe',
-      email: 'john@example.com',
-      role: 'Founder',
-      status: 'accepted' as const,
-    },
-    {
-      name: 'Jane Smith',
-      email: 'jane@example.com',
-      role: 'Developer',
-      status: 'accepted' as const,
-    },
-    {
-      name: 'Bob Wilson',
-      email: 'bob@example.com',
-      role: 'Designer',
-      status: 'accepted' as const,
-    },
-    {
-      name: 'Alice Brown',
-      email: 'alice@example.com',
-      role: 'PM',
-      status: 'accepted' as const,
-    },
-    {
-      name: 'New Member',
-      email: 'newmember@example.com',
-      role: 'Developer',
-      status: 'invited' as const,
-    },
-  ];
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-lg font-semibold">Team Settings</h2>
+          <p className="text-sm text-muted-foreground">
+            Manage team members and invites
+          </p>
+        </div>
+        <Card
+          className="border border-red-200 dark:border-red-900"
+          padding="lg"
+        >
+          <p className="text-sm text-red-600 dark:text-red-400">
+            Failed to load team members. Please try again later.
+          </p>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -66,7 +79,7 @@ export const TeamSettings = () => {
         </div>
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">Invite code:</span>
-          <code className="rounded bg-muted px-2 py-1 font-mono text-sm">
+          <code className="rounded bg-muted px-2 py-1 font-mono text-xs">
             {organizationInviteCode}
           </code>
           <Button variant="ghost" size="sm" onClick={handleCopyCode}>
@@ -78,52 +91,93 @@ export const TeamSettings = () => {
 
       <Card className="border" padding="lg">
         <div className="space-y-4">
-          <h3 className="font-medium">Team Members ({teamMembers.length})</h3>
-          <div className="flex gap-2">
-            <Input
-              placeholder="Enter email address"
-              type="email"
-              value={inviteEmail}
-              onChange={e => setInviteEmail(e.target.value)}
-              className="flex-1"
-            />
-            <Button onClick={handleInvite} disabled={!inviteEmail}>
-              Invite
-            </Button>
-          </div>
+          <h3 className="font-medium">Team Members ({members?.length ?? 0})</h3>
+
+          {removeMemberMutation.isError && (
+            <p className="text-sm text-red-600 dark:text-red-400">
+              {(removeMemberMutation.error as Error).message ||
+                'Failed to remove member'}
+            </p>
+          )}
+
           <div className="space-y-3">
-            {teamMembers.map(member => (
-              <div
-                key={member.email}
-                className="flex items-center justify-between rounded-lg border p-3"
-              >
-                <div className="flex items-center gap-3">
-                  <Avatar alt={member.name} size="sm" />
-                  <div>
-                    <p className="text-sm font-medium">{member.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {member.email}
-                    </p>
+            {members?.map(member => {
+              const memberName = getFullName(member);
+              const isCurrentUser = member.id === user?.id;
+              const { isFounder } = member;
+              const isBeingRemoved = memberToRemove === member.id;
+
+              return (
+                <div
+                  key={member.id}
+                  className="flex items-center justify-between rounded-lg border p-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <Avatar
+                      src={member.avatarUrl ?? undefined}
+                      alt={memberName}
+                      size="sm"
+                    />
+                    <div>
+                      <p className="text-sm font-medium">
+                        {memberName}
+                        {isCurrentUser && (
+                          <span className="ml-2 text-xs text-muted-foreground">
+                            (You)
+                          </span>
+                        )}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {member.email}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
+                      {formatRole(member.role)}
+                    </span>
+
+                    {!isFounder &&
+                      !isCurrentUser &&
+                      (isBeingRemoved ? (
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={() => handleRemoveMember(member.id)}
+                            disabled={removeMemberMutation.isPending}
+                          >
+                            {removeMemberMutation.isPending
+                              ? 'Removing...'
+                              : 'Confirm'}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setMemberToRemove(null)}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setMemberToRemove(member.id)}
+                        >
+                          Remove
+                        </Button>
+                      ))}
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  {member.status === 'invited' ? (
-                    <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
-                      Invited
-                    </span>
-                  ) : (
-                    <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
-                      {member.role}
-                    </span>
-                  )}
-                  {member.role !== 'Founder' && (
-                    <Button variant="ghost" size="sm">
-                      Remove
-                    </Button>
-                  )}
-                </div>
-              </div>
-            ))}
+              );
+            })}
+
+            {(!members || members.length === 0) && (
+              <p className="py-4 text-center text-sm text-muted-foreground">
+                No team members found
+              </p>
+            )}
           </div>
         </div>
       </Card>

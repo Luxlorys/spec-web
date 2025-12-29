@@ -61,11 +61,11 @@ export const ChatInterface: FC<IProps> = ({ featureId }) => {
     },
   });
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!inputValue.trim() || sendMessageMutation.isPending) {
       return;
     }
-    sendMessageMutation.mutate(inputValue);
+    await sendMessageMutation.mutateAsync(inputValue);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {

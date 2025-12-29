@@ -30,6 +30,8 @@ interface IAuthStore {
   // Actions
   setAuth: (user: IUser, accessToken: string, refreshToken: string) => void;
   setTokens: (accessToken: string, refreshToken: string) => void;
+  updateUser: (user: IUser) => void;
+  updateOrganization: (organization: IOrganization) => void;
   clearAuth: () => void;
 
   // Helpers
@@ -62,6 +64,18 @@ export const useAuthStore = create<IAuthStore>()(
           accessToken,
           refreshToken,
         });
+      },
+
+      updateUser: user => {
+        set({ user });
+      },
+
+      updateOrganization: organization => {
+        const { user } = get();
+
+        if (user) {
+          set({ user: { ...user, organization } });
+        }
       },
 
       clearAuth: () => {

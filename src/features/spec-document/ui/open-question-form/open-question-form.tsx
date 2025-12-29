@@ -20,14 +20,14 @@ export const OpenQuestionForm: FC<IOpenQuestionFormProps> = ({
 
   const createMutation = useCreateOpenQuestion();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!questionText.trim()) {
       return;
     }
 
-    createMutation.mutate(
+    await createMutation.mutateAsync(
       {
         specificationId,
         data: { question: questionText },

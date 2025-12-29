@@ -1,12 +1,11 @@
 export enum QueryKeys {
-  GET_TODOS,
-
   // Auth
   CURRENT_USER = 'currentUser',
 
   // Organizations
   ORGANIZATIONS = 'organizations',
   ORGANIZATION_BY_ID = 'organizationById',
+  ORGANIZATION_MEMBERS = 'organizationMembers',
 
   // Feature Requests
   FEATURE_REQUESTS = 'featureRequests',

@@ -52,6 +52,10 @@ export const FeatureDetailClient = ({ featureId }: IProps) => {
     },
   });
 
+  const updateStatus = async (status: FeatureStatus) => {
+    await updateStatusMutation.mutateAsync(status);
+  };
+
   if (featureLoading) {
     return (
       <div className="flex h-96 items-center justify-center">
@@ -104,7 +108,7 @@ export const FeatureDetailClient = ({ featureId }: IProps) => {
         <FeatureOverview
           feature={feature}
           featureId={featureId}
-          onStatusChange={status => updateStatusMutation.mutate(status)}
+          onStatusChange={updateStatus}
           isStatusChangePending={updateStatusMutation.isPending}
         />
       ),
