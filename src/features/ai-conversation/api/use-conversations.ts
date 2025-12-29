@@ -83,6 +83,10 @@ export const useSendMessage = (featureId: number) => {
       queryClient.invalidateQueries({
         queryKey: [QueryKeys.FEATURE_REQUEST_BY_ID, featureId],
       });
+      // Invalidate specification in case it was auto-generated
+      queryClient.invalidateQueries({
+        queryKey: [QueryKeys.SPECIFICATION_BY_FEATURE, featureId],
+      });
       // Invalidate feature list for dashboard updates
       queryClient.invalidateQueries({
         queryKey: [QueryKeys.FEATURE_REQUESTS],
