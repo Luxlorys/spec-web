@@ -4,13 +4,9 @@ import { FC, useEffect, useRef, useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
-import { useMutation, useQuery } from '@tanstack/react-query';
-
-import { conversationsApi } from 'shared/api/conversations';
-import { QueryKeys } from 'shared/constants';
-import { queryClient } from 'shared/lib';
 import { Button, Card, Textarea } from 'shared/ui';
 
+import { useGetConversation, useSendMessage } from '../../api';
 import { Message } from '../message';
 import { ThinkingIndicator } from '../thinking-indicator';
 
@@ -22,50 +18,28 @@ export const ChatInterface: FC<IProps> = ({ featureId }) => {
   const router = useRouter();
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [isInitializing, setIsInitializing] = useState(false);
 
-  const { data: conversation, isLoading } = useQuery({
-    queryKey: [QueryKeys.CONVERSATION_BY_FEATURE, featureId],
-    queryFn: async () => {
-      const existing = await conversationsApi.getByFeatureId(featureId);
+  const numericFeatureId = Number(featureId);
 
-      if (!existing && !isInitializing) {
-        setIsInitializing(true);
-        const newConv = await conversationsApi.createConversation(featureId);
+  const { data: conversation, isLoading } =
+    useGetConversation(numericFeatureId);
 
-        setIsInitializing(false);
-
-        return newConv;
-      }
-
-      return existing;
-    },
-  });
-
-  const sendMessageMutation = useMutation({
-    mutationFn: (content: string) => {
-      if (!conversation) {
-        throw new Error('No conversation');
-      }
-
-      return conversationsApi.sendMessage(conversation.id, { content });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: [QueryKeys.CONVERSATION_BY_FEATURE, featureId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: [QueryKeys.FEATURE_REQUEST_BY_ID, featureId],
-      });
-      setInputValue('');
-    },
-  });
+  const sendMessageMutation = useSendMessage(numericFeatureId);
 
   const handleSend = async () => {
     if (!inputValue.trim() || sendMessageMutation.isPending) {
       return;
     }
-    await sendMessageMutation.mutateAsync(inputValue);
+
+    try {
+      await sendMessageMutation.mutateAsync({
+        content: inputValue,
+      });
+
+      setInputValue('');
+    } catch {
+      // Error is handled by mutation state - input is preserved for retry
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -83,7 +57,7 @@ export const ChatInterface: FC<IProps> = ({ featureId }) => {
     router.push(`/features/${featureId}`);
   };
 
-  if (isLoading || isInitializing) {
+  if (isLoading) {
     return (
       <div className="flex h-96 items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
@@ -91,14 +65,29 @@ export const ChatInterface: FC<IProps> = ({ featureId }) => {
     );
   }
 
-  const isCompleted = conversation?.status === 'completed';
+  if (!conversation) {
+    return (
+      <div className="flex h-96 items-center justify-center">
+        <Card className="p-6 text-center">
+          <p className="text-gray-600 dark:text-gray-400">
+            Conversation not found. Please try again.
+          </p>
+          <Button className="mt-4" onClick={() => router.push('/dashboard')}>
+            Back to Dashboard
+          </Button>
+        </Card>
+      </div>
+    );
+  }
+
+  const { isCompleted } = conversation;
 
   return (
     <div className="flex h-[calc(100vh-12rem)] flex-col">
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto px-4 py-6">
         <div className="mx-auto max-w-4xl space-y-6">
-          {conversation?.messages.map(message => (
+          {conversation.messages.map(message => (
             <Message key={message.id} message={message} />
           ))}
 
@@ -129,7 +118,7 @@ export const ChatInterface: FC<IProps> = ({ featureId }) => {
       {!isCompleted && (
         <div className="border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
           <div className="mx-auto max-w-4xl">
-            <div className="flex items-end gap-3">
+            <div className="flex items-center gap-3">
               <div className="flex-1">
                 <Textarea
                   value={inputValue}
