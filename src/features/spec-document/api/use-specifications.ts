@@ -13,6 +13,7 @@ import {
 
 /**
  * Hook to fetch specification with open questions for a feature
+ * Polls every 15 seconds to check for AI answers on open questions
  */
 export const useGetSpecification = (
   featureId: number,
@@ -23,6 +24,8 @@ export const useGetSpecification = (
     queryFn: () => specificationsApi.getByFeatureId(featureId),
     enabled:
       !Number.isNaN(featureId) && featureId > 0 && (options?.enabled ?? true),
+    refetchInterval: 15000, // Poll every 15 seconds for AI answers
+    refetchIntervalInBackground: false, // Only poll when tab is focused
   });
 };
 
