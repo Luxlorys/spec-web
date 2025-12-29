@@ -4,31 +4,54 @@ import { useState } from 'react';
 
 import Link from 'next/link';
 
+import { Loader2 } from 'lucide-react';
+
+import { useGetOrganizationMembers } from 'features/settings';
 import { formatDate } from 'shared/lib';
-import { mockUsers } from 'shared/lib/mock-data';
 import { useAuthStore } from 'shared/store';
 import { getFullName, UserRole } from 'shared/types';
 import { Avatar, Badge, Button, Card, EmptyState, Input } from 'shared/ui';
 
 const TeamContent = () => {
-  const { user: currentUser, getCurrentOrganization } = useAuthStore();
-  const currentOrg = getCurrentOrganization();
+  const { user: currentUser } = useAuthStore();
+  const { data: teamMembers, isLoading, error } = useGetOrganizationMembers();
+
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState<UserRole>('DEVELOPER');
 
-  // Mock team members - filter by current user's organization
-  const teamMembers = mockUsers.filter(
-    u => u.organization?.id === currentOrg?.id,
-  );
-
   const handleInvite = () => {
-    // Mock invite - would call API in real app
+    // Note: Invite functionality would need a separate API endpoint
     // eslint-disable-next-line no-console
     console.log(`Invitation sent to ${inviteEmail} as ${inviteRole}`);
     setInviteEmail('');
     setShowInviteForm(false);
   };
+
+  if (isLoading) {
+    return (
+      <main className="p-6">
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="p-6">
+        <Card
+          className="border border-red-200 dark:border-red-900"
+          padding="lg"
+        >
+          <p className="text-sm text-red-600 dark:text-red-400">
+            Failed to load team members. Please try again later.
+          </p>
+        </Card>
+      </main>
+    );
+  }
 
   return (
     <main className="p-6">
@@ -73,7 +96,6 @@ const TeamContent = () => {
                 <option value="DESIGNER">Designer</option>
                 <option value="PM">Project Manager</option>
                 <option value="BA">Business Analyst</option>
-                <option value="ADMIN">Admin</option>
               </select>
             </div>
 
@@ -99,7 +121,7 @@ const TeamContent = () => {
       )}
 
       <div className="grid gap-4">
-        {teamMembers.map(member => {
+        {teamMembers?.map(member => {
           const memberName = getFullName(member);
           const memberRole = member.role;
 
@@ -151,7 +173,7 @@ const TeamContent = () => {
         })}
       </div>
 
-      {teamMembers.length === 0 && (
+      {(!teamMembers || teamMembers.length === 0) && (
         <EmptyState
           title="No team members"
           description="Invite your first team member to get started"

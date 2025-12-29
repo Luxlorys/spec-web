@@ -6,7 +6,6 @@ import { Settings } from 'lucide-react';
 
 import {
   BillingSettings,
-  NotificationSettings,
   ProfileSettings,
   ProjectSettings,
   SecuritySettings,
@@ -21,7 +20,6 @@ const sectionComponents: Record<SettingsSection, React.ReactNode> = {
   profile: <ProfileSettings />,
   project: <ProjectSettings />,
   team: <TeamSettings />,
-  notifications: <NotificationSettings />,
   security: <SecuritySettings />,
   billing: <BillingSettings />,
 };

@@ -133,6 +133,7 @@ shared/api/
 - Create hooks in `features/<feature-name>/api/`
 - Export hooks from feature's `index.ts` for external use
 - Internal components use relative imports `../../api` to avoid circular dependencies
+- **Always use `mutateAsync()` instead of `mutate()`** for mutations (POST, PATCH, PUT, DELETE operations)
 
 ### Common Patterns
 

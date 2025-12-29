@@ -141,7 +141,6 @@ export const authApi = {
 export const formatRole = (role: string): string => {
   const roleMap: Record<string, string> = {
     FOUNDER: 'Founder',
-    ADMIN: 'Admin',
     PM: 'Project Manager',
     BA: 'Business Analyst',
     DEVELOPER: 'Developer',

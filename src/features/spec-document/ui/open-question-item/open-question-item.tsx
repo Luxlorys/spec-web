@@ -87,12 +87,12 @@ export const OpenQuestionItem: FC<IOpenQuestionItemProps> = ({
     answer.authorId === currentUser.id;
 
   // Question handlers
-  const handleSaveQuestion = () => {
+  const handleSaveQuestion = async () => {
     if (!editedQuestion.trim()) {
       return;
     }
 
-    editQuestionMutation.mutate(
+    await editQuestionMutation.mutateAsync(
       {
         specificationId,
         questionId: question.id,
@@ -111,10 +111,10 @@ export const OpenQuestionItem: FC<IOpenQuestionItemProps> = ({
     setIsEditingQuestion(false);
   };
 
-  const handleDeleteQuestion = () => {
+  const handleDeleteQuestion = async () => {
     // eslint-disable-next-line no-alert
     if (window.confirm('Are you sure you want to delete this question?')) {
-      deleteQuestionMutation.mutate({
+      await deleteQuestionMutation.mutateAsync({
         specificationId,
         questionId: question.id,
       });
@@ -127,12 +127,12 @@ export const OpenQuestionItem: FC<IOpenQuestionItemProps> = ({
     setEditedAnswerContent(answer.content);
   };
 
-  const handleSaveAnswer = () => {
+  const handleSaveAnswer = async () => {
     if (editingAnswerId === null || !editedAnswerContent.trim()) {
       return;
     }
 
-    editAnswerMutation.mutate(
+    await editAnswerMutation.mutateAsync(
       {
         specificationId,
         questionId: question.id,
@@ -153,10 +153,10 @@ export const OpenQuestionItem: FC<IOpenQuestionItemProps> = ({
     setEditedAnswerContent('');
   };
 
-  const handleDeleteAnswer = (answerId: number) => {
+  const handleDeleteAnswer = async (answerId: number) => {
     // eslint-disable-next-line no-alert
     if (window.confirm('Are you sure you want to delete this answer?')) {
-      deleteAnswerMutation.mutate({
+      await deleteAnswerMutation.mutateAsync({
         specificationId,
         questionId: question.id,
         answerId,
@@ -165,12 +165,12 @@ export const OpenQuestionItem: FC<IOpenQuestionItemProps> = ({
   };
 
   // Add answer handlers
-  const handleAddAnswer = () => {
+  const handleAddAnswer = async () => {
     if (!newAnswerContent.trim()) {
       return;
     }
 
-    createAnswerMutation.mutate(
+    await createAnswerMutation.mutateAsync(
       {
         specificationId,
         questionId: question.id,
@@ -191,8 +191,8 @@ export const OpenQuestionItem: FC<IOpenQuestionItemProps> = ({
   };
 
   // Resolve handler
-  const handleResolve = (answerId: number) => {
-    resolveMutation.mutate({
+  const handleResolve = async (answerId: number) => {
+    await resolveMutation.mutateAsync({
       specificationId,
       questionId: question.id,
       data: { acceptedAnswerId: answerId },

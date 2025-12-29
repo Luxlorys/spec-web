@@ -45,9 +45,9 @@ const NewFeatureContent = () => {
     },
   });
 
-  const onSubmit = (values: CreateFeatureInput) => {
+  const onSubmit = async (values: CreateFeatureInput) => {
     setError('');
-    createMutation.mutate(values);
+    await createMutation.mutateAsync(values);
   };
 
   return (

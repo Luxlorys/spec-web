@@ -7,6 +7,7 @@ export enum QueryKeys {
   // Organizations
   ORGANIZATIONS = 'organizations',
   ORGANIZATION_BY_ID = 'organizationById',
+  ORGANIZATION_MEMBERS = 'organizationMembers',
 
   // Feature Requests
   FEATURE_REQUESTS = 'featureRequests',

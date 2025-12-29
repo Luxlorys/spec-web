@@ -5,141 +5,63 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { AlertTriangle, ArrowLeft, Shield, Trash2 } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Loader2, Trash2 } from 'lucide-react';
 
-import { usersApi } from 'shared/api/users';
-import { QueryKeys } from 'shared/constants';
+import { useGetOrganizationMembers, useRemoveMember } from 'features/settings';
 import { formatDate } from 'shared/lib';
 import { useAuthStore } from 'shared/store';
-import { getFullName, UserRole } from 'shared/types';
-import { Avatar, Badge, Button, Card, Label } from 'shared/ui';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from 'shared/ui/select';
-
-const roleOptions: { value: UserRole; label: string; description: string }[] = [
-  {
-    value: 'FOUNDER',
-    label: 'Founder',
-    description: 'Full access to all features and settings',
-  },
-  {
-    value: 'ADMIN',
-    label: 'Admin',
-    description: 'Can manage team members and settings',
-  },
-  {
-    value: 'PM',
-    label: 'Project Manager',
-    description: 'Can manage features and specifications',
-  },
-  {
-    value: 'BA',
-    label: 'Business Analyst',
-    description: 'Can create and edit specifications',
-  },
-  {
-    value: 'DEVELOPER',
-    label: 'Developer',
-    description: 'Can view and comment on specifications',
-  },
-  {
-    value: 'DESIGNER',
-    label: 'Designer',
-    description: 'Can view and comment on specifications',
-  },
-];
-
-const getPermissionWarningMessage = (
-  isFounder: boolean,
-  isCurrentUserAdmin: boolean,
-): string => {
-  if (isFounder) {
-    return "The founder's role cannot be changed.";
-  }
-  if (!isCurrentUserAdmin) {
-    return 'You need admin permissions to change member roles.';
-  }
-
-  return 'You cannot change your own role.';
-};
+import { getFullName } from 'shared/types';
+import { Avatar, Badge, Button, Card } from 'shared/ui';
 
 const TeamMemberContent = () => {
   const params = useParams();
   const router = useRouter();
-  const queryClient = useQueryClient();
-  const { user: currentUser, getCurrentOrganization } = useAuthStore();
-  const currentOrg = getCurrentOrganization();
+  const { user: currentUser } = useAuthStore();
   const memberId = Number(params.id);
 
-  const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
+  const { data: members, isLoading, error } = useGetOrganizationMembers();
+  const removeMemberMutation = useRemoveMember();
+
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const { data: member, isLoading } = useQuery({
-    queryKey: [QueryKeys.USERS, memberId],
-    queryFn: () => usersApi.getById(memberId),
-    enabled: !!memberId,
-  });
+  // Find the member from the list
+  const member = members?.find(m => m.id === memberId);
 
   const memberName = member ? getFullName(member) : '';
   const memberRole = member?.role ?? null;
   const currentUserRole = currentUser?.role ?? null;
 
-  const updateRoleMutation = useMutation({
-    mutationFn: (role: UserRole) =>
-      usersApi.updateRole(memberId, role, currentOrg?.id ?? 0),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QueryKeys.USERS] });
-      setSelectedRole(null);
-    },
-  });
-
-  const removeMemberMutation = useMutation({
-    mutationFn: () =>
-      usersApi.remove(memberId, currentUser?.id ?? 0, currentOrg?.id ?? 0),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QueryKeys.USERS] });
-      router.push('/team');
-    },
-  });
-
-  const handleSaveRole = () => {
-    if (selectedRole && selectedRole !== memberRole) {
-      updateRoleMutation.mutate(selectedRole);
-    }
+  const handleDelete = async () => {
+    await removeMemberMutation.mutateAsync(memberId);
+    router.push('/team');
   };
 
-  const handleDelete = () => {
-    removeMemberMutation.mutate();
-  };
-
-  const isCurrentUserAdmin =
-    currentUserRole === 'FOUNDER' || currentUserRole === 'ADMIN';
-  const isFounder = memberRole === 'FOUNDER';
+  const isCurrentUserFounder = currentUserRole === 'FOUNDER';
+  const isFounder = member?.isFounder ?? false;
   const isSelf = member?.id === currentUser?.id;
-  const canChangeRole = isCurrentUserAdmin && !isFounder;
-  const canDelete = isCurrentUserAdmin && !isFounder && !isSelf;
+  const canDelete = isCurrentUserFounder && !isFounder && !isSelf;
 
   if (isLoading) {
     return (
       <main className="p-6">
-        <div className="animate-pulse">
-          <div className="mb-6 h-8 w-48 rounded bg-muted" />
-          <Card className="mb-6 border p-6">
-            <div className="flex items-center gap-4">
-              <div className="h-16 w-16 rounded-full bg-muted" />
-              <div className="space-y-2">
-                <div className="h-6 w-32 rounded bg-muted" />
-                <div className="h-4 w-48 rounded bg-muted" />
-              </div>
-            </div>
-          </Card>
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="p-6">
+        <Card
+          className="border border-red-200 dark:border-red-900"
+          padding="lg"
+        >
+          <p className="text-sm text-red-600 dark:text-red-400">
+            Failed to load team member. Please try again later.
+          </p>
+        </Card>
       </main>
     );
   }
@@ -175,10 +97,10 @@ const TeamMemberContent = () => {
           Back to Team
         </Link>
         <h1 className="text-2xl font-bold text-foreground">
-          Manage Team Member
+          Team Member Details
         </h1>
         <p className="text-sm text-muted-foreground">
-          View and manage permissions for this team member
+          View details for this team member
         </p>
       </div>
 
@@ -212,73 +134,23 @@ const TeamMemberContent = () => {
         </div>
       </Card>
 
-      {/* Permissions Card */}
-      <Card className="mb-6 border" padding="lg">
-        <div className="mb-4 flex items-center gap-2">
-          <Shield className="h-5 w-5 text-muted-foreground" />
-          <h3 className="text-lg font-semibold text-foreground">Permissions</h3>
-        </div>
-
-        {canChangeRole ? (
-          <div className="space-y-4">
-            <div>
-              <Label className="mb-2 block">Role</Label>
-              <Select
-                value={selectedRole || memberRole || 'DEVELOPER'}
-                onValueChange={value => setSelectedRole(value as UserRole)}
-              >
-                <SelectTrigger className="w-full max-w-xs">
-                  <SelectValue placeholder="Select a role" />
-                </SelectTrigger>
-                <SelectContent>
-                  {roleOptions
-                    .filter(r => r.value !== 'FOUNDER')
-                    .map(role => (
-                      <SelectItem key={role.value} value={role.value}>
-                        <div className="flex flex-col">
-                          <span>{role.label}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {
-                  roleOptions.find(
-                    r => r.value === (selectedRole || memberRole),
-                  )?.description
-                }
-              </p>
-            </div>
-
-            {selectedRole && selectedRole !== memberRole && (
-              <div className="flex gap-3">
-                <Button
-                  onClick={handleSaveRole}
-                  disabled={updateRoleMutation.isPending}
-                >
-                  {updateRoleMutation.isPending ? 'Saving...' : 'Save Changes'}
-                </Button>
-                <Button variant="outline" onClick={() => setSelectedRole(null)}>
-                  Cancel
-                </Button>
-              </div>
-            )}
-
-            {updateRoleMutation.isError && (
-              <p className="text-sm text-red-600 dark:text-red-400">
-                {(updateRoleMutation.error as Error).message}
-              </p>
-            )}
-          </div>
-        ) : (
+      {/* Info Card for non-deletable members */}
+      {!canDelete && (
+        <Card className="mb-6 border" padding="lg">
           <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-900/50 dark:bg-yellow-900/20">
             <p className="text-sm text-yellow-800 dark:text-yellow-200">
-              {getPermissionWarningMessage(isFounder, isCurrentUserAdmin)}
+              {isFounder && 'The founder cannot be removed from the team.'}
+              {isSelf &&
+                !isFounder &&
+                'You cannot remove yourself from the team.'}
+              {!isCurrentUserFounder &&
+                !isFounder &&
+                !isSelf &&
+                'Only the founder can remove team members.'}
             </p>
           </div>
-        )}
-      </Card>
+        </Card>
+      )}
 
       {/* Danger Zone */}
       {canDelete && (
@@ -318,7 +190,8 @@ const TeamMemberContent = () => {
               </div>
               {removeMemberMutation.isError && (
                 <p className="mt-2 text-sm text-red-600 dark:text-red-400">
-                  {(removeMemberMutation.error as Error).message}
+                  {(removeMemberMutation.error as Error).message ||
+                    'Failed to remove member'}
                 </p>
               )}
             </div>

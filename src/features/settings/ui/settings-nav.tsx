@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  Bell,
   Building2,
   ChevronRight,
   CreditCard,
@@ -17,7 +16,6 @@ export type SettingsSection =
   | 'profile'
   | 'project'
   | 'team'
-  | 'notifications'
   | 'security'
   | 'billing';
 
@@ -33,7 +31,6 @@ const navItems: NavItem[] = [
   { id: 'project', label: 'Project', icon: Building2, founderOnly: true },
   { id: 'team', label: 'Team', icon: Users, founderOnly: true },
   { id: 'billing', label: 'Billing', icon: CreditCard, founderOnly: true },
-  { id: 'notifications', label: 'Notifications', icon: Bell },
   { id: 'security', label: 'Security', icon: Shield },
 ];
 
