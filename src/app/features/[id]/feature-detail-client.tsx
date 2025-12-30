@@ -1,10 +1,12 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 import { useMutation, useQuery } from '@tanstack/react-query';
 
 import { ActivityList, FeatureOverview } from 'features/feature-details';
+import { useDeleteFeature } from 'features/feature-requests';
 import { SpecView, useGetSpecification } from 'features/spec-document';
 import { featureRequestsApi } from 'shared/api';
 import { QueryKeys } from 'shared/constants';
@@ -17,6 +19,7 @@ interface IProps {
 }
 
 export const FeatureDetailClient = ({ featureId }: IProps) => {
+  const router = useRouter();
   const numericId = parseInt(featureId, 10);
 
   const { data: feature, isLoading: featureLoading } = useQuery({
@@ -52,8 +55,15 @@ export const FeatureDetailClient = ({ featureId }: IProps) => {
     },
   });
 
+  const deleteFeatureMutation = useDeleteFeature();
+
   const updateStatus = async (status: FeatureStatus) => {
     await updateStatusMutation.mutateAsync(status);
+  };
+
+  const handleDeleteFeature = async () => {
+    await deleteFeatureMutation.mutateAsync(numericId);
+    router.push('/dashboard');
   };
 
   if (featureLoading) {
@@ -110,6 +120,8 @@ export const FeatureDetailClient = ({ featureId }: IProps) => {
           featureId={featureId}
           onStatusChange={updateStatus}
           isStatusChangePending={updateStatusMutation.isPending}
+          onDeleteFeature={handleDeleteFeature}
+          isDeletePending={deleteFeatureMutation.isPending}
         />
       ),
     },

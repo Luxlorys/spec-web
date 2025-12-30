@@ -156,3 +156,41 @@ export interface IGenerateSpecificationResponse {
   specification: IGeneratedSpecification;
   featureStatus: 'SPEC_GENERATED';
 }
+
+// ============================================================================
+// Streaming types
+// ============================================================================
+
+/**
+ * SSE event types for streaming conversation
+ */
+export type SSEEventType =
+  | 'message_start'
+  | 'text_delta'
+  | 'metadata'
+  | 'message_complete'
+  | 'error';
+
+/**
+ * Metadata received during streaming
+ */
+export interface IStreamMetadata {
+  phase: ConversationPhase;
+  isCompleted: boolean;
+  assistantMessageId: number | null;
+  userMessageId: number | null;
+  specification: ISpecificationRef | null;
+}
+
+/**
+ * Final result when stream completes
+ */
+export interface IStreamCompleteResult {
+  userMessage: IConversationMessage;
+  assistantMessage: IMessageWithMetadata;
+  conversation: {
+    isCompleted: boolean;
+    currentPhase: ConversationPhase;
+  };
+  specification: ISpecificationRef | null;
+}

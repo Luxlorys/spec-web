@@ -8,6 +8,7 @@ export * from './empty-state';
 export * from './tabs';
 
 // shadcn/ui components
+export * from './alert-dialog';
 export * from './sheet';
 export * from './label';
 export * from './select';

@@ -7,6 +7,15 @@ import Link from 'next/link';
 import { formatRelativeTime } from 'shared/lib';
 import { FeatureStatus, IFeatureRequest } from 'shared/types';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
   Avatar,
   Button,
   Card,
@@ -30,6 +39,8 @@ interface IProps {
   featureId: string;
   onStatusChange: (status: FeatureStatus) => void;
   isStatusChangePending: boolean;
+  onDeleteFeature: () => void;
+  isDeletePending: boolean;
 }
 
 export const FeatureOverview: FC<IProps> = ({
@@ -37,6 +48,8 @@ export const FeatureOverview: FC<IProps> = ({
   featureId,
   onStatusChange,
   isStatusChangePending,
+  onDeleteFeature,
+  isDeletePending,
 }) => {
   const creatorName = `${feature.createdBy.firstName} ${feature.createdBy.lastName}`;
   const createdAt = new Date(feature.createdAt);
@@ -122,10 +135,32 @@ export const FeatureOverview: FC<IProps> = ({
         <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
           Quick Actions
         </h3>
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <Link href={`/features/${featureId}/conversation`}>
             <Button variant="outline">View Conversation</Button>
           </Link>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="danger" disabled={isDeletePending}>
+                {isDeletePending ? 'Deleting...' : 'Delete Feature'}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Feature</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to delete &quot;{feature.title}&quot;?
+                  This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={onDeleteFeature}>
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </Card>
     </div>
