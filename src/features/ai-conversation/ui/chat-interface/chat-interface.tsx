@@ -5,18 +5,19 @@ import { FC, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { Loader2, Plus, Send, X } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 
 import { StatusBadge } from 'features/feature-requests';
-import { IFeatureRequest } from 'shared/api';
+import { IConversationMessage, IFeatureRequest } from 'shared/api';
 import { cn } from 'shared/lib';
 import { Button, Card } from 'shared/ui';
 
 import {
   useContextFeature,
   useGetConversation,
-  useSendMessage,
   useUpdateContextFeature,
 } from '../../api';
+import { useStreamingMessage } from '../../hooks';
 import { AttachmentDialog } from '../attachment-dialog';
 import { Message } from '../message';
 import { ThinkingIndicator } from '../thinking-indicator';
@@ -30,6 +31,8 @@ export const ChatInterface: FC<IProps> = ({ featureId, feature }) => {
   const router = useRouter();
   const [inputValue, setInputValue] = useState('');
   const [attachmentDialogOpen, setAttachmentDialogOpen] = useState(false);
+  const [optimisticUserMessage, setOptimisticUserMessage] =
+    useState<IConversationMessage | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -42,27 +45,36 @@ export const ChatInterface: FC<IProps> = ({ featureId, feature }) => {
     feature?.contextFeatureId ?? null,
   );
 
-  const sendMessageMutation = useSendMessage(numericFeatureId);
+  const {
+    isStreaming,
+    streamedText,
+    error: streamError,
+    finalResult,
+    sendMessage,
+  } = useStreamingMessage(numericFeatureId);
+
   const updateContextMutation = useUpdateContextFeature(numericFeatureId);
 
   const handleSend = async () => {
-    if (!inputValue.trim() || sendMessageMutation.isPending) {
+    if (!inputValue.trim() || isStreaming) {
       return;
     }
 
-    try {
-      await sendMessageMutation.mutateAsync({
-        content: inputValue,
-      });
+    const userContent = inputValue;
 
-      setInputValue('');
-      // Reset textarea height
-      if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto';
-      }
-    } catch {
-      // Error is handled by mutation state - input is preserved for retry
+    setInputValue('');
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
     }
+
+    setOptimisticUserMessage({
+      id: Date.now(),
+      role: 'USER',
+      content: userContent,
+      createdAt: new Date().toISOString(),
+    });
+
+    await sendMessage(userContent);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -97,9 +109,22 @@ export const ChatInterface: FC<IProps> = ({ featureId, feature }) => {
     }
   };
 
+  // Clear optimistic message when stream completes
+  useEffect(() => {
+    if (finalResult) {
+      setOptimisticUserMessage(null);
+    }
+  }, [finalResult]);
+
+  // Scroll to bottom on new messages or streaming updates
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [conversation?.messages, sendMessageMutation.isPending]);
+  }, [
+    conversation?.messages,
+    isStreaming,
+    streamedText,
+    optimisticUserMessage,
+  ]);
 
   const handleViewSpec = () => {
     router.push(`/features/${featureId}`);
@@ -139,7 +164,34 @@ export const ChatInterface: FC<IProps> = ({ featureId, feature }) => {
             <Message key={message.id} message={message} />
           ))}
 
-          {sendMessageMutation.isPending && <ThinkingIndicator />}
+          {/* Optimistic user message during streaming */}
+          {optimisticUserMessage && <Message message={optimisticUserMessage} />}
+
+          {/* Streaming AI response */}
+          {isStreaming && streamedText && (
+            <div className="flex justify-start">
+              <div className="mr-12 max-w-[80%]">
+                <div className="rounded-2xl bg-gray-100 px-4 py-3 text-gray-900 dark:bg-gray-800 dark:text-gray-100">
+                  <div className="text-sm leading-relaxed [&>li]:mb-1 [&>ol]:list-decimal [&>ol]:pl-4 [&>p:last-child]:mb-0 [&>p]:mb-2 [&>ul]:list-disc [&>ul]:pl-4 [&_strong]:font-semibold">
+                    <ReactMarkdown>{streamedText}</ReactMarkdown>
+                    <span className="ml-1 inline-block h-4 w-0.5 animate-pulse bg-gray-400" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Thinking indicator before text starts streaming */}
+          {isStreaming && !streamedText && <ThinkingIndicator />}
+
+          {/* Stream error display */}
+          {streamError && (
+            <Card className="border-red-200 bg-red-50 p-4 dark:border-red-900/50 dark:bg-red-900/20">
+              <p className="text-sm text-red-800 dark:text-red-200">
+                Error: {streamError}
+              </p>
+            </Card>
+          )}
 
           {isCompleted && (
             <Card className="border-green-200 bg-green-50 dark:border-green-900/50 dark:bg-green-900/20">
@@ -206,7 +258,7 @@ export const ChatInterface: FC<IProps> = ({ featureId, feature }) => {
               >
                 <button
                   type="button"
-                  disabled={sendMessageMutation.isPending}
+                  disabled={isStreaming}
                   className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
                   aria-label="Add attachment"
                 >
@@ -222,7 +274,7 @@ export const ChatInterface: FC<IProps> = ({ featureId, feature }) => {
                 onKeyDown={handleKeyPress}
                 placeholder="Type your response... (Shift+Enter for new line)"
                 rows={1}
-                disabled={sendMessageMutation.isPending}
+                disabled={isStreaming}
                 className="max-h-[150px] min-h-[36px] flex-1 resize-none bg-transparent py-2 text-sm leading-relaxed text-gray-900 outline-none placeholder:text-gray-400 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-100 dark:placeholder:text-gray-500"
               />
 
@@ -230,17 +282,17 @@ export const ChatInterface: FC<IProps> = ({ featureId, feature }) => {
               <button
                 type="button"
                 onClick={handleSend}
-                disabled={!inputValue.trim() || sendMessageMutation.isPending}
+                disabled={!inputValue.trim() || isStreaming}
                 className={cn(
                   'flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors',
-                  inputValue.trim() && !sendMessageMutation.isPending
+                  inputValue.trim() && !isStreaming
                     ? 'bg-primary text-white hover:bg-primary/90'
                     : 'bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500',
                   'disabled:cursor-not-allowed',
                 )}
                 aria-label="Send message"
               >
-                {sendMessageMutation.isPending ? (
+                {isStreaming ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <Send className="h-4 w-4" />

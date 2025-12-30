@@ -3,6 +3,7 @@
 import { FC, useState } from 'react';
 
 import { Bot, Check, CheckCircle, Pencil, Trash2, User, X } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 
 import { useAuthStore } from 'shared/store';
 import { IOpenQuestion, IQuestionAnswer } from 'shared/types';
@@ -255,7 +256,14 @@ export const OpenQuestionItem: FC<IOpenQuestionItemProps> = ({
             ) : (
               <div>
                 <div className={`font-medium ${textColor} flex items-center`}>
-                  <span>Q: {question.question}</span>
+                  <span className="mr-1">Q:</span>
+                  {question.askedByAi ? (
+                    <span className="[&_p]:inline [&_strong]:font-semibold">
+                      <ReactMarkdown>{question.question}</ReactMarkdown>
+                    </span>
+                  ) : (
+                    <span>{question.question}</span>
+                  )}
                   {question.askedByAi && <AiBadge />}
                 </div>
                 <div className="mt-1">
@@ -373,9 +381,15 @@ export const OpenQuestionItem: FC<IOpenQuestionItemProps> = ({
                           </Badge>
                         )}
                       </div>
-                      <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                        {answer.content}
-                      </p>
+                      {answer.answeredByAi ? (
+                        <div className="mt-1 text-sm text-gray-600 dark:text-gray-400 [&>li]:mb-1 [&>ol]:list-decimal [&>ol]:pl-4 [&>p:last-child]:mb-0 [&>p]:mb-2 [&>ul]:list-disc [&>ul]:pl-4 [&_strong]:font-semibold">
+                          <ReactMarkdown>{answer.content}</ReactMarkdown>
+                        </div>
+                      ) : (
+                        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                          {answer.content}
+                        </p>
+                      )}
                       <div className="mt-2">
                         <AuthorDisplay
                           name={authorName}

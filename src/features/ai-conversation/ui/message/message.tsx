@@ -2,8 +2,13 @@
 
 import { FC } from 'react';
 
+import ReactMarkdown from 'react-markdown';
+
 import { IConversationMessage } from 'shared/api';
 import { cn, formatDateTime } from 'shared/lib';
+
+const markdownStyles =
+  'text-sm leading-relaxed [&>p]:mb-2 [&>p:last-child]:mb-0 [&>ol]:list-decimal [&>ol]:pl-4 [&>ul]:list-disc [&>ul]:pl-4 [&>li]:mb-1 [&_strong]:font-semibold';
 
 interface IProps {
   message: IConversationMessage;
@@ -23,9 +28,15 @@ export const Message: FC<IProps> = ({ message }) => {
               : 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100',
           )}
         >
-          <p className="whitespace-pre-wrap text-sm leading-relaxed">
-            {message.content}
-          </p>
+          {isUser ? (
+            <p className="whitespace-pre-wrap text-sm leading-relaxed">
+              {message.content}
+            </p>
+          ) : (
+            <div className={markdownStyles}>
+              <ReactMarkdown>{message.content}</ReactMarkdown>
+            </div>
+          )}
         </div>
         <p
           className={cn(
