@@ -15,7 +15,7 @@ const ConversationContent = ({ featureId }: { featureId: string }) => {
   const numericId = parseInt(featureId, 10);
 
   const { data: feature, isLoading } = useQuery({
-    queryKey: [QueryKeys.FEATURE_REQUEST_BY_ID, featureId],
+    queryKey: [QueryKeys.FEATURE_REQUEST_BY_ID, numericId],
     queryFn: () => featureRequestsApi.getById(numericId),
     enabled: !Number.isNaN(numericId),
   });
@@ -72,7 +72,7 @@ const ConversationContent = ({ featureId }: { featureId: string }) => {
       </div>
 
       {/* Chat Interface */}
-      <ChatInterface featureId={featureId} />
+      <ChatInterface featureId={featureId} feature={feature} />
     </main>
   );
 };
