@@ -25,11 +25,21 @@ export interface IFeatureRequest {
   id: number;
   title: string;
   initialContext: string | null;
+  contextFeatureId: number | null;
   status: FeatureStatus;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
   createdBy: ICreatedBy;
+}
+
+/**
+ * Simplified feature for context reference
+ */
+export interface IContextFeature {
+  id: number;
+  title: string;
+  status: FeatureStatus;
 }
 
 /**
@@ -39,6 +49,7 @@ export interface IFeatureRequest {
 export interface ICreateFeatureRequest {
   title: string;
   initialContext?: string;
+  contextFeatureId?: number;
 }
 
 /**
@@ -97,6 +108,21 @@ export interface IUpdateFeatureStatusResponse {
  */
 export interface IDeleteFeatureResponse {
   success: boolean;
+}
+
+/**
+ * Request body for updating context feature
+ * PATCH /features/:id/context-feature
+ */
+export interface IUpdateContextFeatureRequest {
+  contextFeatureId: number | null;
+}
+
+/**
+ * Response for update context feature
+ */
+export interface IUpdateContextFeatureResponse {
+  feature: IFeatureRequest;
 }
 
 // ============================================================================

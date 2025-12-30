@@ -6,11 +6,12 @@ import { useRouter } from 'next/navigation';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 
 import {
   CreateFeatureInput,
   createFeatureSchema,
+  FeatureSearchCombobox,
 } from 'features/feature-requests';
 import { featureRequestsApi } from 'shared/api';
 import { QueryKeys } from 'shared/constants';
@@ -24,12 +25,14 @@ const NewFeatureContent = () => {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<CreateFeatureInput>({
     resolver: zodResolver(createFeatureSchema),
     defaultValues: {
       title: '',
       initialContext: '',
+      contextFeatureId: undefined,
     },
   });
 
@@ -71,6 +74,22 @@ const NewFeatureContent = () => {
               placeholder="e.g., User Authentication System"
               error={errors.title?.message}
               helperText="A clear, concise name for this feature"
+            />
+          </div>
+
+          <div>
+            <Controller
+              control={control}
+              name="contextFeatureId"
+              render={({ field }) => (
+                <FeatureSearchCombobox
+                  value={field.value ?? null}
+                  onChange={value => field.onChange(value ?? undefined)}
+                  label="Related Feature (Optional)"
+                  placeholder="Search for a feature to use as context..."
+                  helperText="Optionally attach an existing feature as context for the AI"
+                />
+              )}
             />
           </div>
 

@@ -20,7 +20,7 @@ export const FeatureDetailClient = ({ featureId }: IProps) => {
   const numericId = parseInt(featureId, 10);
 
   const { data: feature, isLoading: featureLoading } = useQuery({
-    queryKey: [QueryKeys.FEATURE_REQUEST_BY_ID, featureId],
+    queryKey: [QueryKeys.FEATURE_REQUEST_BY_ID, numericId],
     queryFn: () => featureRequestsApi.getById(numericId),
     enabled: !Number.isNaN(numericId),
   });
@@ -41,7 +41,7 @@ export const FeatureDetailClient = ({ featureId }: IProps) => {
       featureRequestsApi.updateStatus(numericId, { status }),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [QueryKeys.FEATURE_REQUEST_BY_ID, featureId],
+        queryKey: [QueryKeys.FEATURE_REQUEST_BY_ID, numericId],
       });
       queryClient.invalidateQueries({
         queryKey: [QueryKeys.FEATURE_REQUESTS],

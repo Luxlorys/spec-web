@@ -10,6 +10,8 @@ import {
   IFeatureRequestFilters,
   IGetActivitiesResponse,
   IGetFeatureResponse,
+  IUpdateContextFeatureRequest,
+  IUpdateContextFeatureResponse,
   IUpdateFeatureStatusRequest,
   IUpdateFeatureStatusResponse,
 } from './types';
@@ -92,5 +94,21 @@ export const featureRequestsApi = {
     );
 
     return data.activities;
+  },
+
+  /**
+   * Update context feature for a feature
+   * PATCH /features/:id/context-feature
+   */
+  updateContextFeature: async (
+    id: number,
+    requestData: IUpdateContextFeatureRequest,
+  ): Promise<IFeatureRequest> => {
+    const { data } = await api.patch<IUpdateContextFeatureResponse>(
+      `/features/${id}/context-feature`,
+      requestData,
+    );
+
+    return data.feature;
   },
 };

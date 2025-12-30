@@ -4,27 +4,46 @@ import { FC, useEffect, useRef, useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
-import { Button, Card, Textarea } from 'shared/ui';
+import { Loader2, Plus, Send, X } from 'lucide-react';
 
-import { useGetConversation, useSendMessage } from '../../api';
+import { StatusBadge } from 'features/feature-requests';
+import { IFeatureRequest } from 'shared/api';
+import { cn } from 'shared/lib';
+import { Button, Card } from 'shared/ui';
+
+import {
+  useContextFeature,
+  useGetConversation,
+  useSendMessage,
+  useUpdateContextFeature,
+} from '../../api';
+import { AttachmentDialog } from '../attachment-dialog';
 import { Message } from '../message';
 import { ThinkingIndicator } from '../thinking-indicator';
 
 interface IProps {
   featureId: string;
+  feature?: IFeatureRequest;
 }
 
-export const ChatInterface: FC<IProps> = ({ featureId }) => {
+export const ChatInterface: FC<IProps> = ({ featureId, feature }) => {
   const router = useRouter();
   const [inputValue, setInputValue] = useState('');
+  const [attachmentDialogOpen, setAttachmentDialogOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const numericFeatureId = Number(featureId);
 
   const { data: conversation, isLoading } =
     useGetConversation(numericFeatureId);
 
+  const { data: contextFeature } = useContextFeature(
+    feature?.contextFeatureId ?? null,
+  );
+
   const sendMessageMutation = useSendMessage(numericFeatureId);
+  const updateContextMutation = useUpdateContextFeature(numericFeatureId);
 
   const handleSend = async () => {
     if (!inputValue.trim() || sendMessageMutation.isPending) {
@@ -37,6 +56,10 @@ export const ChatInterface: FC<IProps> = ({ featureId }) => {
       });
 
       setInputValue('');
+      // Reset textarea height
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto';
+      }
     } catch {
       // Error is handled by mutation state - input is preserved for retry
     }
@@ -46,6 +69,31 @@ export const ChatInterface: FC<IProps> = ({ featureId }) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
+    }
+  };
+
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInputValue(e.target.value);
+    // Auto-resize textarea
+    const textarea = e.target;
+
+    textarea.style.height = 'auto';
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 150)}px`;
+  };
+
+  const handleAttachFeature = async (contextFeatureId: number) => {
+    try {
+      await updateContextMutation.mutateAsync(contextFeatureId);
+    } catch {
+      // Error handled by mutation state
+    }
+  };
+
+  const handleRemoveContext = async () => {
+    try {
+      await updateContextMutation.mutateAsync(null);
+    } catch {
+      // Error handled by mutation state
     }
   };
 
@@ -83,7 +131,7 @@ export const ChatInterface: FC<IProps> = ({ featureId }) => {
   const { isCompleted } = conversation;
 
   return (
-    <div className="flex h-[calc(100vh-12rem)] flex-col">
+    <div className="flex h-[calc(100vh-8rem)] flex-col">
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto px-4 py-6">
         <div className="mx-auto max-w-4xl space-y-6">
@@ -114,30 +162,93 @@ export const ChatInterface: FC<IProps> = ({ featureId }) => {
         </div>
       </div>
 
-      {/* Input Area */}
+      {/* Input Area - Claude-like design */}
       {!isCompleted && (
-        <div className="border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
-          <div className="mx-auto max-w-4xl">
-            <div className="flex items-center gap-3">
-              <div className="flex-1">
-                <Textarea
-                  value={inputValue}
-                  onChange={e => setInputValue(e.target.value)}
-                  onKeyDown={handleKeyPress}
-                  placeholder="Type your response... (Shift+Enter for new line)"
-                  rows={3}
-                  disabled={sendMessageMutation.isPending}
-                />
+        <div className="border-t border-purple-200 bg-white pb-2 pt-3 dark:border-gray-700 dark:bg-gray-900">
+          <div className="mx-auto max-w-4xl px-4">
+            {/* Context feature display above input */}
+            {contextFeature && (
+              <div className="mb-2 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <span>Additional context:</span>
+                <span className="truncate font-medium">
+                  {contextFeature.title}
+                </span>
+                <StatusBadge status={contextFeature.status} />
+                <button
+                  type="button"
+                  onClick={handleRemoveContext}
+                  disabled={updateContextMutation.isPending}
+                  className="shrink-0 rounded p-0.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-gray-800 dark:hover:text-gray-300"
+                  aria-label="Remove context"
+                >
+                  {updateContextMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <X className="h-4 w-4" />
+                  )}
+                </button>
               </div>
-              <Button
+            )}
+
+            {/* Input container with Claude-like design */}
+            <div
+              className={cn(
+                'flex items-start gap-2 rounded-2xl border border-gray-300 bg-white p-2 transition-colors dark:border-gray-600 dark:bg-gray-800',
+                'focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20',
+              )}
+            >
+              {/* Plus button with attachment dialog */}
+              <AttachmentDialog
+                open={attachmentDialogOpen}
+                onOpenChange={setAttachmentDialogOpen}
+                currentFeatureId={numericFeatureId}
+                onSelectFeature={handleAttachFeature}
+              >
+                <button
+                  type="button"
+                  disabled={sendMessageMutation.isPending}
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+                  aria-label="Add attachment"
+                >
+                  <Plus className="h-5 w-5" />
+                </button>
+              </AttachmentDialog>
+
+              {/* Textarea */}
+              <textarea
+                ref={textareaRef}
+                value={inputValue}
+                onChange={handleTextareaChange}
+                onKeyDown={handleKeyPress}
+                placeholder="Type your response... (Shift+Enter for new line)"
+                rows={1}
+                disabled={sendMessageMutation.isPending}
+                className="max-h-[150px] min-h-[36px] flex-1 resize-none bg-transparent py-2 text-sm leading-relaxed text-gray-900 outline-none placeholder:text-gray-400 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-100 dark:placeholder:text-gray-500"
+              />
+
+              {/* Send button */}
+              <button
+                type="button"
                 onClick={handleSend}
                 disabled={!inputValue.trim() || sendMessageMutation.isPending}
-                isLoading={sendMessageMutation.isPending}
+                className={cn(
+                  'flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors',
+                  inputValue.trim() && !sendMessageMutation.isPending
+                    ? 'bg-primary text-white hover:bg-primary/90'
+                    : 'bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500',
+                  'disabled:cursor-not-allowed',
+                )}
+                aria-label="Send message"
               >
-                Send
-              </Button>
+                {sendMessageMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </button>
             </div>
-            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+
+            <p className="mt-2 text-center text-xs text-gray-500 dark:text-gray-400">
               Press Enter to send, Shift+Enter for new line
             </p>
           </div>

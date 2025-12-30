@@ -11,6 +11,7 @@ export * from './tabs';
 export * from './sheet';
 export * from './label';
 export * from './select';
+export * from './popover';
 export * from './checkbox';
 export * from './sidebar';
 export * from './scroll-area';

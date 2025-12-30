@@ -2,9 +2,9 @@
 
 ## Executive Summary
 
-SpecFlow is an AI-powered tool that helps early-stage startups translate founder intent into developer-ready specifications. It acts as an intelligent layer between non-technical or semi-technical founders and their development team, reducing communication overhead, eliminating misunderstandings, and enabling small teams to move faster without hiring additional coordination roles (PM, BA).
+SpecFlow is an AI-powered product development assistant that helps early-stage startups translate founder intent into developer-ready specifications. More than just a spec generator, SpecFlow acts as your **AI Product Manager** — understanding your product vision, target audience, and existing features to provide intelligent guidance, suggest UX improvements, and surface risks before development begins.
 
-**One-liner:** "Turn your feature ideas into clear specs through AI conversation — no PM required."
+**One-liner:** "Your AI Product Manager — turn ideas into specs, get UX suggestions, and ship features that match your vision."
 
 > **Note:** This document reflects the current implementation of SpecFlow as of the latest build.
 
@@ -24,25 +24,29 @@ Early-stage startups (3-15 people) waste significant time and resources on the g
 4. **Context gets lost** — why decisions were made, what edge cases were discussed, original intent
 5. **Founders become bottlenecks** — they're the only ones who know the full picture
 6. **Can't afford a PM** — but desperately need the function a PM serves
+7. **No one to challenge ideas** — founders need pushback on UX decisions and feature scope, but small teams lack this perspective
 
 ---
 
 ## Solution Overview
 
-SpecFlow provides a conversational AI interface that:
+SpecFlow provides an AI Product Manager that:
 
-1. **Guides founders** through structured intake to capture feature requirements
-2. **Asks intelligent follow-up questions** to fill gaps and surface edge cases
-3. **Generates comprehensive specs** with user stories, acceptance criteria, and scope boundaries
-4. **Enables developer feedback** through section-level commenting
-5. **Maintains living documentation** that evolves through spec regeneration from discussions
-6. **Exports AI-ready prompts** for coding assistants like Claude, Cursor, and Copilot
+1. **Understands your product context** — learns your target audience, user personas, and product vision to provide relevant guidance
+2. **Guides founders** through structured intake to capture feature requirements
+3. **Challenges and improves ideas** — suggests better UX approaches, identifies potential issues, and proposes alternatives
+4. **Maintains project awareness** — knows your existing features and flags conflicts or integration opportunities
+5. **Generates comprehensive specs** with user stories, acceptance criteria, and scope boundaries
+6. **Proactively identifies gaps** — creates open questions for ambiguities and can suggest answers based on product context
+7. **Enables developer feedback** through section-level commenting
+8. **Maintains living documentation** that evolves through spec regeneration from discussions
+9. **Exports AI-ready prompts** for coding assistants like Claude, Cursor, and Copilot
 
 ### Key Value Propositions
 
-- **For Founders:** "Describe what you want in plain language, get a spec your developers can actually use"
-- **For Developers:** "Get clear requirements upfront, ask questions async, stop guessing what founder meant"
-- **For the Startup:** "Move faster with fewer people, reduce costly misunderstandings"
+- **For Founders:** "Describe what you want, get challenged on your assumptions, and receive a spec that's better than what you imagined"
+- **For Developers:** "Get clear requirements upfront, with edge cases already considered and UX decisions documented"
+- **For the Startup:** "Move faster with fewer people, reduce costly misunderstandings, and build better products"
 
 ---
 
@@ -60,6 +64,7 @@ SpecFlow provides a conversational AI interface that:
 **Goals:**
 - Stop repeating themselves
 - Ship features that match their vision
+- Get feedback on ideas before committing to build
 - Spend less time on coordination, more on strategy
 - Enable team to work more independently
 
@@ -131,9 +136,47 @@ Public routes: `/`, `/login`, `/signup`
 
 ---
 
-### Feature 2: Feature Request Creation
+### Feature 2: Project Context & AI Knowledge Base
 
-**Description:** Create new feature requests with optional context, then refine through AI conversation.
+**Description:** Configure project-level context that AI uses to provide relevant, informed guidance across all conversations.
+
+#### Project Context Settings
+**Route:** `/settings` → Project tab (Admin only)
+
+**Configurable Fields:**
+- **Product Description:** What the product does and its core value proposition
+- **Target Audience:** Who the product is built for (industries, company sizes, roles)
+- **User Personas:** Detailed descriptions of key user types with their goals, pain points, and behaviors
+- **Product Vision:** Long-term direction and goals for the product
+- **Technical Stack:** Technologies used (helps AI make relevant technical suggestions)
+- **Design Principles:** UX guidelines and patterns the team follows
+
+#### How AI Uses Project Context
+
+The AI agent incorporates project context to:
+1. **Tailor questions** — Asks about your specific user personas by name
+2. **Suggest relevant UX patterns** — Based on your target audience and design principles
+3. **Flag misalignments** — Notices when a feature doesn't fit your stated product vision
+4. **Make informed trade-offs** — Understands technical constraints when suggesting solutions
+5. **Maintain consistency** — References how similar problems were solved in existing features
+
+#### Existing Features Context
+
+AI automatically has awareness of:
+- All completed feature specifications
+- Their scope, user stories, and technical considerations
+- How features relate to each other
+
+This enables:
+- **Conflict detection:** "This overlaps with your existing Invite System — should they share the flow?"
+- **Integration suggestions:** "Your Analytics feature already tracks user sessions, you could leverage that here"
+- **Consistency enforcement:** "In your Team Management feature, admins have this permission. Should it work the same way here?"
+
+---
+
+### Feature 3: Feature Request Creation & AI Conversation
+
+**Description:** Create new feature requests and refine them through intelligent AI conversation that goes beyond simple Q&A.
 
 #### New Feature Form
 **Route:** `/features/new`
@@ -154,18 +197,33 @@ Public routes: `/`, `/login`, `/signup`
 - Auto-scroll to latest message
 - Enter to send, Shift+Enter for new line
 
+**Conversation Capabilities:**
+
+The AI agent acts as a **product development partner**, not just a question-asker:
+
+| Capability | Description |
+|------------|-------------|
+| **Structured Discovery** | Guides through problem, users, requirements, scope, technical considerations |
+| **UX Suggestions** | Proposes better approaches: "Instead of a modal, consider an inline expansion — it's less disruptive for this use case" |
+| **Alternative Solutions** | Offers options: "You could solve this three ways: A) ..., B) ..., C) ... — given your target audience, I'd recommend B because..." |
+| **Risk Identification** | Flags potential issues: "This could create confusion with your existing notification system" |
+| **Scope Guidance** | Helps right-size features: "This sounds like it could be split into two phases. For v1, I'd suggest focusing on..." |
+| **Persona-Aware Questions** | References your defined personas: "How should this work for your 'Technical Admin' persona vs. 'Business User'?" |
+| **Conflict Detection** | Notices overlaps: "Your Team Settings feature already has role management. Should this extend it or work separately?" |
+
 **Conversation Flow:**
-1. AI initiates with greeting and first question
-2. Questions cover:
+1. AI initiates with greeting, acknowledges feature context and relevant existing features
+2. Discovery questions covering:
    - Problem & context ("What problem does this solve?")
-   - Target users ("Who will use this feature?")
+   - Target users ("Which of your personas will use this most?")
    - Desired outcome ("What does success look like?")
    - Scope boundaries ("What's NOT included?")
    - Technical constraints
-3. AI asks edge case questions based on context
-4. AI summarizes understanding for confirmation
-5. On completion, generates spec document
-6. Feature status updated to `spec_generated`
+3. **AI suggests improvements** throughout the conversation
+4. AI asks edge case questions based on context
+5. AI summarizes understanding and **recommendations** for confirmation
+6. On completion, generates spec document with AI suggestions incorporated
+7. Feature status updated to `spec_generated`
 
 **Completion State:**
 - Green success card displayed
@@ -174,9 +232,9 @@ Public routes: `/`, `/login`, `/signup`
 
 ---
 
-### Feature 3: Spec Document Generation & Management
+### Feature 4: Spec Document Generation & Management
 
-**Description:** AI generates structured specification from conversation with full editing and commenting capabilities.
+**Description:** AI generates structured specification from conversation, including its recommendations and identified gaps.
 
 #### Document Structure
 
@@ -188,10 +246,25 @@ Public routes: `/`, `/login`, `/signup`
 | Acceptance Criteria | Checkbox list of criteria | No |
 | Scope: Included | What's in scope | Yes (array) |
 | Scope: Excluded | What's explicitly out | Yes (array) |
-| Technical Considerations | Technical requirements | Yes (array) |
+| Technical Considerations | Technical requirements and suggestions | Yes (array) |
 | Edge Cases | Scenario/behavior table | No |
-| Open Questions | Questions needing answers | Special UI |
+| AI Recommendations | UX and implementation suggestions from AI | Read-only |
+| Open Questions | Questions needing answers (from AI and team) | Special UI |
 | Assumptions | What was assumed | Yes (array) |
+
+#### AI Recommendations Section (New)
+
+Displays suggestions the AI made during conversation:
+- **UX Recommendations:** Better interaction patterns, flow improvements
+- **Implementation Suggestions:** Technical approaches, reusable components
+- **Risk Mitigations:** How to handle identified risks
+- **Future Considerations:** What to think about for v2
+
+Each recommendation includes:
+- The suggestion
+- Rationale (why AI recommended this)
+- Status: Accepted / Rejected / Pending
+- Founder can accept/reject with optional notes
 
 #### Spec Header
 - Document title "Specification Document"
@@ -218,7 +291,59 @@ Public routes: `/`, `/login`, `/signup`
 
 ---
 
-### Feature 4: Spec Regeneration & Version History
+### Feature 5: Open Questions Management (Enhanced)
+
+**Description:** Track and resolve questions within the specification — now with AI participation.
+
+#### Question Sources
+
+| Source | Description |
+|--------|-------------|
+| **AI-Generated** | Questions AI identified during conversation as needing clarification |
+| **Team Members** | Questions added by developers, designers, or other team members |
+| **AI-Suggested Answers** | AI can propose answers to team questions based on product context |
+
+#### AI-Generated Questions
+
+During spec generation, AI creates open questions for:
+- Ambiguities it couldn't resolve from conversation
+- Edge cases that need founder decision
+- Technical decisions that depend on team preference
+- UX choices with multiple valid approaches
+
+Example AI questions:
+- "Should failed payment attempts show the specific error or a generic message? (Security vs. UX trade-off)"
+- "If a user is in multiple teams, which team's settings take precedence?"
+- "What's the expected load? This affects whether we need pagination on day one."
+
+#### AI-Suggested Answers
+
+When team members ask questions, AI can suggest answers:
+1. Team member adds question: "What happens if the user loses connection mid-upload?"
+2. AI analyzes product context and similar features
+3. AI suggests: "Based on your Upload feature in Documents, you handle this with auto-resume. Recommend the same pattern here."
+4. Founder can accept, modify, or provide different answer
+
+#### Question Item Display
+- Question text with source badge (AI / Team Member name)
+- Answer section (or "Awaiting Answer" badge)
+- **AI Suggested Answer** (if available) with accept/modify buttons
+- Edit/add answer buttons
+- "Mark as resolved" checkbox
+- Color-coded borders:
+  - Yellow/orange: Unresolved
+  - Blue: Has AI suggestion
+  - Green: Resolved
+- Shows askedBy/answeredBy metadata
+
+#### Integration with Regeneration
+- Answered questions automatically incorporated when regenerating spec
+- AI incorporates answers into relevant sections
+- Accepted AI suggestions reflected in updated spec
+
+---
+
+### Feature 6: Spec Regeneration & Version History
 
 **Description:** Update specifications based on team feedback with full version tracking.
 
@@ -232,9 +357,18 @@ Public routes: `/`, `/login`, `/signup`
    - Summary view: Changes grouped by type (Modified, Added, Removed)
    - Diff view: Side-by-side comparison with reasoning
    - Context summary: Resolved comments count, answered questions count
+   - **AI's additional suggestions** based on the feedback
 4. Review proposed changes with AI reasoning
 5. Click "Approve & Apply Changes"
 6. Version incremented, old version saved to history
+
+#### AI Enhancement During Regeneration
+
+When regenerating, AI may:
+- Suggest additional changes based on feedback patterns
+- Identify inconsistencies introduced by edits
+- Recommend updates to related sections
+- Flag if changes conflict with existing features
 
 #### Version History Sidebar
 - Accessed via History button (circle icon)
@@ -250,7 +384,7 @@ Public routes: `/`, `/login`, `/signup`
 
 ---
 
-### Feature 5: Generate Prompt
+### Feature 7: Generate Prompt
 
 **Description:** Export specification as AI-ready prompt for coding assistants.
 
@@ -283,6 +417,9 @@ Public routes: `/`, `/login`, `/signup`
 ## Edge Cases to Handle
 [Scenario: Expected behavior format]
 
+## AI Recommendations (Accepted)
+[Accepted UX and implementation suggestions]
+
 ## Design Notes & Decisions
 [Answered questions in Q&A format]
 [Resolved comments grouped by section]
@@ -301,32 +438,7 @@ Public routes: `/`, `/login`, `/signup`
 
 ---
 
-### Feature 6: Open Questions Management
-
-**Description:** Track and resolve questions within the specification.
-
-#### Add Question
-- "Add New Question" button in Open Questions section
-- Enter question text
-- Automatically records who asked
-
-#### Question Item Display
-- Question text with edit/delete buttons
-- Answer section (or "Awaiting Answer" badge)
-- Edit/add answer buttons
-- "Mark as resolved" checkbox
-- Color-coded borders:
-  - Yellow/orange: Unresolved
-  - Green: Resolved
-- Shows askedBy/answeredBy metadata
-
-#### Integration with Regeneration
-- Answered questions automatically considered when regenerating spec
-- AI incorporates answers into relevant sections
-
----
-
-### Feature 7: Dashboard
+### Feature 8: Dashboard
 
 **Description:** Central view of all feature requests with filtering and multiple view options.
 
@@ -350,6 +462,7 @@ Public routes: `/`, `/login`, `/signup`
 - Feature title (links to detail page)
 - Initial context excerpt (2-line truncate)
 - Open questions count (if any)
+- **AI suggestions count** (pending review)
 - Assignee with avatar
 - Last activity (relative time)
 
@@ -359,7 +472,7 @@ Public routes: `/`, `/login`, `/signup`
 
 ---
 
-### Feature 8: Feature Detail Page
+### Feature 9: Feature Detail Page
 
 **Description:** Comprehensive view of a single feature request with tabs.
 
@@ -378,6 +491,7 @@ Public routes: `/`, `/login`, `/signup`
 - Created by information
 - Last activity timestamp
 - Initial context card
+- **AI Insights card** (key suggestions, risks identified)
 - Quick actions: View/Start Conversation
 
 **Specification Tab:**
@@ -392,11 +506,12 @@ Public routes: `/`, `/login`, `/signup`
 - Timeline of feature lifecycle
 - Creation event with creator avatar
 - Status change events
+- AI suggestion events
 - Relative timestamps
 
 ---
 
-### Feature 9: Notifications
+### Feature 10: Notifications
 
 **Description:** Keep team informed of updates across the application.
 
@@ -407,6 +522,7 @@ Public routes: `/`, `/login`, `/signup`
 | spec_generated | Green | Specification ready |
 | question_asked | Orange | New question on spec |
 | question_answered | Blue | Question answered |
+| ai_suggestion | Cyan | AI suggested an answer to a question |
 | status_changed | Yellow | Feature status updated |
 | spec_updated | Indigo | Specification modified |
 
@@ -431,7 +547,7 @@ Public routes: `/`, `/login`, `/signup`
 
 ---
 
-### Feature 10: Settings
+### Feature 11: Settings
 
 **Description:** Comprehensive settings page with role-based section visibility.
 
@@ -449,6 +565,7 @@ Public routes: `/`, `/login`, `/signup`
   - New feature requests
   - Spec generated
   - Questions & answers
+  - AI suggestions
   - Status changes
 - In-app notification options:
   - Desktop notifications
@@ -474,6 +591,12 @@ Public routes: `/`, `/login`, `/signup`
 **Project Settings:**
 - Project name and description
 - Website URL
+- **Product Context Configuration:**
+  - Target audience description
+  - User personas (add/edit/remove)
+  - Product vision statement
+  - Technical stack
+  - Design principles
 - Danger zone: Delete project
 
 **Team Settings:**
@@ -501,29 +624,40 @@ Public routes: `/`, `/login`, `/signup`
 ### Flow 1: Founder Creates Feature Request
 ```
 Dashboard → "Feature Request" button → Enter title & context →
-Submit → AI Conversation → Answer questions →
-Conversation completes → Spec generated → Review spec
+Submit → AI Conversation (with suggestions & challenges) →
+Answer questions, consider AI recommendations →
+Conversation completes → Spec generated with AI recommendations →
+Review spec, accept/reject suggestions
 ```
 
 ### Flow 2: Developer Reviews Spec
 ```
 Notification (spec ready) → Open feature → Specification tab →
-Read through sections → Add comment on unclear section →
-Wait for resolution → Mark spec as "Ready to Build"
+Read through sections including AI recommendations →
+Add comment on unclear section → See AI suggested answer →
+Accept or provide own answer → Mark spec as "Ready to Build"
 ```
 
 ### Flow 3: Team Provides Feedback & Spec Updates
 ```
-Developer adds comments → Founder answers open questions →
-Founder clicks "Update Specification" → Review proposed changes →
-Approve changes → New spec version created
+Developer adds comments/questions → AI suggests answers →
+Founder reviews suggestions, answers remaining questions →
+Founder clicks "Update Specification" → AI proposes additional improvements →
+Review all changes → Approve → New spec version created
 ```
 
 ### Flow 4: Export Spec for AI Coding
 ```
 Open feature → Specification tab → Click "Generate Prompt" →
-Review generated markdown → Copy to clipboard →
-Paste into Claude/Cursor/Copilot
+Review generated markdown (includes accepted AI recommendations) →
+Copy to clipboard → Paste into Claude/Cursor/Copilot
+```
+
+### Flow 5: Configure Product Context
+```
+Settings → Project tab → Edit Product Context →
+Add target audience, user personas, vision →
+Save → AI now uses this context in all conversations
 ```
 
 ---
@@ -535,13 +669,16 @@ SpecFlow
 ├── Dashboard
 │   ├── Tab Filters (All, Draft, Spec Generated, Ready to Build, Completed)
 │   ├── Grid/List View Toggle
-│   └── Feature Cards
+│   └── Feature Cards (with AI insights indicator)
 ├── Feature Detail
 │   ├── Overview Tab
 │   │   ├── Status & Assignment
+│   │   ├── AI Insights Summary
 │   │   └── Quick Actions
 │   ├── Specification Tab
 │   │   ├── Spec Sections (editable)
+│   │   ├── AI Recommendations Section
+│   │   ├── Open Questions (with AI suggestions)
 │   │   ├── Comments Sidebar
 │   │   ├── Version History
 │   │   └── Generate Prompt
@@ -549,7 +686,7 @@ SpecFlow
 │   └── Activity Tab
 ├── New Feature
 │   ├── Title & Context Form
-│   └── AI Conversation Interface
+│   └── AI Conversation Interface (enhanced)
 ├── Notifications
 │   ├── All/Unread Tabs
 │   └── Notification Cards
@@ -560,6 +697,7 @@ SpecFlow
     ├── Appearance
     ├── Integrations
     ├── Project (admin)
+    │   └── Product Context Configuration
     ├── Team (admin)
     └── Billing (admin)
 ```
@@ -581,47 +719,40 @@ draft → spec_generated → ready_to_build → completed
 
 ---
 
+## AI Agent Capabilities Summary
+
+| Capability | Description |
+|------------|-------------|
+| **Product Context Awareness** | Knows your target audience, personas, vision, and existing features |
+| **Intelligent Discovery** | Asks targeted questions based on your specific product |
+| **UX Suggestions** | Proposes better user experiences based on best practices and your design principles |
+| **Alternative Solutions** | Offers multiple approaches with recommendations |
+| **Conflict Detection** | Identifies overlaps with existing features |
+| **Risk Identification** | Flags potential issues before development |
+| **Scope Guidance** | Helps right-size features, suggests phasing |
+| **Open Question Generation** | Creates questions for ambiguities it couldn't resolve |
+| **Answer Suggestions** | Proposes answers to team questions based on product context |
+| **Consistency Enforcement** | Ensures new features align with existing patterns |
+
+---
+
 ## Technical Implementation
 
 ### Tech Stack
-- **Framework:** Next.js 16 with App Router
-- **Language:** TypeScript
-- **Styling:** Tailwind CSS
+- **Frontend:** Next.js 16 with App Router, TypeScript, Tailwind CSS
 - **UI Components:** shadcn/ui + Radix UI primitives
-- **State Management:**
-  - Zustand (auth state with localStorage persistence)
-  - TanStack React Query (server state and caching)
+- **State Management:** Zustand (auth), TanStack React Query (server state)
 - **Forms:** React Hook Form + Zod validation
-- **Icons:** Lucide React
+- **Backend:** Fastify with TypeScript
+- **Database:** PostgreSQL with Prisma ORM
+- **AI:** Claude 3.5 Sonnet via Anthropic API
 - **Authentication:** Cookie-based with middleware protection
-- **Data Layer:** Mock API (designed for easy backend replacement)
 
-### Key Files
-
-**Types:**
-- `src/shared/types/user.ts` - User and role types
-- `src/shared/types/feature-request.ts` - Feature request types
-- `src/shared/types/spec-document.ts` - Spec document types
-- `src/shared/types/conversation.ts` - Conversation types
-- `src/shared/types/comment.ts` - Comment types
-- `src/shared/types/notification.ts` - Notification types
-
-**API Layer:**
-- `src/shared/api/auth.ts` - Authentication
-- `src/shared/api/feature-requests.ts` - Feature CRUD
-- `src/shared/api/conversations.ts` - AI conversations
-- `src/shared/api/spec-documents.ts` - Spec management
-- `src/shared/api/comments.ts` - Comments
-- `src/shared/api/users.ts` - User management
-- `src/shared/api/notifications.ts` - Notifications
-
-**Features:**
-- `src/features/auth/` - Login, signup forms
-- `src/features/feature-requests/` - Dashboard cards, status badges
-- `src/features/ai-conversation/` - Chat interface
-- `src/features/spec-document/` - Spec view, editing, comments, regeneration
-- `src/features/notifications/` - Notification center
-- `src/features/layout/` - Sidebar, header
+### AI Integration Details
+- **Prompt Caching:** System prompts cached for 90% token savings on subsequent messages
+- **Context Snapshot:** Project context stored at conversation start, not rebuilt per message
+- **Token Budget:** ~10k tokens per request (system: 2k, context: 2k, history: 4k, response: 2k)
+- **Structured Output:** Tool use for reliable JSON responses
 
 ---
 
@@ -632,13 +763,20 @@ draft → spec_generated → ready_to_build → completed
 - [x] Role-based access control
 - [x] Invite code team management
 - [x] Organization/workspace setup
+- [x] **Product context configuration**
+- [x] **User personas management**
 - [x] Feature request creation
-- [x] AI-guided conversation interface
+- [x] **Enhanced AI conversation with suggestions**
+- [x] **AI UX and solution recommendations**
+- [x] **Conflict detection with existing features**
 - [x] Spec document generation
+- [x] **AI recommendations section in specs**
 - [x] Section-level spec editing
 - [x] Section commenting with threads
 - [x] Comment resolution tracking
 - [x] Open questions management
+- [x] **AI-generated open questions**
+- [x] **AI-suggested answers to questions**
 - [x] Spec regeneration from discussions
 - [x] Version history with rollback
 - [x] Generate prompt for AI assistants
@@ -651,14 +789,14 @@ draft → spec_generated → ready_to_build → completed
 - [x] Integration placeholders (Slack, GitHub, Jira, Linear)
 
 ### Future Enhancements
-- [ ] Real backend API integration
 - [ ] Email notifications
 - [ ] Slack integration (real)
-- [ ] Linear/Jira integration
+- [ ] Linear/Jira integration (create tickets from specs)
 - [ ] Spec export (PDF, Markdown download)
 - [ ] Voice input for conversations
-- [ ] Analytics dashboard
-- [ ] Custom AI training on company context
+- [ ] Analytics dashboard (specs created, cycle time, etc.)
+- [ ] AI learning from accepted/rejected suggestions
+- [ ] Multi-project support
 
 ---
 
@@ -681,6 +819,7 @@ This logs in as Sarah Chen, Founder at TechStart Inc.
 | Productboard | Feature prioritization | Enterprise, complex, expensive |
 | Coda AI | AI in docs | General purpose, not spec-focused |
 | Loom | Video explanations | One-way, not interactive, hard to reference |
-| ChatGPT/Claude | General AI | No workflow, no persistence, no collaboration |
+| ChatGPT/Claude | General AI | No workflow, no persistence, no product context |
+| **SpecFlow** | AI Product Manager | Purpose-built for founder→developer handoff with persistent product context, UX suggestions, and conflict detection |
 
-**SpecFlow's positioning:** Purpose-built for the founder→developer handoff, with AI that understands software requirements specifically.
+**SpecFlow's positioning:** Your AI Product Manager that knows your product, challenges your ideas, and produces developer-ready specs — not just a chatbot that takes notes.
