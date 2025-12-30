@@ -172,7 +172,7 @@ export const ChatInterface: FC<IProps> = ({ featureId, feature }) => {
             <div className="flex justify-start">
               <div className="mr-12 max-w-[80%]">
                 <div className="rounded-2xl bg-gray-100 px-4 py-3 text-gray-900 dark:bg-gray-800 dark:text-gray-100">
-                  <div className="text-sm leading-relaxed [&>p]:mb-2 [&>p:last-child]:mb-0 [&>ol]:list-decimal [&>ol]:pl-4 [&>ul]:list-disc [&>ul]:pl-4 [&>li]:mb-1 [&_strong]:font-semibold">
+                  <div className="text-sm leading-relaxed [&>li]:mb-1 [&>ol]:list-decimal [&>ol]:pl-4 [&>p:last-child]:mb-0 [&>p]:mb-2 [&>ul]:list-disc [&>ul]:pl-4 [&_strong]:font-semibold">
                     <ReactMarkdown>{streamedText}</ReactMarkdown>
                     <span className="ml-1 inline-block h-4 w-0.5 animate-pulse bg-gray-400" />
                   </div>

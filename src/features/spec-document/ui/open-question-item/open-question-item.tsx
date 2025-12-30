@@ -382,7 +382,7 @@ export const OpenQuestionItem: FC<IOpenQuestionItemProps> = ({
                         )}
                       </div>
                       {answer.answeredByAi ? (
-                        <div className="mt-1 text-sm text-gray-600 dark:text-gray-400 [&>p]:mb-2 [&>p:last-child]:mb-0 [&>ol]:list-decimal [&>ol]:pl-4 [&>ul]:list-disc [&>ul]:pl-4 [&>li]:mb-1 [&_strong]:font-semibold">
+                        <div className="mt-1 text-sm text-gray-600 dark:text-gray-400 [&>li]:mb-1 [&>ol]:list-decimal [&>ol]:pl-4 [&>p:last-child]:mb-0 [&>p]:mb-2 [&>ul]:list-disc [&>ul]:pl-4 [&_strong]:font-semibold">
                           <ReactMarkdown>{answer.content}</ReactMarkdown>
                         </div>
                       ) : (
