@@ -1,11 +1,10 @@
 import { z } from 'zod';
 
 export const createFeatureSchema = z.object({
-  title: z
+  idea: z
     .string()
-    .min(3, { message: 'Title must be at least 3 characters' })
-    .max(100, { message: 'Title must be less than 100 characters' }),
-  initialContext: z.string().optional(),
+    .min(20, { message: 'Idea must be at least 20 characters' })
+    .max(5000, { message: 'Idea must not exceed 5000 characters' }),
   contextFeatureId: z.number().optional(),
 });
 

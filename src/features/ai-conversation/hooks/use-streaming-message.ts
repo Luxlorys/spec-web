@@ -2,7 +2,11 @@ import { useCallback, useRef, useState } from 'react';
 
 import { env } from 'env';
 
-import { IStreamCompleteResult, IStreamMetadata } from 'shared/api';
+import {
+  IConversationWithProgress,
+  IStreamCompleteResult,
+  IStreamMetadata,
+} from 'shared/api';
 import { QueryKeys } from 'shared/constants';
 import { queryClient } from 'shared/lib';
 import { useAuthStore } from 'shared/store';
@@ -10,6 +14,7 @@ import { useAuthStore } from 'shared/store';
 interface IStreamingState {
   isStreaming: boolean;
   streamedText: string;
+  pendingUserMessage: string | null;
   error: string | null;
   metadata: IStreamMetadata | null;
   finalResult: IStreamCompleteResult | null;
@@ -18,6 +23,7 @@ interface IStreamingState {
 const initialState: IStreamingState = {
   isStreaming: false,
   streamedText: '',
+  pendingUserMessage: null,
   error: null,
   metadata: null,
   finalResult: null,
@@ -114,20 +120,41 @@ export const useStreamingMessage = (featureId: number) => {
   const [state, setState] = useState<IStreamingState>(initialState);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  const invalidateQueries = useCallback(() => {
-    queryClient.invalidateQueries({
-      queryKey: [QueryKeys.CONVERSATION_BY_FEATURE, featureId],
-    });
-    queryClient.invalidateQueries({
-      queryKey: [QueryKeys.FEATURE_REQUEST_BY_ID, featureId],
-    });
-    queryClient.invalidateQueries({
-      queryKey: [QueryKeys.SPECIFICATION_BY_FEATURE, featureId],
-    });
-    queryClient.invalidateQueries({
-      queryKey: [QueryKeys.FEATURE_REQUESTS],
-    });
-  }, [featureId]);
+  const updateConversationCache = useCallback(
+    (result: IStreamCompleteResult) => {
+      queryClient.setQueryData<IConversationWithProgress | null>(
+        [QueryKeys.CONVERSATION_BY_FEATURE, featureId],
+        old => {
+          if (!old) {
+            return old;
+          }
+
+          return {
+            ...old,
+            messages: [
+              ...old.messages,
+              result.userMessage,
+              result.assistantMessage,
+            ],
+            isCompleted: result.conversation.isCompleted,
+            currentPhase: result.conversation.currentPhase,
+          };
+        },
+      );
+
+      // Still invalidate other related queries
+      queryClient.invalidateQueries({
+        queryKey: [QueryKeys.FEATURE_REQUEST_BY_ID, featureId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QueryKeys.SPECIFICATION_BY_FEATURE, featureId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QueryKeys.FEATURE_REQUESTS],
+      });
+    },
+    [featureId],
+  );
 
   const sendMessage = useCallback(
     async (content: string) => {
@@ -137,6 +164,7 @@ export const useStreamingMessage = (featureId: number) => {
       setState({
         isStreaming: true,
         streamedText: '',
+        pendingUserMessage: content,
         error: null,
         metadata: null,
         finalResult: null,
@@ -180,14 +208,25 @@ export const useStreamingMessage = (featureId: number) => {
               ...prev,
               metadata,
             }));
+            if (metadata.isCompleted) {
+              queryClient.invalidateQueries({
+                queryKey: [QueryKeys.FEATURE_REQUEST_BY_ID, featureId],
+              });
+              queryClient.invalidateQueries({
+                queryKey: [QueryKeys.SPECIFICATION_BY_FEATURE, featureId],
+              });
+            }
           },
           onComplete: result => {
+            updateConversationCache(result);
+
             setState(prev => ({
               ...prev,
               isStreaming: false,
+              streamedText: '',
+              pendingUserMessage: null,
               finalResult: result,
             }));
-            invalidateQueries();
           },
           onError: message => {
             setState(prev => ({
@@ -211,7 +250,7 @@ export const useStreamingMessage = (featureId: number) => {
         }));
       }
     },
-    [featureId, invalidateQueries],
+    [featureId, updateConversationCache],
   );
 
   const cancel = useCallback(() => {

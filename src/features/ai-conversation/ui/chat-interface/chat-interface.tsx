@@ -5,10 +5,9 @@ import { FC, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { Loader2, Plus, Send, X } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
 
 import { StatusBadge } from 'features/feature-requests';
-import { IConversationMessage, IFeatureRequest } from 'shared/api';
+import { IFeatureRequest } from 'shared/api';
 import { cn } from 'shared/lib';
 import { Button, Card } from 'shared/ui';
 
@@ -31,8 +30,6 @@ export const ChatInterface: FC<IProps> = ({ featureId, feature }) => {
   const router = useRouter();
   const [inputValue, setInputValue] = useState('');
   const [attachmentDialogOpen, setAttachmentDialogOpen] = useState(false);
-  const [optimisticUserMessage, setOptimisticUserMessage] =
-    useState<IConversationMessage | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -48,8 +45,8 @@ export const ChatInterface: FC<IProps> = ({ featureId, feature }) => {
   const {
     isStreaming,
     streamedText,
+    pendingUserMessage,
     error: streamError,
-    finalResult,
     sendMessage,
   } = useStreamingMessage(numericFeatureId);
 
@@ -66,13 +63,6 @@ export const ChatInterface: FC<IProps> = ({ featureId, feature }) => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
-
-    setOptimisticUserMessage({
-      id: Date.now(),
-      role: 'USER',
-      content: userContent,
-      createdAt: new Date().toISOString(),
-    });
 
     await sendMessage(userContent);
   };
@@ -109,22 +99,10 @@ export const ChatInterface: FC<IProps> = ({ featureId, feature }) => {
     }
   };
 
-  // Clear optimistic message when stream completes
-  useEffect(() => {
-    if (finalResult) {
-      setOptimisticUserMessage(null);
-    }
-  }, [finalResult]);
-
   // Scroll to bottom on new messages or streaming updates
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [
-    conversation?.messages,
-    isStreaming,
-    streamedText,
-    optimisticUserMessage,
-  ]);
+  }, [conversation?.messages, isStreaming, streamedText, pendingUserMessage]);
 
   const handleViewSpec = () => {
     router.push(`/features/${featureId}`);
@@ -164,21 +142,29 @@ export const ChatInterface: FC<IProps> = ({ featureId, feature }) => {
             <Message key={message.id} message={message} />
           ))}
 
-          {/* Optimistic user message during streaming */}
-          {optimisticUserMessage && <Message message={optimisticUserMessage} />}
+          {/* Optimistic user message while streaming */}
+          {pendingUserMessage && (
+            <Message
+              message={{
+                id: -2,
+                role: 'USER',
+                content: pendingUserMessage,
+                createdAt: new Date().toISOString(),
+              }}
+            />
+          )}
 
           {/* Streaming AI response */}
-          {isStreaming && streamedText && (
-            <div className="flex justify-start">
-              <div className="mr-12 max-w-[80%]">
-                <div className="rounded-2xl bg-gray-100 px-4 py-3 text-gray-900 dark:bg-gray-800 dark:text-gray-100">
-                  <div className="text-sm leading-relaxed [&>li]:mb-1 [&>ol]:list-decimal [&>ol]:pl-4 [&>p:last-child]:mb-0 [&>p]:mb-2 [&>ul]:list-disc [&>ul]:pl-4 [&_strong]:font-semibold">
-                    <ReactMarkdown>{streamedText}</ReactMarkdown>
-                    <span className="ml-1 inline-block h-4 w-0.5 animate-pulse bg-gray-400" />
-                  </div>
-                </div>
-              </div>
-            </div>
+          {streamedText && (
+            <Message
+              message={{
+                id: -1,
+                role: 'ASSISTANT',
+                content: streamedText,
+                createdAt: new Date().toISOString(),
+              }}
+              isStreaming={isStreaming}
+            />
           )}
 
           {/* Thinking indicator before text starts streaming */}

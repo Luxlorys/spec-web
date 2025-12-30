@@ -12,10 +12,22 @@ const markdownStyles =
 
 interface IProps {
   message: IConversationMessage;
+  isStreaming?: boolean;
 }
 
-export const Message: FC<IProps> = ({ message }) => {
+const formatMessageDate = (createdAt: string): string => {
+  const date = new Date(createdAt);
+
+  if (Number.isNaN(date.getTime())) {
+    return formatDateTime(new Date());
+  }
+
+  return formatDateTime(date);
+};
+
+export const Message: FC<IProps> = ({ message, isStreaming }) => {
   const isUser = message.role === 'USER';
+  const formattedDate = formatMessageDate(message.createdAt);
 
   return (
     <div className={cn('flex', isUser ? 'justify-end' : 'justify-start')}>
@@ -35,6 +47,9 @@ export const Message: FC<IProps> = ({ message }) => {
           ) : (
             <div className={markdownStyles}>
               <ReactMarkdown>{message.content}</ReactMarkdown>
+              {isStreaming && (
+                <span className="ml-1 inline-block h-4 w-0.5 animate-pulse bg-gray-400" />
+              )}
             </div>
           )}
         </div>
@@ -44,7 +59,7 @@ export const Message: FC<IProps> = ({ message }) => {
             isUser ? 'text-right' : 'text-left',
           )}
         >
-          {formatDateTime(new Date(message.createdAt))}
+          {formattedDate}
         </p>
       </div>
     </div>

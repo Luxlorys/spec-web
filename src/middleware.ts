@@ -29,10 +29,10 @@ export const middleware = (request: NextRequest) => {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Redirect to dashboard if accessing login/signup while authenticated
+  // Redirect to features/new if accessing login/signup while authenticated
   // Don't redirect for verify-email, forgot-password, reset-password
   if (accessToken && (pathname === '/login' || pathname === '/signup')) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    return NextResponse.redirect(new URL('/features/new', request.url));
   }
 
   return NextResponse.next();

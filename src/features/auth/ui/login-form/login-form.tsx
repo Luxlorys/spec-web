@@ -42,7 +42,7 @@ export const LoginForm: FC = () => {
       setAuth(response.user, response.accessToken, response.refreshToken);
 
       // Redirect to requested page or dashboard
-      const redirect = searchParams.get('redirect') || '/dashboard';
+      const redirect = searchParams.get('redirect') || '/features/new';
 
       router.push(redirect);
     } catch (err) {
