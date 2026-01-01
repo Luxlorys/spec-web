@@ -40,6 +40,8 @@ export const transformRegenerationPreview = (
     fullProposedSpec,
     regenerationSummary: response.regenerationSummary,
     newOpenQuestions: response.newOpenQuestions,
+    cachedAt: response.cachedAt ? new Date(response.cachedAt) : null,
+    canRegenerateAt: new Date(response.canRegenerateAt),
   };
 };
 

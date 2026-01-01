@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 
 import { AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
 
+import { formatRelativeTime } from 'shared/lib';
 import { IRegenerationPreview, ISpecDocument } from 'shared/types';
 import {
   Badge,
@@ -12,16 +13,11 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  TabsContent,
-  TabsList,
-  TabsRoot,
-  TabsTrigger,
 } from 'shared/ui';
 
 import { useApplyRegeneration, useRegenerationPreview } from '../../api';
 import { transformRegenerationPreview } from '../../lib';
-import { DiffView } from './diff-view';
-import { SummaryView } from './summary-view';
+import { ChangesView } from './changes-view';
 
 interface IProps {
   isOpen: boolean;
@@ -83,12 +79,18 @@ export const RegenerationModal = ({
       change => change.changeType !== 'unchanged',
     ) ?? false;
 
-  // Determine which state to show
-  const showLoading = previewMutation.isPending;
-  const showError = previewMutation.error && !previewMutation.isPending;
+  // Determine which state to show (mutually exclusive)
   const showSuccess = applyMutation.isSuccess;
+  const showApplying = applyMutation.isPending && !showSuccess;
+  const showLoading =
+    previewMutation.isPending && !showSuccess && !showApplying;
+  const showError =
+    previewMutation.error &&
+    !previewMutation.isPending &&
+    !showSuccess &&
+    !showApplying;
   const showPreview =
-    preview && !previewMutation.isPending && !applyMutation.isSuccess;
+    preview && !previewMutation.isPending && !showSuccess && !showApplying;
 
   return (
     <Sheet open={isOpen} onOpenChange={handleClose}>
@@ -107,6 +109,16 @@ export const RegenerationModal = ({
               <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
               <p className="text-sm text-gray-600">
                 Analyzing discussions and generating preview...
+              </p>
+            </div>
+          )}
+
+          {/* Applying State */}
+          {showApplying && (
+            <div className="flex flex-col items-center justify-center space-y-4 py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+              <p className="text-sm text-gray-600">
+                Applying changes to specification...
               </p>
             </div>
           )}
@@ -142,9 +154,16 @@ export const RegenerationModal = ({
             <>
               {/* Context Summary Card */}
               <div className="rounded-lg border border-purple-200 bg-purple-50 p-4">
-                <h3 className="mb-3 text-sm font-semibold text-purple-900">
-                  Regeneration Context
-                </h3>
+                <div className="mb-3 flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-purple-900">
+                    Regeneration Context
+                  </h3>
+                  {preview.cachedAt && (
+                    <Badge variant="gray" className="text-xs">
+                      Cached {formatRelativeTime(preview.cachedAt)}
+                    </Badge>
+                  )}
+                </div>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="text-purple-700">Current Version:</span>
@@ -203,33 +222,13 @@ export const RegenerationModal = ({
                 </div>
               )}
 
-              {/* Tabs for Summary/Diff view */}
+              {/* Changes View */}
               {hasChanges && (
                 <>
-                  <TabsRoot defaultValue="summary">
-                    <TabsList className="h-auto w-full justify-start gap-4 rounded-none border-b border-gray-200 bg-transparent p-0">
-                      <TabsTrigger
-                        value="summary"
-                        className="rounded-none border-b-2 border-transparent px-1 pb-3 pt-2 data-[state=active]:border-purple-600 data-[state=active]:bg-transparent data-[state=active]:text-purple-600 data-[state=active]:shadow-none"
-                      >
-                        Summary
-                      </TabsTrigger>
-                      <TabsTrigger
-                        value="diff"
-                        className="rounded-none border-b-2 border-transparent px-1 pb-3 pt-2 data-[state=active]:border-purple-600 data-[state=active]:bg-transparent data-[state=active]:text-purple-600 data-[state=active]:shadow-none"
-                      >
-                        Detailed Diff
-                      </TabsTrigger>
-                    </TabsList>
-
-                    <TabsContent value="summary" className="mt-4 min-h-[400px]">
-                      <SummaryView changes={preview.proposedChanges} />
-                    </TabsContent>
-
-                    <TabsContent value="diff" className="mt-4 min-h-[400px]">
-                      <DiffView changes={preview.proposedChanges} />
-                    </TabsContent>
-                  </TabsRoot>
+                  <ChangesView
+                    changes={preview.proposedChanges}
+                    regenerationSummary={preview.regenerationSummary}
+                  />
 
                   {/* Action Buttons */}
                   <div className="flex justify-end gap-3 border-t border-gray-200 pt-4">

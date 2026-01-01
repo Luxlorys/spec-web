@@ -119,14 +119,6 @@ export const DiffView = ({ changes }: IProps) => {
               </div>
             </div>
           </div>
-
-          {/* AI Reasoning */}
-          <div className="border-t border-purple-200 bg-purple-50 px-4 py-3">
-            <h4 className="mb-1 text-xs font-semibold uppercase text-purple-700">
-              AI Reasoning
-            </h4>
-            <p className="text-sm text-purple-900">{change.reason}</p>
-          </div>
         </div>
       ))}
 

@@ -240,6 +240,10 @@ export interface IRegenerationPreviewResponse {
   commentCount: number;
   newOpenQuestions: string[];
   regenerationSummary: string;
+  /** ISO date string when the preview was cached, null if fresh */
+  cachedAt: string | null;
+  /** ISO date string when a fresh preview can be requested */
+  canRegenerateAt: string;
 }
 
 /**
@@ -277,4 +281,8 @@ export interface IRegenerationPreview {
   fullProposedSpec: ISpecDocument;
   regenerationSummary: string;
   newOpenQuestions: string[];
+  /** When the preview was cached, null if freshly generated */
+  cachedAt: Date | null;
+  /** When a fresh preview can be requested */
+  canRegenerateAt: Date;
 }
