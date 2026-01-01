@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { Loader2, Plus, Send, X } from 'lucide-react';
 
 import { StatusBadge } from 'features/feature-requests';
+import { useGetSpecification } from 'features/spec-document';
 import { IFeatureRequest } from 'shared/api';
 import { cn } from 'shared/lib';
 import { Button, Card } from 'shared/ui';
@@ -51,6 +52,8 @@ export const ChatInterface: FC<IProps> = ({ featureId, feature }) => {
   } = useStreamingMessage(numericFeatureId);
 
   const updateContextMutation = useUpdateContextFeature(numericFeatureId);
+
+  const { data: specification } = useGetSpecification(numericFeatureId);
 
   const handleSend = async () => {
     if (!inputValue.trim() || isStreaming) {
@@ -179,7 +182,22 @@ export const ChatInterface: FC<IProps> = ({ featureId, feature }) => {
             </Card>
           )}
 
-          {isCompleted && (
+          {isCompleted && !specification && (
+            <Card className="border-amber-200 bg-amber-50 dark:border-amber-900/50 dark:bg-amber-900/20">
+              <div className="flex flex-col items-center text-center">
+                <Loader2 className="mb-3 h-8 w-8 animate-spin text-amber-600 dark:text-amber-400" />
+                <h3 className="mb-2 text-lg font-semibold text-amber-900 dark:text-amber-100">
+                  Generating Specification...
+                </h3>
+                <p className="text-sm text-amber-800 dark:text-amber-200">
+                  Your specification document is being generated. This usually
+                  takes a few seconds.
+                </p>
+              </div>
+            </Card>
+          )}
+
+          {isCompleted && specification && (
             <Card className="border-green-200 bg-green-50 dark:border-green-900/50 dark:bg-green-900/20">
               <div className="text-center">
                 <h3 className="mb-2 text-lg font-semibold text-green-900 dark:text-green-100">
@@ -260,8 +278,7 @@ export const ChatInterface: FC<IProps> = ({ featureId, feature }) => {
                 onKeyDown={handleKeyPress}
                 placeholder="Type your response... (Shift+Enter for new line)"
                 rows={1}
-                disabled={isStreaming}
-                className="max-h-[150px] min-h-[36px] flex-1 resize-none bg-transparent py-2 text-sm leading-relaxed text-gray-900 outline-none placeholder:text-gray-400 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-100 dark:placeholder:text-gray-500"
+                className="max-h-[150px] min-h-[36px] flex-1 resize-none bg-transparent py-2 text-sm leading-relaxed text-gray-900 outline-none placeholder:text-gray-400 dark:text-gray-100 dark:placeholder:text-gray-500"
               />
 
               {/* Send button */}

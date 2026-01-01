@@ -31,12 +31,12 @@ export const Message: FC<IProps> = ({ message, isStreaming }) => {
 
   return (
     <div className={cn('flex', isUser ? 'justify-end' : 'justify-start')}>
-      <div className={cn('max-w-[80%]', isUser ? 'ml-12' : 'mr-12')}>
+      <div className={cn('relative max-w-[80%]', isUser ? 'ml-12' : 'mr-12')}>
         <div
           className={cn(
-            'rounded-2xl px-4 py-3',
+            'w-fit rounded-2xl px-4 py-3',
             isUser
-              ? 'bg-primary text-primary-foreground'
+              ? 'ml-auto bg-primary text-primary-foreground'
               : 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100',
           )}
         >
