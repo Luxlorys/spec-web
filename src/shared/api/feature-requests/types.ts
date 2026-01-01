@@ -47,8 +47,7 @@ export interface IContextFeature {
  * POST /features
  */
 export interface ICreateFeatureRequest {
-  title: string;
-  initialContext?: string;
+  idea: string;
   contextFeatureId?: number;
 }
 

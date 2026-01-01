@@ -11,3 +11,4 @@ export * from '../api/comments/types';
 export * from '../api/conversations/types';
 export * from '../api/feature-requests/types';
 export * from '../api/specifications/types';
+export * from '../api/users/types';

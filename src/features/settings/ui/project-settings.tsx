@@ -2,6 +2,9 @@
 
 import { useState } from 'react';
 
+import { Plus, Trash2 } from 'lucide-react';
+import { useFieldArray } from 'react-hook-form';
+
 import { Button, Card, Input } from 'shared/ui';
 
 import { useProjectForm } from '../hooks';
@@ -20,8 +23,14 @@ export const ProjectSettings = () => {
 
   const {
     register,
+    control,
     formState: { errors, isDirty },
   } = form;
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'userPersonas',
+  });
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
@@ -66,6 +75,149 @@ export const ProjectSettings = () => {
               placeholder="https://yourproject.com"
               error={errors.website?.message}
             />
+
+            {/* Product Context Section */}
+            <div className="border-t pt-4">
+              <h3 className="mb-4 font-medium">Product Context</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium">
+                    Product Vision
+                  </label>
+                  <textarea
+                    {...register('productVision')}
+                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    rows={3}
+                    placeholder="What is the long-term vision for your product?"
+                  />
+                  {errors.productVision?.message && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {errors.productVision.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium">
+                    Target Market
+                  </label>
+                  <textarea
+                    {...register('targetMarket')}
+                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    rows={3}
+                    placeholder="Who is your target audience?"
+                  />
+                  {errors.targetMarket?.message && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {errors.targetMarket.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium">
+                    Tech Stack
+                  </label>
+                  <textarea
+                    {...register('techStack')}
+                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    rows={3}
+                    placeholder="What technologies does your product use?"
+                  />
+                  {errors.techStack?.message && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {errors.techStack.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* User Personas Section */}
+            <div className="border-t pt-4">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <h3 className="font-medium">User Personas</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Define the target users for your product
+                  </p>
+                </div>
+                {fields.length < 20 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => append({ name: '', description: '' })}
+                  >
+                    <Plus className="mr-1 h-4 w-4" />
+                    Add Persona
+                  </Button>
+                )}
+              </div>
+
+              {errors.userPersonas?.message && (
+                <p className="mb-4 text-sm text-red-600 dark:text-red-400">
+                  {errors.userPersonas.message}
+                </p>
+              )}
+
+              {fields.length === 0 ? (
+                <div className="rounded-lg border border-dashed p-6 text-center">
+                  <p className="text-sm text-muted-foreground">
+                    No personas defined yet. Add a persona to describe your
+                    target users.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {fields.map((field, index) => (
+                    <div
+                      key={field.id}
+                      className="rounded-lg border bg-muted/30 p-4"
+                    >
+                      <div className="mb-3 flex items-center justify-between">
+                        <span className="text-sm font-medium">
+                          Persona {index + 1}
+                        </span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => remove(index)}
+                        >
+                          <Trash2 className="h-4 w-4 text-muted-foreground hover:text-red-500" />
+                        </Button>
+                      </div>
+                      <div className="space-y-3">
+                        <Input
+                          {...register(`userPersonas.${index}.name`)}
+                          label="Name"
+                          placeholder="e.g., Power User, Casual Browser"
+                          error={errors.userPersonas?.[index]?.name?.message}
+                        />
+                        <div>
+                          <label className="mb-1.5 block text-sm font-medium">
+                            Description
+                          </label>
+                          <textarea
+                            {...register(`userPersonas.${index}.description`)}
+                            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                            rows={2}
+                            placeholder="Describe this persona's goals, needs, and behaviors..."
+                          />
+                          {errors.userPersonas?.[index]?.description
+                            ?.message && (
+                            <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                              {errors.userPersonas[index]?.description?.message}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {error && (
               <p className="text-sm text-red-600 dark:text-red-400">

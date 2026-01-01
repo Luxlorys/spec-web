@@ -1,12 +1,12 @@
 'use client';
 
-import { FC, useState } from 'react';
+import { FC } from 'react';
 
 import { Plus } from 'lucide-react';
 
 import { Button, Textarea } from 'shared/ui';
 
-import { useCreateOpenQuestion } from '../../api';
+import { useOpenQuestionForm } from '../../hooks';
 
 interface IOpenQuestionFormProps {
   specificationId: number;
@@ -15,41 +15,21 @@ interface IOpenQuestionFormProps {
 export const OpenQuestionForm: FC<IOpenQuestionFormProps> = ({
   specificationId,
 }) => {
-  const [isAdding, setIsAdding] = useState(false);
-  const [questionText, setQuestionText] = useState('');
+  const { form, onSubmit, isAdding, startAdding, cancelAdding, isLoading } =
+    useOpenQuestionForm({ specificationId });
 
-  const createMutation = useCreateOpenQuestion();
+  const {
+    register,
+    watch,
+    formState: { errors },
+  } = form;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!questionText.trim()) {
-      return;
-    }
-
-    await createMutation.mutateAsync(
-      {
-        specificationId,
-        data: { question: questionText },
-      },
-      {
-        onSuccess: () => {
-          setQuestionText('');
-          setIsAdding(false);
-        },
-      },
-    );
-  };
-
-  const handleCancel = () => {
-    setQuestionText('');
-    setIsAdding(false);
-  };
+  const questionText = watch('question');
 
   if (!isAdding) {
     return (
       <div className="mb-4">
-        <Button onClick={() => setIsAdding(true)} variant="outline" size="sm">
+        <Button onClick={startAdding} variant="outline" size="sm">
           <Plus className="h-4 w-4" />
           Add New Question
         </Button>
@@ -59,7 +39,7 @@ export const OpenQuestionForm: FC<IOpenQuestionFormProps> = ({
 
   return (
     <form
-      onSubmit={handleSubmit}
+      onSubmit={onSubmit}
       className="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50"
     >
       <div className="mb-3">
@@ -71,10 +51,10 @@ export const OpenQuestionForm: FC<IOpenQuestionFormProps> = ({
         </label>
         <Textarea
           id="new-question"
-          value={questionText}
-          onChange={e => setQuestionText(e.target.value)}
+          {...register('question')}
           placeholder="What question needs to be answered?"
           className="min-h-[80px]"
+          error={errors.question?.message}
           autoFocus
         />
       </div>
@@ -82,16 +62,16 @@ export const OpenQuestionForm: FC<IOpenQuestionFormProps> = ({
         <Button
           type="submit"
           size="sm"
-          disabled={!questionText.trim() || createMutation.isPending}
+          disabled={!questionText?.trim() || isLoading}
         >
-          {createMutation.isPending ? 'Adding...' : 'Add Question'}
+          {isLoading ? 'Adding...' : 'Add Question'}
         </Button>
         <Button
           type="button"
           size="sm"
           variant="outline"
-          onClick={handleCancel}
-          disabled={createMutation.isPending}
+          onClick={cancelAdding}
+          disabled={isLoading}
         >
           Cancel
         </Button>

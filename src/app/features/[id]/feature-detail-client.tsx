@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -7,7 +9,11 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 
 import { ActivityList, FeatureOverview } from 'features/feature-details';
 import { useDeleteFeature } from 'features/feature-requests';
-import { SpecView, useGetSpecification } from 'features/spec-document';
+import {
+  RegenerationModal,
+  SpecView,
+  useGetSpecification,
+} from 'features/spec-document';
 import { featureRequestsApi } from 'shared/api';
 import { QueryKeys } from 'shared/constants';
 import { queryClient, showApiError } from 'shared/lib';
@@ -21,6 +27,7 @@ interface IProps {
 export const FeatureDetailClient = ({ featureId }: IProps) => {
   const router = useRouter();
   const numericId = parseInt(featureId, 10);
+  const [isRegenerationModalOpen, setIsRegenerationModalOpen] = useState(false);
 
   const { data: feature, isLoading: featureLoading } = useQuery({
     queryKey: [QueryKeys.FEATURE_REQUEST_BY_ID, numericId],
@@ -131,18 +138,6 @@ export const FeatureDetailClient = ({ featureId }: IProps) => {
       label: 'Specification',
       content: renderSpecificationContent(),
     },
-
-    {
-      id: 'comments',
-      label: 'Comments',
-      content: (
-        <EmptyState
-          title="Comments Coming Soon"
-          description="This feature will allow team members to discuss and ask questions about the specification"
-        />
-      ),
-    },
-
     {
       id: 'activity',
       label: 'Activity',
@@ -175,14 +170,28 @@ export const FeatureDetailClient = ({ featureId }: IProps) => {
             )}
           </div>
 
-          <Link href="/dashboard">
-            <Button variant="outline">Back to Dashboard</Button>
-          </Link>
+          {hasSpec && (
+            <Button
+              variant="outline"
+              onClick={() => setIsRegenerationModalOpen(true)}
+            >
+              Regenerate Specification
+            </Button>
+          )}
         </div>
       </div>
 
       {/* Tabs */}
       <Tabs tabs={tabs} defaultTab="overview" />
+
+      {/* Regeneration Modal */}
+      {spec && (
+        <RegenerationModal
+          isOpen={isRegenerationModalOpen}
+          onClose={() => setIsRegenerationModalOpen(false)}
+          currentSpec={spec}
+        />
+      )}
     </>
   );
 };

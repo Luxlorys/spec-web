@@ -3,59 +3,21 @@
 import { FC } from 'react';
 
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
 
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-
-import { authApi } from 'shared/api';
-import { isEmailNotVerifiedError, showApiError } from 'shared/lib';
-import { useAuthStore } from 'shared/store';
 import { Button, Input } from 'shared/ui';
 
-import { LoginInput, loginSchema } from '../../lib';
+import { useLoginForm } from '../../hooks';
 
 export const LoginForm: FC = () => {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const { setAuth } = useAuthStore();
-
-  // Check for password reset success message
-  const resetSuccess = searchParams.get('reset') === 'success';
+  const { form, onSubmit, resetSuccess, isSubmitting } = useLoginForm();
 
   const {
     register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<LoginInput>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: '',
-      password: '',
-    },
-  });
-
-  const onSubmit = async (values: LoginInput) => {
-    try {
-      const response = await authApi.login(values);
-
-      setAuth(response.user, response.accessToken, response.refreshToken);
-
-      // Redirect to requested page or dashboard
-      const redirect = searchParams.get('redirect') || '/dashboard';
-
-      router.push(redirect);
-    } catch (err) {
-      if (isEmailNotVerifiedError(err)) {
-        router.push(`/verify-email?email=${encodeURIComponent(values.email)}`);
-      } else {
-        showApiError(err);
-      }
-    }
-  };
+    formState: { errors },
+  } = form;
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={onSubmit} className="space-y-4">
       {resetSuccess && (
         <div className="rounded-lg bg-green-50 p-3 text-sm text-green-800 dark:bg-green-900/20 dark:text-green-400">
           Your password has been reset successfully. Please log in with your new

@@ -75,6 +75,7 @@ export const useEditOpenQuestion = () => {
 
 /**
  * Hook to resolve an open question with an accepted answer
+ * Also invalidates feature activities to show the resolution in activity feed
  */
 export const useResolveOpenQuestion = () => {
   return useMutation({
@@ -90,7 +91,8 @@ export const useResolveOpenQuestion = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({
         predicate: query =>
-          query.queryKey[0] === QueryKeys.SPECIFICATION_BY_FEATURE,
+          query.queryKey[0] === QueryKeys.SPECIFICATION_BY_FEATURE ||
+          query.queryKey[0] === QueryKeys.FEATURE_ACTIVITIES,
       });
     },
   });

@@ -1,4 +1,4 @@
-import { IOrganization, UserRole } from '../auth/types';
+import { IOrganization, IUserPersona, UserRole } from '../auth/types';
 
 // Non-founder roles (for profile updates - founders cannot change their role)
 export type NonFounderRole = 'PM' | 'BA' | 'DEVELOPER' | 'DESIGNER';
@@ -64,6 +64,10 @@ export interface IUpdateOrganizationRequest {
   name?: string;
   description?: string | null;
   website?: string | null;
+  productVision?: string | null;
+  targetMarket?: string | null;
+  techStack?: string | null;
+  userPersonas?: IUserPersona[] | null;
 }
 
 // ============================================================================

@@ -2,53 +2,24 @@
 
 import { FC } from 'react';
 
-import { useRouter } from 'next/navigation';
-
-import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowLeft } from 'lucide-react';
-import { useForm } from 'react-hook-form';
 
-import { authApi } from 'shared/api';
-import { showApiError } from 'shared/lib';
 import { Button, Input } from 'shared/ui';
 
-import {
-  FounderSignupInput,
-  founderSignupSchema,
-  PASSWORD_REQUIREMENTS,
-} from '../../lib';
+import { useAdminSignupForm } from '../../hooks';
+import { PASSWORD_REQUIREMENTS } from '../../lib';
 
 interface IProps {
   onBack: () => void;
 }
 
 export const AdminSignupForm: FC<IProps> = ({ onBack }) => {
-  const router = useRouter();
+  const { form, onSubmit, isSubmitting } = useAdminSignupForm();
 
   const {
     register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<FounderSignupInput>({
-    resolver: zodResolver(founderSignupSchema),
-    defaultValues: {
-      firstName: '',
-      lastName: '',
-      email: '',
-      password: '',
-      organizationName: '',
-    },
-  });
-
-  const onSubmit = async (values: FounderSignupInput) => {
-    try {
-      await authApi.register(values);
-      // Redirect to verification page - user must verify email before logging in
-      router.push(`/verify-email?email=${encodeURIComponent(values.email)}`);
-    } catch (err) {
-      showApiError(err);
-    }
-  };
+    formState: { errors },
+  } = form;
 
   return (
     <div>
@@ -61,7 +32,7 @@ export const AdminSignupForm: FC<IProps> = ({ onBack }) => {
         Back to options
       </button>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={onSubmit} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div>
             <Input

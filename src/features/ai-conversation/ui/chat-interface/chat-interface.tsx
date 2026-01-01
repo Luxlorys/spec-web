@@ -5,10 +5,10 @@ import { FC, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { Loader2, Plus, Send, X } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
 
 import { StatusBadge } from 'features/feature-requests';
-import { IConversationMessage, IFeatureRequest } from 'shared/api';
+import { useGetSpecification } from 'features/spec-document';
+import { IFeatureRequest } from 'shared/api';
 import { cn } from 'shared/lib';
 import { Button, Card } from 'shared/ui';
 
@@ -31,8 +31,6 @@ export const ChatInterface: FC<IProps> = ({ featureId, feature }) => {
   const router = useRouter();
   const [inputValue, setInputValue] = useState('');
   const [attachmentDialogOpen, setAttachmentDialogOpen] = useState(false);
-  const [optimisticUserMessage, setOptimisticUserMessage] =
-    useState<IConversationMessage | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -48,12 +46,14 @@ export const ChatInterface: FC<IProps> = ({ featureId, feature }) => {
   const {
     isStreaming,
     streamedText,
+    pendingUserMessage,
     error: streamError,
-    finalResult,
     sendMessage,
   } = useStreamingMessage(numericFeatureId);
 
   const updateContextMutation = useUpdateContextFeature(numericFeatureId);
+
+  const { data: specification } = useGetSpecification(numericFeatureId);
 
   const handleSend = async () => {
     if (!inputValue.trim() || isStreaming) {
@@ -66,13 +66,6 @@ export const ChatInterface: FC<IProps> = ({ featureId, feature }) => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
-
-    setOptimisticUserMessage({
-      id: Date.now(),
-      role: 'USER',
-      content: userContent,
-      createdAt: new Date().toISOString(),
-    });
 
     await sendMessage(userContent);
   };
@@ -109,22 +102,10 @@ export const ChatInterface: FC<IProps> = ({ featureId, feature }) => {
     }
   };
 
-  // Clear optimistic message when stream completes
-  useEffect(() => {
-    if (finalResult) {
-      setOptimisticUserMessage(null);
-    }
-  }, [finalResult]);
-
   // Scroll to bottom on new messages or streaming updates
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [
-    conversation?.messages,
-    isStreaming,
-    streamedText,
-    optimisticUserMessage,
-  ]);
+  }, [conversation?.messages, isStreaming, streamedText, pendingUserMessage]);
 
   const handleViewSpec = () => {
     router.push(`/features/${featureId}`);
@@ -164,21 +145,29 @@ export const ChatInterface: FC<IProps> = ({ featureId, feature }) => {
             <Message key={message.id} message={message} />
           ))}
 
-          {/* Optimistic user message during streaming */}
-          {optimisticUserMessage && <Message message={optimisticUserMessage} />}
+          {/* Optimistic user message while streaming */}
+          {pendingUserMessage && (
+            <Message
+              message={{
+                id: -2,
+                role: 'USER',
+                content: pendingUserMessage,
+                createdAt: new Date().toISOString(),
+              }}
+            />
+          )}
 
           {/* Streaming AI response */}
-          {isStreaming && streamedText && (
-            <div className="flex justify-start">
-              <div className="mr-12 max-w-[80%]">
-                <div className="rounded-2xl bg-gray-100 px-4 py-3 text-gray-900 dark:bg-gray-800 dark:text-gray-100">
-                  <div className="text-sm leading-relaxed [&>li]:mb-1 [&>ol]:list-decimal [&>ol]:pl-4 [&>p:last-child]:mb-0 [&>p]:mb-2 [&>ul]:list-disc [&>ul]:pl-4 [&_strong]:font-semibold">
-                    <ReactMarkdown>{streamedText}</ReactMarkdown>
-                    <span className="ml-1 inline-block h-4 w-0.5 animate-pulse bg-gray-400" />
-                  </div>
-                </div>
-              </div>
-            </div>
+          {streamedText && (
+            <Message
+              message={{
+                id: -1,
+                role: 'ASSISTANT',
+                content: streamedText,
+                createdAt: new Date().toISOString(),
+              }}
+              isStreaming={isStreaming}
+            />
           )}
 
           {/* Thinking indicator before text starts streaming */}
@@ -193,7 +182,22 @@ export const ChatInterface: FC<IProps> = ({ featureId, feature }) => {
             </Card>
           )}
 
-          {isCompleted && (
+          {isCompleted && !specification && (
+            <Card className="border-amber-200 bg-amber-50 dark:border-amber-900/50 dark:bg-amber-900/20">
+              <div className="flex flex-col items-center text-center">
+                <Loader2 className="mb-3 h-8 w-8 animate-spin text-amber-600 dark:text-amber-400" />
+                <h3 className="mb-2 text-lg font-semibold text-amber-900 dark:text-amber-100">
+                  Generating Specification...
+                </h3>
+                <p className="text-sm text-amber-800 dark:text-amber-200">
+                  Your specification document is being generated. This usually
+                  takes a few seconds.
+                </p>
+              </div>
+            </Card>
+          )}
+
+          {isCompleted && specification && (
             <Card className="border-green-200 bg-green-50 dark:border-green-900/50 dark:bg-green-900/20">
               <div className="text-center">
                 <h3 className="mb-2 text-lg font-semibold text-green-900 dark:text-green-100">
@@ -274,8 +278,7 @@ export const ChatInterface: FC<IProps> = ({ featureId, feature }) => {
                 onKeyDown={handleKeyPress}
                 placeholder="Type your response... (Shift+Enter for new line)"
                 rows={1}
-                disabled={isStreaming}
-                className="max-h-[150px] min-h-[36px] flex-1 resize-none bg-transparent py-2 text-sm leading-relaxed text-gray-900 outline-none placeholder:text-gray-400 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-100 dark:placeholder:text-gray-500"
+                className="max-h-[150px] min-h-[36px] flex-1 resize-none bg-transparent py-2 text-sm leading-relaxed text-gray-900 outline-none placeholder:text-gray-400 dark:text-gray-100 dark:placeholder:text-gray-500"
               />
 
               {/* Send button */}

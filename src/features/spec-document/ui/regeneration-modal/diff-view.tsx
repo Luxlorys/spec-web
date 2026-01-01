@@ -1,17 +1,13 @@
-// @ts-nocheck
-// This component is not currently used - kept for future implementation
-// Type checking is disabled until feature is implemented
-
 'use client';
 
-import { IAcceptanceCriteria, IEdgeCase, IProposedChange } from 'shared/types';
+import { ChangeType, IProposedChange } from 'shared/types';
 import { Badge } from 'shared/ui';
 
 interface IProps {
   changes: IProposedChange[];
 }
 
-const getProposedBgColor = (changeType: string): string => {
+const getProposedBgColor = (changeType: ChangeType): string => {
   if (changeType === 'added') {
     return 'bg-green-50';
   }
@@ -30,7 +26,7 @@ export const DiffView = ({ changes }: IProps) => {
       .trim();
   };
 
-  const getChangeTypeBadge = (type: string) => {
+  const getChangeTypeBadge = (type: ChangeType) => {
     switch (type) {
       case 'modified':
         return <Badge variant="purple">Modified</Badge>;
@@ -46,7 +42,7 @@ export const DiffView = ({ changes }: IProps) => {
     }
   };
 
-  const renderValue = (value: any): React.ReactNode => {
+  const renderValue = (value: string | string[] | null): React.ReactNode => {
     // Handle null/undefined
     if (value === null || value === undefined) {
       return <span className="italic text-gray-400">Empty</span>;
@@ -58,54 +54,13 @@ export const DiffView = ({ changes }: IProps) => {
     }
 
     // Handle string array
-    if (
-      Array.isArray(value) &&
-      value.length > 0 &&
-      typeof value[0] === 'string'
-    ) {
+    if (Array.isArray(value) && value.length > 0) {
       return (
         <ul className="list-inside list-disc space-y-1">
           {value.map((item: string) => (
             <li key={item}>{item}</li>
           ))}
         </ul>
-      );
-    }
-
-    // Handle acceptance criteria array
-    if (Array.isArray(value) && value.length > 0 && 'description' in value[0]) {
-      const criteria = value as IAcceptanceCriteria[];
-
-      return (
-        <ul className="space-y-2">
-          {criteria.map((item, idx) => (
-            <li key={item.id || idx} className="flex items-start gap-2">
-              <span className="font-medium text-gray-600">{idx + 1}.</span>
-              <span>{item.description}</span>
-            </li>
-          ))}
-        </ul>
-      );
-    }
-
-    // Handle edge cases array
-    if (Array.isArray(value) && value.length > 0 && 'scenario' in value[0]) {
-      const cases = value as IEdgeCase[];
-
-      return (
-        <div className="space-y-3">
-          {cases.map(item => (
-            <div
-              key={item.scenario}
-              className="border-l-2 border-gray-300 pl-3"
-            >
-              <p className="font-medium text-gray-900">{item.scenario}</p>
-              <p className="mt-1 text-sm text-gray-600">
-                {item.expectedBehavior}
-              </p>
-            </div>
-          ))}
-        </div>
       );
     }
 
@@ -163,14 +118,6 @@ export const DiffView = ({ changes }: IProps) => {
                 {renderValue(change.proposedValue)}
               </div>
             </div>
-          </div>
-
-          {/* AI Reasoning */}
-          <div className="border-t border-purple-200 bg-purple-50 px-4 py-3">
-            <h4 className="mb-1 text-xs font-semibold uppercase text-purple-700">
-              AI Reasoning
-            </h4>
-            <p className="text-sm text-purple-900">{change.reason}</p>
           </div>
         </div>
       ))}

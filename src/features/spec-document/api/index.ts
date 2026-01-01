@@ -16,3 +16,8 @@ export {
   useUpdateComment,
   useDeleteComment,
 } from './use-comments';
+
+export {
+  useRegenerationPreview,
+  useApplyRegeneration,
+} from './use-regeneration';

@@ -2,6 +2,12 @@
 // Note: ADMIN role removed - not supported by API
 export type UserRole = 'FOUNDER' | 'PM' | 'BA' | 'DEVELOPER' | 'DESIGNER';
 
+// User persona for organization
+export interface IUserPersona {
+  name: string;
+  description: string;
+}
+
 // Organization with full details
 export interface IOrganization {
   id: number;
@@ -9,6 +15,10 @@ export interface IOrganization {
   slug: string;
   description: string | null;
   website: string | null;
+  productVision: string | null;
+  targetMarket: string | null;
+  techStack: string | null;
+  userPersonas: IUserPersona[] | null;
 }
 
 // User interface matching API response (simplified - no memberships)

@@ -14,8 +14,11 @@ import {
   IGetSpecificationResponse,
   IOpenQuestion,
   IQuestionAnswer,
+  IRegenerationApplyResponse,
+  IRegenerationPreviewResponse,
   IResolveQuestionRequest,
   IResolveQuestionResponse,
+  ISpecDocument,
   ISpecificationWithQuestions,
 } from './types';
 
@@ -156,5 +159,31 @@ export const specificationsApi = {
     );
 
     return data.success;
+  },
+
+  /**
+   * Generate a preview of specification changes based on resolved questions and comments
+   * POST /specifications/:specificationId/regenerate/preview
+   */
+  regeneratePreview: async (
+    specificationId: number,
+  ): Promise<IRegenerationPreviewResponse> => {
+    const { data } = await api.post<IRegenerationPreviewResponse>(
+      `/specifications/${specificationId}/regenerate/preview`,
+    );
+
+    return data;
+  },
+
+  /**
+   * Apply regeneration and create a new specification version
+   * POST /specifications/:specificationId/regenerate/apply
+   */
+  regenerateApply: async (specificationId: number): Promise<ISpecDocument> => {
+    const { data } = await api.post<IRegenerationApplyResponse>(
+      `/specifications/${specificationId}/regenerate/apply`,
+    );
+
+    return data.specification;
   },
 };

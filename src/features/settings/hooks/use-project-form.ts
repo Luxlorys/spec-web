@@ -10,6 +10,21 @@ import { useDeleteOrganization, useUpdateOrganization } from '../api';
 
 const trimmedString = z.string().transform(val => val.trim());
 
+const userPersonaSchema = z.object({
+  name: trimmedString.pipe(
+    z
+      .string()
+      .min(1, { message: 'Name is required' })
+      .max(100, { message: 'Name must be 100 characters or less' }),
+  ),
+  description: trimmedString.pipe(
+    z
+      .string()
+      .min(1, { message: 'Description is required' })
+      .max(1000, { message: 'Description must be 1000 characters or less' }),
+  ),
+});
+
 const projectSchema = z.object({
   name: trimmedString.pipe(
     z.string().min(1, { message: 'Project name is required' }),
@@ -19,6 +34,34 @@ const projectSchema = z.object({
     .pipe(z.string().url({ message: 'Please enter a valid URL' }))
     .optional()
     .or(z.literal('')),
+  productVision: trimmedString
+    .pipe(
+      z.string().max(5000, {
+        message: 'Product vision must be 5000 characters or less',
+      }),
+    )
+    .optional()
+    .or(z.literal('')),
+  targetMarket: trimmedString
+    .pipe(
+      z.string().max(5000, {
+        message: 'Target market must be 5000 characters or less',
+      }),
+    )
+    .optional()
+    .or(z.literal('')),
+  techStack: trimmedString
+    .pipe(
+      z
+        .string()
+        .max(5000, { message: 'Tech stack must be 5000 characters or less' }),
+    )
+    .optional()
+    .or(z.literal('')),
+  userPersonas: z
+    .array(userPersonaSchema)
+    .max(20, { message: 'Maximum 20 personas allowed' })
+    .optional(),
 });
 
 export type ProjectFormData = z.infer<typeof projectSchema>;
@@ -36,6 +79,10 @@ export const useProjectForm = () => {
       name: organization?.name ?? '',
       description: organization?.description ?? '',
       website: organization?.website ?? '',
+      productVision: organization?.productVision ?? '',
+      targetMarket: organization?.targetMarket ?? '',
+      techStack: organization?.techStack ?? '',
+      userPersonas: organization?.userPersonas ?? [],
     },
   });
 
@@ -46,6 +93,10 @@ export const useProjectForm = () => {
         name: organization.name,
         description: organization.description ?? '',
         website: organization.website ?? '',
+        productVision: organization.productVision ?? '',
+        targetMarket: organization.targetMarket ?? '',
+        techStack: organization.techStack ?? '',
+        userPersonas: organization.userPersonas ?? [],
       });
     }
   }, [organization, form]);
@@ -55,6 +106,10 @@ export const useProjectForm = () => {
       name: data.name || undefined,
       description: data.description || null,
       website: data.website || null,
+      productVision: data.productVision || null,
+      targetMarket: data.targetMarket || null,
+      techStack: data.techStack || null,
+      userPersonas: data.userPersonas?.length ? data.userPersonas : null,
     });
     form.reset(data);
   });
