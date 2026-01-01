@@ -1,12 +1,11 @@
 'use client';
 
-import { FC, FormEvent, useState } from 'react';
+import { FC } from 'react';
 
 import { SectionType } from 'shared/api/comments';
 import { Button, Textarea } from 'shared/ui';
 
-import { useCreateComment } from '../../api';
-import { validateCommentContent } from '../../lib/validation';
+import { useCommentForm } from '../../hooks';
 
 interface ICommentFormProps {
   specificationId: number;
@@ -23,72 +22,41 @@ export const CommentForm: FC<ICommentFormProps> = ({
   placeholder = 'Add a comment...',
   autoFocus = false,
 }) => {
-  const [content, setContent] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const { form, onSubmit, isLoading } = useCommentForm({
+    specificationId,
+    sectionType,
+    onSuccess,
+  });
 
-  const createMutation = useCreateComment();
+  const {
+    register,
+    watch,
+    formState: { errors },
+  } = form;
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-
-    // Validate
-    const validationError = validateCommentContent(content);
-
-    if (validationError) {
-      setError(validationError);
-
-      return;
-    }
-
-    try {
-      await createMutation.mutateAsync({
-        specificationId,
-        data: {
-          sectionType,
-          content: content.trim(),
-        },
-      });
-
-      // Clear form
-      setContent('');
-      setError(null);
-
-      // Callback
-      onSuccess?.();
-    } catch (err) {
-      setError('Failed to post comment. Please try again.');
-      // eslint-disable-next-line no-console
-      console.error('Failed to create comment:', err);
-    }
-  };
+  const content = watch('content');
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
+    <form onSubmit={onSubmit} className="space-y-3">
       <Textarea
-        value={content}
-        onChange={e => {
-          setContent(e.target.value);
-          if (error) {
-            setError(null);
-          }
-        }}
+        {...register('content')}
         placeholder={placeholder}
         rows={3}
-        error={error || undefined}
+        error={errors.content?.message}
         autoFocus={autoFocus}
         className="w-full"
       />
 
       <div className="flex items-center justify-between">
         <span className="text-sm text-gray-500 dark:text-gray-400">
-          {content.length}/1000
+          {content?.length || 0}/1000
         </span>
 
         <Button
           type="submit"
           size="sm"
-          disabled={!content.trim() || createMutation.isPending}
-          isLoading={createMutation.isPending}
+          disabled={!content?.trim() || isLoading}
+          isLoading={isLoading}
         >
           Comment
         </Button>

@@ -1,96 +1,34 @@
 'use client';
 
-import { FC, useState } from 'react';
+import { FC } from 'react';
 
-import { useRouter } from 'next/navigation';
-
-import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowLeft, CheckCircle2, Loader2 } from 'lucide-react';
-import { useForm } from 'react-hook-form';
 
-import { authApi, formatRole } from 'shared/api';
-import { showApiError } from 'shared/lib';
-import { IInviteCodeValidation } from 'shared/types';
+import { formatRole } from 'shared/api';
 import { Button, Input } from 'shared/ui';
 
-import {
-  MemberSignupInput,
-  memberSignupSchema,
-  PASSWORD_REQUIREMENTS,
-} from '../../lib';
+import { useMemberSignupForm } from '../../hooks';
+import { PASSWORD_REQUIREMENTS } from '../../lib';
 
 interface IProps {
   onBack: () => void;
 }
 
 export const MemberSignupForm: FC<IProps> = ({ onBack }) => {
-  const router = useRouter();
-  const [validatedInvite, setValidatedInvite] =
-    useState<IInviteCodeValidation | null>(null);
-  const [isValidating, setIsValidating] = useState(false);
+  const {
+    form,
+    onSubmit,
+    inviteCode,
+    validatedInvite,
+    isValidating,
+    validateInviteCode,
+    isSubmitting,
+  } = useMemberSignupForm();
 
   const {
     register,
-    handleSubmit,
-    watch,
-    formState: { errors, isSubmitting },
-  } = useForm<MemberSignupInput>({
-    resolver: zodResolver(memberSignupSchema),
-    defaultValues: {
-      inviteCode: '',
-      firstName: '',
-      lastName: '',
-      email: '',
-      password: '',
-    },
-  });
-
-  const inviteCode = watch('inviteCode');
-
-  const validateInviteCode = async () => {
-    if (!inviteCode.trim()) {
-      return;
-    }
-
-    setIsValidating(true);
-    setValidatedInvite(null);
-
-    try {
-      const invite = await authApi.verifyInviteCode(inviteCode.trim());
-
-      if (invite.valid) {
-        setValidatedInvite(invite);
-      } else {
-        showApiError(new Error('Invalid invite code'));
-      }
-    } catch (err) {
-      showApiError(err);
-    } finally {
-      setIsValidating(false);
-    }
-  };
-
-  const onSubmit = async (values: MemberSignupInput) => {
-    if (!validatedInvite) {
-      showApiError(new Error('Please validate your invite code first'));
-
-      return;
-    }
-
-    try {
-      await authApi.registerWithInvite({
-        email: values.email,
-        password: values.password,
-        firstName: values.firstName,
-        lastName: values.lastName,
-        inviteCode: values.inviteCode,
-      });
-      // Redirect to verification page - user must verify email before logging in
-      router.push(`/verify-email?email=${encodeURIComponent(values.email)}`);
-    } catch (err) {
-      showApiError(err);
-    }
-  };
+    formState: { errors },
+  } = form;
 
   return (
     <div>
@@ -103,7 +41,7 @@ export const MemberSignupForm: FC<IProps> = ({ onBack }) => {
         Back to options
       </button>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={onSubmit} className="space-y-4">
         {/* Invite Code Section */}
         <div className="space-y-2">
           <div className="flex gap-2">
