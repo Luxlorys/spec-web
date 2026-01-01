@@ -197,3 +197,84 @@ export interface IEditAnswerResponse {
 export interface IDeleteAnswerResponse {
   success: boolean;
 }
+
+// ============================================================================
+// Regeneration Types
+// ============================================================================
+
+/**
+ * Change types for regeneration preview
+ */
+export type ChangeType = 'modified' | 'added' | 'removed' | 'unchanged';
+
+/**
+ * Section change object from API
+ * Contains old and new values for a specific section
+ */
+export interface ISectionChange<T = string | string[]> {
+  old: T;
+  new: T;
+}
+
+/**
+ * Changes object from regeneration preview API
+ * Only contains sections that would change
+ */
+export interface IRegenerationChanges {
+  overview?: ISectionChange<string>;
+  problemStatement?: ISectionChange<string>;
+  userStories?: ISectionChange<string[]>;
+  acceptanceCriteria?: ISectionChange<string[]>;
+  scopeIncluded?: ISectionChange<string[]>;
+  scopeExcluded?: ISectionChange<string[]>;
+  technicalConsiderations?: ISectionChange<string[]>;
+}
+
+/**
+ * Response from POST /specifications/:specificationId/regenerate/preview
+ */
+export interface IRegenerationPreviewResponse {
+  changes: IRegenerationChanges;
+  unresolvedQuestionCount: number;
+  resolvedQuestionCount: number;
+  commentCount: number;
+  newOpenQuestions: string[];
+  regenerationSummary: string;
+}
+
+/**
+ * Response from POST /specifications/:specificationId/regenerate/apply
+ */
+export interface IRegenerationApplyResponse {
+  specification: ISpecDocument;
+  copiedQuestionCount: number;
+  newQuestionCount: number;
+}
+
+/**
+ * UI type for proposed changes in regeneration modal
+ */
+export interface IProposedChange {
+  section: string;
+  currentValue: string | string[] | null;
+  proposedValue: string | string[] | null;
+  changeType: ChangeType;
+  reason: string;
+}
+
+/**
+ * UI type for regeneration preview data used by modal components
+ */
+export interface IRegenerationPreview {
+  currentVersion: number;
+  nextVersion: number;
+  contextSummary: {
+    resolvedCommentsCount: number;
+    answeredQuestionsCount: number;
+    sectionsWithFeedback: string[];
+  };
+  proposedChanges: IProposedChange[];
+  fullProposedSpec: ISpecDocument;
+  regenerationSummary: string;
+  newOpenQuestions: string[];
+}

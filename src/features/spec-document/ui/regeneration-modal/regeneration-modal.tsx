@@ -1,7 +1,3 @@
-// @ts-nocheck
-// This component is not currently used - kept for future implementation
-// Type checking is disabled until feature is implemented
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -16,59 +12,68 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  TabsContent,
+  TabsList,
+  TabsRoot,
+  TabsTrigger,
 } from 'shared/ui';
 
+import { useApplyRegeneration, useRegenerationPreview } from '../../api';
+import { transformRegenerationPreview } from '../../lib';
 import { DiffView } from './diff-view';
 import { SummaryView } from './summary-view';
 
 interface IProps {
   isOpen: boolean;
   onClose: () => void;
-  specId: string;
-  preview: IRegenerationPreview | null;
-  isLoadingPreview: boolean;
-  previewError: Error | null;
-  onApprove: (proposedSpec: ISpecDocument) => void;
-  isCommitting: boolean;
-  commitSuccess: boolean;
+  currentSpec: ISpecDocument;
+  onSuccess?: () => void;
 }
-
-type ViewMode = 'summary' | 'diff';
 
 export const RegenerationModal = ({
   isOpen,
   onClose,
-  specId: _specId,
-  preview,
-  isLoadingPreview,
-  previewError,
-  onApprove,
-  isCommitting,
-  commitSuccess,
+  currentSpec,
+  onSuccess,
 }: IProps) => {
-  const [viewMode, setViewMode] = useState<ViewMode>('summary');
+  const [preview, setPreview] = useState<IRegenerationPreview | null>(null);
 
-  // Reset view mode when modal opens
+  const previewMutation = useRegenerationPreview();
+  const applyMutation = useApplyRegeneration();
+
+  // Fetch preview when modal opens
   useEffect(() => {
-    if (isOpen) {
-      setViewMode('summary');
+    if (isOpen && currentSpec?.id) {
+      setPreview(null);
+      previewMutation.mutateAsync(currentSpec.id).then(response => {
+        const transformed = transformRegenerationPreview(response, currentSpec);
+
+        setPreview(transformed);
+      });
     }
-  }, [isOpen]);
+  }, [isOpen, currentSpec]);
 
   // Auto-close after success
   useEffect(() => {
-    if (commitSuccess) {
+    if (applyMutation.isSuccess) {
       const timeout = setTimeout(() => {
         onClose();
+        onSuccess?.();
       }, 2000);
 
       return () => clearTimeout(timeout);
     }
-  }, [commitSuccess, onClose]);
+  }, [applyMutation.isSuccess, onClose, onSuccess]);
 
-  const handleApprove = () => {
-    if (preview) {
-      onApprove(preview.fullProposedSpec);
+  const handleApprove = async () => {
+    if (currentSpec?.id) {
+      await applyMutation.mutateAsync(currentSpec.id);
+    }
+  };
+
+  const handleClose = () => {
+    if (!applyMutation.isPending) {
+      onClose();
     }
   };
 
@@ -78,8 +83,15 @@ export const RegenerationModal = ({
       change => change.changeType !== 'unchanged',
     ) ?? false;
 
+  // Determine which state to show
+  const showLoading = previewMutation.isPending;
+  const showError = previewMutation.error && !previewMutation.isPending;
+  const showSuccess = applyMutation.isSuccess;
+  const showPreview =
+    preview && !previewMutation.isPending && !applyMutation.isSuccess;
+
   return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
+    <Sheet open={isOpen} onOpenChange={handleClose}>
       <SheetContent
         side="right"
         className="w-full overflow-y-auto sm:max-w-4xl"
@@ -90,7 +102,7 @@ export const RegenerationModal = ({
 
         <div className="mt-6 space-y-6">
           {/* Loading State */}
-          {isLoadingPreview && (
+          {showLoading && (
             <div className="flex flex-col items-center justify-center space-y-4 py-12">
               <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
               <p className="text-sm text-gray-600">
@@ -100,18 +112,20 @@ export const RegenerationModal = ({
           )}
 
           {/* Error State */}
-          {previewError && (
+          {showError && (
             <div className="flex flex-col items-center justify-center space-y-4 py-12">
               <AlertCircle className="h-8 w-8 text-red-600" />
               <p className="text-sm font-medium text-gray-900">
                 Failed to generate preview
               </p>
-              <p className="text-sm text-gray-600">{previewError.message}</p>
+              <p className="text-sm text-gray-600">
+                {previewMutation.error?.message}
+              </p>
             </div>
           )}
 
           {/* Success State */}
-          {commitSuccess && (
+          {showSuccess && (
             <div className="flex flex-col items-center justify-center space-y-4 py-12">
               <CheckCircle className="h-12 w-12 text-green-600" />
               <p className="text-lg font-semibold text-gray-900">
@@ -124,7 +138,7 @@ export const RegenerationModal = ({
           )}
 
           {/* Preview State */}
-          {preview && !isLoadingPreview && !commitSuccess && (
+          {showPreview && (
             <>
               {/* Context Summary Card */}
               <div className="rounded-lg border border-purple-200 bg-purple-50 p-4">
@@ -189,66 +203,58 @@ export const RegenerationModal = ({
                 </div>
               )}
 
-              {/* Tab Switcher */}
+              {/* Tabs for Summary/Diff view */}
               {hasChanges && (
                 <>
-                  <div className="flex gap-2 border-b border-gray-200">
-                    <button
-                      type="button"
-                      onClick={() => setViewMode('summary')}
-                      className={`border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
-                        viewMode === 'summary'
-                          ? 'border-purple-600 text-purple-600'
-                          : 'border-transparent text-gray-600 hover:text-gray-900'
-                      }`}
-                    >
-                      Summary
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setViewMode('diff')}
-                      className={`border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
-                        viewMode === 'diff'
-                          ? 'border-purple-600 text-purple-600'
-                          : 'border-transparent text-gray-600 hover:text-gray-900'
-                      }`}
-                    >
-                      Detailed Diff
-                    </button>
-                  </div>
+                  <TabsRoot defaultValue="summary">
+                    <TabsList className="h-auto w-full justify-start gap-4 rounded-none border-b border-gray-200 bg-transparent p-0">
+                      <TabsTrigger
+                        value="summary"
+                        className="rounded-none border-b-2 border-transparent px-1 pb-3 pt-2 data-[state=active]:border-purple-600 data-[state=active]:bg-transparent data-[state=active]:text-purple-600 data-[state=active]:shadow-none"
+                      >
+                        Summary
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="diff"
+                        className="rounded-none border-b-2 border-transparent px-1 pb-3 pt-2 data-[state=active]:border-purple-600 data-[state=active]:bg-transparent data-[state=active]:text-purple-600 data-[state=active]:shadow-none"
+                      >
+                        Detailed Diff
+                      </TabsTrigger>
+                    </TabsList>
 
-                  {/* View Content */}
-                  <div className="min-h-[400px]">
-                    {viewMode === 'summary' ? (
+                    <TabsContent value="summary" className="mt-4 min-h-[400px]">
                       <SummaryView changes={preview.proposedChanges} />
-                    ) : (
+                    </TabsContent>
+
+                    <TabsContent value="diff" className="mt-4 min-h-[400px]">
                       <DiffView changes={preview.proposedChanges} />
-                    )}
+                    </TabsContent>
+                  </TabsRoot>
+
+                  {/* Action Buttons */}
+                  <div className="flex justify-end gap-3 border-t border-gray-200 pt-4">
+                    <Button
+                      variant="outline"
+                      onClick={handleClose}
+                      disabled={applyMutation.isPending}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleApprove}
+                      disabled={applyMutation.isPending}
+                    >
+                      {applyMutation.isPending ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Applying...
+                        </>
+                      ) : (
+                        'Approve & Apply Changes'
+                      )}
+                    </Button>
                   </div>
                 </>
-              )}
-
-              {/* Action Buttons */}
-              {hasChanges && (
-                <div className="flex justify-end gap-3 border-t border-gray-200 pt-4">
-                  <Button
-                    variant="outline"
-                    onClick={onClose}
-                    disabled={isCommitting}
-                  >
-                    Cancel
-                  </Button>
-                  <Button onClick={handleApprove} disabled={isCommitting}>
-                    {isCommitting ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Applying...
-                      </>
-                    ) : (
-                      'Approve & Apply Changes'
-                    )}
-                  </Button>
-                </div>
               )}
             </>
           )}

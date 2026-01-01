@@ -1,10 +1,6 @@
-// @ts-nocheck
-// This component is not currently used - kept for future implementation
-// Type checking is disabled until feature is implemented
-
 'use client';
 
-import { IProposedChange } from 'shared/types';
+import { ChangeType, IProposedChange } from 'shared/types';
 import { Badge } from 'shared/ui';
 
 interface IProps {
@@ -17,7 +13,7 @@ export const SummaryView = ({ changes }: IProps) => {
   const added = changes.filter(c => c.changeType === 'added');
   const removed = changes.filter(c => c.changeType === 'removed');
 
-  const getChangeTypeBadge = (type: string) => {
+  const getChangeTypeBadge = (type: ChangeType) => {
     switch (type) {
       case 'modified':
         return <Badge variant="purple">Modified</Badge>;
@@ -55,7 +51,7 @@ export const SummaryView = ({ changes }: IProps) => {
             {modified.map(change => (
               <div
                 key={`modified-${change.section}`}
-                className="rounded-lg border border-purple-200 bg-purple-50 p-4"
+                className="rounded-lg border border-gray-200 p-4"
               >
                 <div className="mb-2 flex items-start justify-between">
                   <h4 className="font-medium text-purple-900">
