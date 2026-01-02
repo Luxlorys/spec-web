@@ -138,6 +138,7 @@ export type SpecificationEventType =
   | 'COMMENT_RESOLVED'
   | 'OPEN_QUESTION_ASKED'
   | 'OPEN_QUESTION_ANSWERED'
+  | 'OPEN_QUESTION_ANSWERED_BY_AI'
   | 'OPEN_QUESTION_RESOLVED'
   | 'STATUS_CHANGED'
   | 'VERSION_CREATED';
@@ -203,6 +204,21 @@ export interface IOpenQuestionAnsweredMetadata {
 }
 
 /**
+ * Metadata for OPEN_QUESTION_ANSWERED_BY_AI event
+ */
+export interface IOpenQuestionAnsweredByAiMetadata {
+  questionId: number;
+  answerId: number;
+  answerType: 'direct' | 'suggestion' | 'insufficient_context';
+  confidence: 'high' | 'medium' | 'low';
+  reasoning?: string;
+  tokenUsage: {
+    inputTokens: number;
+    outputTokens: number;
+  };
+}
+
+/**
  * Metadata for OPEN_QUESTION_RESOLVED event
  */
 export interface IOpenQuestionResolvedMetadata {
@@ -232,7 +248,7 @@ export interface IVersionCreatedMetadata {
 interface IBaseActivity {
   id: number;
   createdAt: string;
-  actor: IActivityActor;
+  actor: IActivityActor | null;
 }
 
 /**
@@ -262,6 +278,10 @@ export type IActivity =
   | (IBaseActivity & {
       eventType: 'OPEN_QUESTION_ANSWERED';
       metadata: IOpenQuestionAnsweredMetadata;
+    })
+  | (IBaseActivity & {
+      eventType: 'OPEN_QUESTION_ANSWERED_BY_AI';
+      metadata: IOpenQuestionAnsweredByAiMetadata;
     })
   | (IBaseActivity & {
       eventType: 'OPEN_QUESTION_RESOLVED';
