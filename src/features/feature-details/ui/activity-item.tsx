@@ -30,6 +30,9 @@ const getActivityIcon = (eventType: IActivity['eventType']): string => {
     case 'OPEN_QUESTION_ANSWERED':
       return '💡';
 
+    case 'OPEN_QUESTION_ANSWERED_BY_AI':
+      return '🤖';
+
     case 'OPEN_QUESTION_RESOLVED':
       return '✅';
 
@@ -44,8 +47,23 @@ const getActivityIcon = (eventType: IActivity['eventType']): string => {
   }
 };
 
+const getConfidenceLabel = (confidence: 'high' | 'medium' | 'low'): string => {
+  switch (confidence) {
+    case 'high':
+      return 'High confidence';
+
+    case 'medium':
+      return 'Medium confidence';
+
+    case 'low':
+      return 'Low confidence';
+  }
+};
+
 const getActivityDescription = (activity: IActivity): React.ReactNode => {
-  const actorName = `${activity.actor.firstName} ${activity.actor.lastName}`;
+  const actorName = activity.actor
+    ? `${activity.actor.firstName} ${activity.actor.lastName}`
+    : null;
 
   switch (activity.eventType) {
     case 'SPEC_CREATED':
@@ -96,6 +114,20 @@ const getActivityDescription = (activity: IActivity): React.ReactNode => {
         </>
       );
 
+    case 'OPEN_QUESTION_ANSWERED_BY_AI':
+      return (
+        <>
+          <span className="font-medium">AI</span> answered a question
+          {activity.metadata.answerType === 'suggestion' && ' (suggestion)'}
+          {activity.metadata.answerType === 'insufficient_context' &&
+            ' (needs more context)'}
+          {' · '}
+          <span className="text-gray-500 dark:text-gray-400">
+            {getConfidenceLabel(activity.metadata.confidence)}
+          </span>
+        </>
+      );
+
     case 'OPEN_QUESTION_RESOLVED':
       return (
         <>
@@ -123,7 +155,8 @@ const getActivityDescription = (activity: IActivity): React.ReactNode => {
     default:
       return (
         <>
-          <span className="font-medium">{actorName}</span> performed an action
+          <span className="font-medium">{actorName ?? 'System'}</span> performed
+          an action
         </>
       );
   }

@@ -158,11 +158,6 @@ export const RegenerationModal = ({
                   <h3 className="text-sm font-semibold text-purple-900">
                     Regeneration Context
                   </h3>
-                  {preview.cachedAt && (
-                    <Badge variant="gray" className="text-xs">
-                      Cached {formatRelativeTime(preview.cachedAt)}
-                    </Badge>
-                  )}
                 </div>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
