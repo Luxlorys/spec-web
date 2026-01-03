@@ -8,7 +8,6 @@ const PROTECTED_PATHS = [
   '/features',
   '/settings',
   '/team',
-  '/notifications',
   '/documentation',
 ];
 

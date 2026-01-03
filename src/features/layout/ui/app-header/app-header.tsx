@@ -5,7 +5,6 @@ import { FC } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-import { NotificationCenter } from 'features/notifications';
 import { authApi } from 'shared/api/auth';
 import { useAuthStore } from 'shared/store';
 import { getFullName } from 'shared/types';
@@ -51,8 +50,6 @@ export const AppHeader: FC = () => {
           <Link href="/features/new">
             <Button size="sm">New Feature</Button>
           </Link>
-
-          <NotificationCenter />
 
           {user && (
             <div className="flex items-center gap-3">
