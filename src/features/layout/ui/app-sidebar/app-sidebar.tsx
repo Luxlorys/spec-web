@@ -5,20 +5,16 @@ import { FC } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
-import { useQuery } from '@tanstack/react-query';
 import {
-  Bell,
   BookOpen,
   ChevronUp,
   Home,
   LogOut,
   Settings,
-  Sparkles,
+  Sparkles
 } from 'lucide-react';
 
 import { authApi } from 'shared/api/auth';
-import { QueryKeys } from 'shared/constants';
-import { mockNotifications } from 'shared/lib/mock-data';
 import { useAuthStore } from 'shared/store';
 import { getFullName } from 'shared/types';
 import { Avatar, Button } from 'shared/ui';
@@ -36,7 +32,6 @@ import {
   SidebarGroupContent,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
 } from 'shared/ui/sidebar';
@@ -53,12 +48,6 @@ const navItems = [
     icon: BookOpen,
   },
   {
-    title: 'Notifications',
-    url: '/notifications',
-    icon: Bell,
-    hasBadge: true,
-  },
-  {
     title: 'Settings',
     url: '/settings',
     icon: Settings,
@@ -69,16 +58,6 @@ export const AppSidebar: FC = () => {
   const pathname = usePathname();
   const router = useRouter();
   const { user } = useAuthStore();
-
-  const { data: notifications = [] } = useQuery({
-    queryKey: [QueryKeys.NOTIFICATIONS],
-    queryFn: () => {
-      return mockNotifications.filter(n => n.userId === String(user?.id));
-    },
-    enabled: !!user,
-  });
-
-  const unreadCount = notifications.filter(n => !n.read).length;
 
   const handleLogout = () => {
     authApi.logout();
@@ -132,11 +111,6 @@ export const AppSidebar: FC = () => {
                         <span>{item.title}</span>
                       </Link>
                     </SidebarMenuButton>
-                    {item.hasBadge && unreadCount > 0 && (
-                      <SidebarMenuBadge className="rounded-full bg-destructive text-destructive-foreground">
-                        {unreadCount}
-                      </SidebarMenuBadge>
-                    )}
                   </SidebarMenuItem>
                 );
               })}

@@ -23,8 +23,6 @@ export enum QueryKeys {
   // Comments
   COMMENTS_BY_SPEC = 'commentsBySpec',
 
-  // Notifications
-  NOTIFICATIONS = 'notifications',
   UNREAD_COUNT = 'unreadCount',
 
   // Team

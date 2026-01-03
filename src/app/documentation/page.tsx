@@ -1,118 +1,131 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense } from 'react';
 
-import { useQuery } from '@tanstack/react-query';
-import { BookOpen, FileText } from 'lucide-react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
-import { QueryKeys } from 'shared/constants';
-import { mockDocumentationData } from 'shared/lib';
+import { BookOpen, Clock, Loader2, RefreshCw } from 'lucide-react';
+
+import {
+  FeaturesTab,
+  GlossaryTab,
+  OverviewTab,
+  ProductContextTab,
+  useGetDocumentation,
+  useRegenerateDocumentation,
+} from 'features/documentation';
 import { useAuthStore } from 'shared/store';
-import { Card, EmptyState } from 'shared/ui';
+import {
+  Badge,
+  Button,
+  Card,
+  EmptyState,
+  Skeleton,
+  TabsContent,
+  TabsList,
+  TabsRoot,
+  TabsTrigger,
+} from 'shared/ui';
 
-type DocumentationType = 'project-context' | 'feature-specs' | 'technical-docs';
-
-const documentationTypes: {
-  value: DocumentationType;
-  label: string;
-  description: string;
-}[] = [
-  {
-    value: 'project-context',
-    label: 'Project Context',
-    description:
-      'Initial project documentation and context provided during setup',
-  },
-  {
-    value: 'feature-specs',
-    label: 'Feature Specifications',
-    description: 'Generated specifications from completed features',
-  },
-  {
-    value: 'technical-docs',
-    label: 'Technical Documentation',
-    description: 'Additional technical documentation and guides',
-  },
-];
-
-const getEmptyStateDescription = (type: DocumentationType): string => {
-  if (type === 'project-context') {
-    return 'Project context documentation will appear here once uploaded during project setup.';
-  }
-
-  if (type === 'feature-specs') {
-    return 'Feature specifications will be automatically generated as features are completed.';
-  }
-
-  return 'Additional technical documentation can be added to help your team understand the project better.';
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 };
 
-export default function DocumentationPage() {
-  const { user, getCurrentOrganization } = useAuthStore();
-  const currentOrg = getCurrentOrganization();
-  const [selectedType, setSelectedType] =
-    useState<DocumentationType>('project-context');
+const getEmptyStateDescription = (
+  completedFeatureCount: number,
+  isFounder: boolean,
+) => {
+  if (completedFeatureCount === 0) {
+    return 'Complete at least one feature to generate project documentation.';
+  }
 
-  const projectId = currentOrg?.id ?? user?.id;
+  if (isFounder) {
+    return 'Click "Generate Documentation" to create comprehensive documentation from your completed features. This process typically takes about 1 minute.';
+  }
 
-  const { data: documentation = [], isLoading } = useQuery({
-    queryKey: [QueryKeys.DOCUMENTATION, projectId, selectedType],
-    queryFn: () => {
-      // In a real app, this would fetch from an API
-      return mockDocumentationData.filter(
-        doc => doc.projectId === String(projectId) && doc.type === selectedType,
-      );
-    },
-    enabled: !!user,
-  });
+  return 'Documentation will be generated once the founder initiates the process.';
+};
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
+const GeneratingState = () => (
+  <div className="flex flex-col items-center justify-center py-12 text-center">
+    <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+    </div>
+    <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
+      Generating Documentation
+    </h3>
+    <p className="mb-2 max-w-sm text-sm text-gray-600 dark:text-gray-400">
+      AI is analyzing your completed features and creating comprehensive
+      documentation.
+    </p>
+    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+      <Clock className="h-4 w-4" />
+      <span>This typically takes about 1 minute</span>
+    </div>
+  </div>
+);
+
+const LoadingSkeleton = () => (
+  <div className="space-y-6">
+    <div className="flex items-center justify-between">
+      <div className="flex gap-4">
+        <Skeleton className="h-5 w-32" />
+        <Skeleton className="h-5 w-24" />
+      </div>
+      <Skeleton className="h-9 w-32" />
+    </div>
+    <Skeleton className="h-10 w-full max-w-md" />
+    <div className="space-y-4">
+      <Skeleton className="h-32 w-full" />
+      <Skeleton className="h-32 w-full" />
+      <Skeleton className="h-32 w-full" />
+    </div>
+  </div>
+);
+
+const VALID_TABS = ['overview', 'context', 'features', 'glossary'] as const;
+
+type TabValue = (typeof VALID_TABS)[number];
+
+const DocumentationContent = () => {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const { user } = useAuthStore();
+  const isFounder = user?.isFounder ?? false;
+
+  const { data, isLoading, error } = useGetDocumentation({ enabled: !!user });
+  const regenerateMutation = useRegenerateDocumentation();
+
+  // Generation is in progress if backend says so OR if we just triggered it
+  const isGenerating = data?.isPending || regenerateMutation.isPending;
+
+  const tabParam = searchParams.get('tab');
+  const activeTab: TabValue =
+    tabParam && VALID_TABS.includes(tabParam as TabValue)
+      ? (tabParam as TabValue)
+      : 'overview';
+
+  const handleTabChange = (value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    params.set('tab', value);
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
-  const formatContent = (content: string) => {
-    // Simple markdown-like formatting
-    return content.split('\n').map((line, idx) => {
-      const key = `line-${idx}-${line.slice(0, 20).replace(/\s/g, '')}`;
-
-      if (line.startsWith('# ')) {
-        return (
-          <h2
-            key={key}
-            className="mb-2 mt-4 text-xl font-semibold text-primary"
-          >
-            {line.slice(2)}
-          </h2>
-        );
-      }
-      if (line.startsWith('## ')) {
-        return (
-          <h3 key={key} className="mb-2 mt-3 text-lg font-medium">
-            {line.slice(3)}
-          </h3>
-        );
-      }
-      if (line.startsWith('- ')) {
-        return (
-          <li key={key} className="mb-1 ml-4">
-            {line.slice(2)}
-          </li>
-        );
-      }
-      if (line.trim() === '') {
-        return <br key={key} />;
-      }
-
-      return (
-        <p key={key} className="mb-2 text-gray-700 dark:text-gray-300">
-          {line}
-        </p>
-      );
-    });
+  const handleRegenerate = async () => {
+    try {
+      await regenerateMutation.mutateAsync();
+    } catch {
+      // Error is handled by the mutation
+    }
   };
 
   return (
@@ -128,91 +141,146 @@ export default function DocumentationPage() {
               Documentation
             </h1>
             <p className="text-gray-600 dark:text-gray-400">
-              Project documentation and feature specifications
+              AI-generated project documentation and feature specifications
             </p>
           </div>
         </div>
-
-        {/* Type Filter Tabs */}
-        <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700">
-          {documentationTypes.map(type => (
-            <button
-              type="button"
-              key={type.value}
-              onClick={() => setSelectedType(type.value)}
-              className={`border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
-                selectedType === type.value
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-              }`}
-            >
-              {type.label}
-            </button>
-          ))}
-        </div>
       </div>
 
-      {/* Current Type Description */}
-      <div className="mb-6">
-        <p className="text-sm text-gray-600 dark:text-gray-400">
-          {documentationTypes.find(t => t.value === selectedType)?.description}
-        </p>
-      </div>
+      {/* Loading State */}
+      {isLoading && <LoadingSkeleton />}
 
-      {/* Documentation Content */}
-      {isLoading && (
-        <div className="grid gap-4">
-          {['skeleton-1', 'skeleton-2', 'skeleton-3'].map(key => (
-            <Card key={key} className="animate-pulse p-6">
-              <div className="mb-2 h-4 rounded bg-gray-200 dark:bg-gray-700" />
-              <div className="mb-4 h-3 w-3/4 rounded bg-gray-200 dark:bg-gray-700" />
-              <div className="space-y-2">
-                <div className="h-3 rounded bg-gray-200 dark:bg-gray-700" />
-                <div className="h-3 w-5/6 rounded bg-gray-200 dark:bg-gray-700" />
-              </div>
-            </Card>
-          ))}
-        </div>
+      {/* Error State */}
+      {error && !isLoading && (
+        <Card className="border border-red-200 p-6 dark:border-red-900">
+          <p className="text-sm text-red-600 dark:text-red-400">
+            Failed to load documentation. Please try again later.
+          </p>
+        </Card>
       )}
 
-      {!isLoading && documentation.length > 0 && (
-        <div className="grid gap-6">
-          {documentation.map(doc => (
-            <Card key={doc.id} className="p-6">
-              <div className="mb-4 flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <FileText className="h-5 w-5 text-primary" />
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                      {doc.title}
-                    </h3>
-                    <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-                      <span>Created {formatDate(doc.createdAt)}</span>
-                      {doc.updatedAt !== doc.createdAt && (
-                        <span>Updated {formatDate(doc.updatedAt)}</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
+      {/* Content */}
+      {!isLoading && !error && data && (
+        <>
+          {/* Metadata Bar */}
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+              {data.updatedAt && (
+                <span>Last updated: {formatDate(data.updatedAt)}</span>
+              )}
+              <Badge variant="blue">
+                {data.completedFeatureCount} completed feature
+                {data.completedFeatureCount === 1 ? '' : 's'}
+              </Badge>
+            </div>
 
-              <div className="prose prose-sm max-w-none">
-                <div className="text-gray-700 dark:text-gray-300">
-                  {formatContent(doc.content)}
-                </div>
+            {isFounder && data.documentation && (
+              <div className="flex items-center gap-3">
+                {isGenerating && (
+                  <span className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Clock className="h-4 w-4" />
+                    ~1 min
+                  </span>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRegenerate}
+                  disabled={isGenerating || !data.canRegenerate}
+                >
+                  {isGenerating ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                  )}
+                  {isGenerating ? 'Regenerating...' : 'Regenerate'}
+                </Button>
               </div>
-            </Card>
-          ))}
-        </div>
-      )}
+            )}
+          </div>
 
-      {!isLoading && documentation.length === 0 && (
-        <EmptyState
-          icon={<BookOpen className="h-12 w-12" />}
-          title={`No ${documentationTypes.find(t => t.value === selectedType)?.label?.toLowerCase()} found`}
-          description={getEmptyStateDescription(selectedType)}
-        />
+          {/* Documentation Content */}
+          {data.documentation ? (
+            <TabsRoot value={activeTab} onValueChange={handleTabChange}>
+              <TabsList className="h-auto w-full justify-start gap-6 rounded-none border-b border-border bg-transparent p-0">
+                <TabsTrigger
+                  value="overview"
+                  className="rounded-none border-b-2 border-transparent px-0 pb-3 pt-2 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+                >
+                  Overview
+                </TabsTrigger>
+                <TabsTrigger
+                  value="context"
+                  className="rounded-none border-b-2 border-transparent px-0 pb-3 pt-2 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+                >
+                  Product Context
+                </TabsTrigger>
+                <TabsTrigger
+                  value="features"
+                  badge={data.documentation.featureCatalog.length}
+                  className="rounded-none border-b-2 border-transparent px-0 pb-3 pt-2 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+                >
+                  Features
+                </TabsTrigger>
+                <TabsTrigger
+                  value="glossary"
+                  badge={data.documentation.glossary.length}
+                  className="rounded-none border-b-2 border-transparent px-0 pb-3 pt-2 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+                >
+                  Glossary
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="overview" className="mt-6">
+                <OverviewTab
+                  executiveSummary={data.documentation.executiveSummary}
+                />
+              </TabsContent>
+
+              <TabsContent value="context" className="mt-6">
+                <ProductContextTab
+                  productContext={data.documentation.productContext}
+                />
+              </TabsContent>
+
+              <TabsContent value="features" className="mt-6">
+                <FeaturesTab features={data.documentation.featureCatalog} />
+              </TabsContent>
+
+              <TabsContent value="glossary" className="mt-6">
+                <GlossaryTab glossary={data.documentation.glossary} />
+              </TabsContent>
+            </TabsRoot>
+          ) : isGenerating ? (
+            <GeneratingState />
+          ) : (
+            <EmptyState
+              icon={<BookOpen className="h-12 w-12" />}
+              title="No documentation generated"
+              description={getEmptyStateDescription(
+                data.completedFeatureCount,
+                isFounder,
+              )}
+              action={
+                isFounder && data.completedFeatureCount > 0 ? (
+                  <Button onClick={handleRegenerate}>
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Generate Documentation
+                  </Button>
+                ) : undefined
+              }
+            />
+          )}
+        </>
       )}
     </div>
+  );
+};
+
+export default function DocumentationPage() {
+  return (
+    <Suspense fallback={<LoadingSkeleton />}>
+      <DocumentationContent />
+    </Suspense>
   );
 }

@@ -130,7 +130,7 @@ SpecFlow provides an AI Product Manager that:
 - Revoke active codes from Settings → Team
 
 #### Protected Routes
-Middleware protects: `/dashboard`, `/features/*`, `/settings`, `/notifications`
+Middleware protects: `/dashboard`, `/features/*`, `/settings`, 
 
 Public routes: `/`, `/login`, `/signup`
 
@@ -511,43 +511,7 @@ When regenerating, AI may:
 
 ---
 
-### Feature 10: Notifications
-
-**Description:** Keep team informed of updates across the application.
-
-#### Notification Types
-| Type | Icon Color | Description |
-|------|------------|-------------|
-| feature_created | Purple | New feature created |
-| spec_generated | Green | Specification ready |
-| question_asked | Orange | New question on spec |
-| question_answered | Blue | Question answered |
-| ai_suggestion | Cyan | AI suggested an answer to a question |
-| status_changed | Yellow | Feature status updated |
-| spec_updated | Indigo | Specification modified |
-
-#### Notification Center (Header Dropdown)
-- Bell icon with unread count badge
-- Recent notifications preview (max 5)
-- "Mark all as read" button
-- Links to related content
-
-#### Notifications Page
-**Route:** `/notifications`
-
-- Tabs: All / Unread
-- Statistics cards (Total, Unread counts)
-- Notification cards with:
-  - Icon with color-coded background
-  - Type badge
-  - Title and message
-  - Relative time
-  - Link to related content
-  - Unread indicator
-
----
-
-### Feature 11: Settings
+### Feature 10: Settings
 
 **Description:** Comprehensive settings page with role-based section visibility.
 
@@ -687,9 +651,6 @@ SpecFlow
 ├── New Feature
 │   ├── Title & Context Form
 │   └── AI Conversation Interface (enhanced)
-├── Notifications
-│   ├── All/Unread Tabs
-│   └── Notification Cards
 └── Settings
     ├── Profile
     ├── Notifications
