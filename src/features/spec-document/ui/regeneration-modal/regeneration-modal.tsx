@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 
 import { AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
 
-import { formatRelativeTime } from 'shared/lib';
 import { IRegenerationPreview, ISpecDocument } from 'shared/types';
 import {
   Badge,
