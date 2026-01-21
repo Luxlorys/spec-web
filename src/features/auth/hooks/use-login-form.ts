@@ -30,10 +30,18 @@ export const useLoginForm = () => {
 
       setAuth(response.user, response.accessToken, response.refreshToken);
 
-      // Redirect to requested page or dashboard
-      const redirect = searchParams.get('redirect') || '/features/new';
+      // Check if founder needs onboarding
+      const needsOnboarding =
+        response.user.isFounder && response.user.onboardingCompletedAt === null;
 
-      router.push(redirect);
+      if (needsOnboarding) {
+        router.push('/onboarding');
+      } else {
+        // Redirect to requested page or dashboard
+        const redirect = searchParams.get('redirect') || '/features/new';
+
+        router.push(redirect);
+      }
     } catch (err) {
       if (isEmailNotVerifiedError(err)) {
         router.push(`/verify-email?email=${encodeURIComponent(values.email)}`);

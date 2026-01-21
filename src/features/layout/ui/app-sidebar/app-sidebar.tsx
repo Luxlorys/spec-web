@@ -11,7 +11,7 @@ import {
   Home,
   LogOut,
   Settings,
-  Sparkles
+  Sparkles,
 } from 'lucide-react';
 
 import { authApi } from 'shared/api/auth';

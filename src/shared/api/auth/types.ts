@@ -34,6 +34,7 @@ export interface IUser {
   lastLoginAt: string | null;
   role: UserRole;
   isFounder: boolean;
+  onboardingCompletedAt: string | null;
   organization: IOrganization;
 }
 
@@ -116,3 +117,41 @@ export const AUTH_ERROR_CODES = {
   TOKEN_EXPIRED: 'TOKEN_EXPIRED',
   ACCOUNT_LOCKED: 'ACCOUNT_LOCKED',
 } as const;
+
+// Product stage enum values matching API
+export type ProductStageValue =
+  | 'IDEA'
+  | 'MVP'
+  | 'EARLY_TRACTION'
+  | 'GROWTH'
+  | 'SCALE';
+
+/**
+ * Request to complete onboarding (founder only)
+ * POST /api/auth/onboarding/complete
+ */
+export interface ICompleteOnboardingRequest {
+  productIdentity?: {
+    oneLiner: string;
+  };
+  targetUsers?: {
+    userTypes: string[];
+    companySize?: string;
+  };
+  productStage?: {
+    stage: ProductStageValue;
+    problemStatement?: string;
+  };
+  quickStart?: {
+    personas?: Array<{ name: string; description: string }>;
+    techStack?: string;
+  };
+}
+
+/**
+ * Response from POST /api/auth/onboarding/complete
+ */
+export interface ICompleteOnboardingResponse {
+  success: true;
+  user: IUser;
+}
