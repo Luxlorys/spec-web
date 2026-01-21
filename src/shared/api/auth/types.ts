@@ -132,7 +132,7 @@ export type ProductStageValue =
  */
 export interface ICompleteOnboardingRequest {
   productIdentity?: {
-    oneLiner: string;
+    description: string;
   };
   targetUsers?: {
     userTypes: string[];

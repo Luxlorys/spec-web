@@ -76,7 +76,7 @@ export const useOnboardingWizard = () => {
     // Step 1: Product Identity
     if (data.description) {
       result.productIdentity = {
-        oneLiner: data.description,
+        description: data.description,
       };
     }
 

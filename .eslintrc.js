@@ -56,6 +56,7 @@ module.exports = {
     'no-unused-vars': 'off',
     'default-case': 'off',
     'consistent-return': 'off',
+    'no-nested-ternary': 'off',
     curly: ['error', 'all'],
     'max-params': ['error', 3],
     'no-negated-condition': 'error',
