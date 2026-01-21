@@ -4,7 +4,7 @@
 
 SpecFlow is an AI-powered product development assistant that helps early-stage startups translate founder intent into developer-ready specifications. More than just a spec generator, SpecFlow acts as your **AI Product Manager** — understanding your product vision, target audience, and existing features to provide intelligent guidance, suggest UX improvements, and surface risks before development begins.
 
-**One-liner:** "Your AI Product Manager — turn ideas into specs, get UX suggestions, and ship features that match your vision."
+**One-liner:** "Your AI Product Manager — break down product ideas, turn them into specs, get UX suggestions, and ship features that match your vision."
 
 > **Note:** This document reflects the current implementation of SpecFlow as of the latest build.
 
@@ -33,18 +33,19 @@ Early-stage startups (3-15 people) waste significant time and resources on the g
 SpecFlow provides an AI Product Manager that:
 
 1. **Understands your product context** — learns your target audience, user personas, and product vision to provide relevant guidance
-2. **Guides founders** through structured intake to capture feature requirements
-3. **Challenges and improves ideas** — suggests better UX approaches, identifies potential issues, and proposes alternatives
-4. **Maintains project awareness** — knows your existing features and flags conflicts or integration opportunities
-5. **Generates comprehensive specs** with user stories, acceptance criteria, and scope boundaries
-6. **Proactively identifies gaps** — creates open questions for ambiguities and can suggest answers based on product context
-7. **Enables developer feedback** through section-level commenting
-8. **Maintains living documentation** that evolves through spec regeneration from discussions
-9. **Exports AI-ready prompts** for coding assistants like Claude, Cursor, and Copilot
+2. **Breaks down big ideas** — takes a raw product concept or large task and intelligently splits it into well-scoped feature requests
+3. **Guides founders** through structured intake to capture feature requirements
+4. **Challenges and improves ideas** — suggests better UX approaches, identifies potential issues, and proposes alternatives
+5. **Maintains project awareness** — knows your existing features and flags conflicts or integration opportunities
+6. **Generates comprehensive specs** with user stories, acceptance criteria, and scope boundaries
+7. **Proactively identifies gaps** — creates open questions for ambiguities and can suggest answers based on product context
+8. **Enables developer feedback** through section-level commenting
+9. **Maintains living documentation** that evolves through spec regeneration from discussions
+10. **Exports AI-ready prompts** for coding assistants like Claude, Cursor, and Copilot
 
 ### Key Value Propositions
 
-- **For Founders:** "Describe what you want, get challenged on your assumptions, and receive a spec that's better than what you imagined"
+- **For Founders:** "Describe your product vision, get it broken into manageable features, get challenged on your assumptions, and receive specs that are better than what you imagined"
 - **For Developers:** "Get clear requirements upfront, with edge cases already considered and UX decisions documented"
 - **For the Startup:** "Move faster with fewer people, reduce costly misunderstandings, and build better products"
 
@@ -174,7 +175,108 @@ This enables:
 
 ---
 
-### Feature 3: Feature Request Creation & AI Conversation
+### Feature 3: Task Breakdown (Product Idea → Feature Requests)
+
+**Description:** Break down a raw product idea or large task into well-scoped, individual feature requests. This is the entry point for founders who have a big vision but need help structuring it into buildable pieces.
+
+#### Use Cases
+
+| Scenario | Example Input | Expected Output |
+|----------|---------------|-----------------|
+| **New Product** | "I want to build a web dashboard for tracking inventory with auth, settings, and reports" | 4-6 feature requests: Authentication, Dashboard Overview, Inventory List, Settings, Reports |
+| **Major Feature** | "Add a complete billing system with subscriptions, invoices, and payment history" | 3-4 feature requests: Subscription Management, Payment Processing, Invoice Generation, Billing History |
+| **Vague Idea** | "I need user management" | AI asks clarifying questions, then suggests: User CRUD, Roles & Permissions, Team/Org Structure |
+
+#### Task Breakdown Form
+**Route:** `/breakdown/new`
+
+1. Enter project/idea title (required)
+2. Describe the overall vision in free-form text (required, min 50 characters)
+3. Optionally list known components or features you've already thought of
+4. Submit initiates AI breakdown conversation
+
+#### AI Breakdown Conversation
+**Route:** `/breakdown/[id]/conversation`
+
+**Conversation Flow:**
+
+1. **Understanding Phase**
+   - AI reads the vision and asks clarifying questions
+   - "Who are the primary users of this dashboard?"
+   - "What's the core action users need to take?"
+   - "Are there any integrations or external systems involved?"
+   - "What's your timeline/priority — MVP or full product?"
+
+2. **Decomposition Phase**
+   - AI proposes an initial breakdown into feature areas
+   - Groups related functionality logically
+   - Identifies dependencies between features
+   - Suggests build order based on dependencies and value
+
+3. **Refinement Phase**
+   - Founder can accept, reject, merge, or split proposed features
+   - AI explains reasoning: "I separated Auth from User Profile because they have different complexity levels and Auth is a blocker for everything else"
+   - Founder can add constraints: "We're using Clerk for auth, so that's already handled"
+   - AI adjusts breakdown based on feedback
+
+4. **Completion Phase**
+   - Final list of feature requests with:
+     - Title
+     - One-line description
+     - Suggested priority (P0/P1/P2)
+     - Dependencies (which features must come first)
+     - Estimated complexity (S/M/L)
+   - "Create All Features" button generates feature requests in draft status
+   - Each feature links back to the parent breakdown for context
+
+#### Breakdown Output Structure
+
+```
+Breakdown: "Inventory Management Dashboard"
+├── Feature 1: Authentication (P0, no dependencies, S)
+│   └── "User login, signup, and session management"
+├── Feature 2: Dashboard Layout (P0, depends on Auth, S)
+│   └── "Main navigation, header, and page structure"
+├── Feature 3: Inventory List (P1, depends on Dashboard, M)
+│   └── "View, search, and filter inventory items"
+├── Feature 4: Inventory CRUD (P1, depends on Inventory List, M)
+│   └── "Add, edit, and delete inventory items"
+├── Feature 5: Settings (P2, depends on Auth, S)
+│   └── "User preferences and account settings"
+└── Feature 6: Reports (P2, depends on Inventory List, L)
+    └── "Generate and export inventory reports"
+```
+
+#### AI Capabilities in Breakdown
+
+| Capability | Description |
+|------------|-------------|
+| **Scope Detection** | Identifies when an "idea" is actually multiple features: "This sounds like 3 separate features — want me to break it down?" |
+| **Dependency Mapping** | Automatically identifies what needs to be built first |
+| **Complexity Estimation** | Provides rough sizing based on typical patterns |
+| **MVP Guidance** | Suggests what to include in v1 vs. defer to later |
+| **Gap Identification** | Notices missing pieces: "You mentioned billing but not user accounts — do you need auth?" |
+| **Industry Patterns** | Recognizes common product patterns: "For a SaaS dashboard, you'll typically need: auth, core feature, settings, billing" |
+
+#### Integration with Feature Requests
+
+- Each generated feature request includes a `breakdownId` linking to the parent breakdown
+- Breakdown page shows progress: which features have specs, which are in progress
+- Changing one feature can trigger AI suggestion to update related features
+- Breakdown can be "reopened" to add more features later
+
+#### Breakdown States
+
+| State | Description |
+|-------|-------------|
+| `in_progress` | Conversation ongoing, breakdown not finalized |
+| `completed` | Breakdown finalized, features generated |
+| `partially_specified` | Some features have specs, others don't |
+| `fully_specified` | All child features have completed specs |
+
+---
+
+### Feature 4: Feature Request Creation & AI Conversation
 
 **Description:** Create new feature requests and refine them through intelligent AI conversation that goes beyond simple Q&A.
 
@@ -232,7 +334,7 @@ The AI agent acts as a **product development partner**, not just a question-aske
 
 ---
 
-### Feature 4: Spec Document Generation & Management
+### Feature 5: Spec Document Generation & Management
 
 **Description:** AI generates structured specification from conversation, including its recommendations and identified gaps.
 
@@ -291,7 +393,7 @@ Each recommendation includes:
 
 ---
 
-### Feature 5: Open Questions Management (Enhanced)
+### Feature 6: Open Questions Management (Enhanced)
 
 **Description:** Track and resolve questions within the specification — now with AI participation.
 
@@ -343,7 +445,7 @@ When team members ask questions, AI can suggest answers:
 
 ---
 
-### Feature 6: Spec Regeneration & Version History
+### Feature 7: Spec Regeneration & Version History
 
 **Description:** Update specifications based on team feedback with full version tracking.
 
@@ -384,7 +486,7 @@ When regenerating, AI may:
 
 ---
 
-### Feature 7: Generate Prompt
+### Feature 8: Generate Prompt
 
 **Description:** Export specification as AI-ready prompt for coding assistants.
 
@@ -438,13 +540,19 @@ When regenerating, AI may:
 
 ---
 
-### Feature 8: Dashboard
+### Feature 9: Dashboard
 
-**Description:** Central view of all feature requests with filtering and multiple view options.
+**Description:** Central view of all feature requests and breakdowns with filtering and multiple view options.
 
 **Route:** `/dashboard`
 
-#### Tab-based Filtering
+#### Primary Navigation
+| Section | Description |
+|---------|-------------|
+| **Features** | Individual feature requests (default view) |
+| **Breakdowns** | Product idea breakdowns with their child features |
+
+#### Tab-based Filtering (Features View)
 | Tab | Shows |
 |-----|-------|
 | All | All features with total count |
@@ -452,6 +560,15 @@ When regenerating, AI may:
 | Spec Generated | Specs created, awaiting review |
 | Ready to Build | Specs approved for implementation |
 | Completed | Finished features |
+
+#### Tab-based Filtering (Breakdowns View)
+| Tab | Shows |
+|-----|-------|
+| All | All breakdowns |
+| In Progress | Breakdown conversation ongoing |
+| Completed | Breakdown finalized, features generated |
+| Partially Specified | Some features have specs |
+| Fully Specified | All child features have specs |
 
 #### View Modes
 - **Grid View:** 3-column card layout (default)
@@ -463,16 +580,27 @@ When regenerating, AI may:
 - Initial context excerpt (2-line truncate)
 - Open questions count (if any)
 - **AI suggestions count** (pending review)
+- **Parent breakdown link** (if created from breakdown)
 - Assignee with avatar
+- Last activity (relative time)
+
+#### Breakdown Card Information
+- Status badge (color-coded)
+- Breakdown title (links to detail page)
+- Vision excerpt (2-line truncate)
+- Child features count with progress (e.g., "3/5 specs complete")
+- Priority distribution (P0/P1/P2 counts)
+- Created by with avatar
 - Last activity (relative time)
 
 #### Empty States
 - Helpful guidance when no features exist
-- Prompts to create first feature
+- Prompts to create first feature or start a breakdown
+- "Start with a breakdown" suggestion for new users
 
 ---
 
-### Feature 9: Feature Detail Page
+### Feature 10: Feature Detail Page
 
 **Description:** Comprehensive view of a single feature request with tabs.
 
@@ -511,7 +639,7 @@ When regenerating, AI may:
 
 ---
 
-### Feature 10: Settings
+### Feature 11: Settings
 
 **Description:** Comprehensive settings page with role-based section visibility.
 
@@ -585,7 +713,18 @@ When regenerating, AI may:
 
 ## User Flows
 
-### Flow 1: Founder Creates Feature Request
+### Flow 1: Founder Breaks Down Product Idea (NEW)
+```
+Dashboard → "New Breakdown" button → Enter idea title & vision →
+Submit → AI Breakdown Conversation →
+AI asks clarifying questions about users, scope, priorities →
+AI proposes feature breakdown with dependencies →
+Founder refines: accept/reject/merge/split features →
+Finalize → "Create All Features" → Features created in draft status →
+Each feature ready for individual spec conversation
+```
+
+### Flow 2: Founder Creates Individual Feature Request
 ```
 Dashboard → "Feature Request" button → Enter title & context →
 Submit → AI Conversation (with suggestions & challenges) →
@@ -594,7 +733,7 @@ Conversation completes → Spec generated with AI recommendations →
 Review spec, accept/reject suggestions
 ```
 
-### Flow 2: Developer Reviews Spec
+### Flow 3: Developer Reviews Spec
 ```
 Notification (spec ready) → Open feature → Specification tab →
 Read through sections including AI recommendations →
@@ -602,7 +741,7 @@ Add comment on unclear section → See AI suggested answer →
 Accept or provide own answer → Mark spec as "Ready to Build"
 ```
 
-### Flow 3: Team Provides Feedback & Spec Updates
+### Flow 4: Team Provides Feedback & Spec Updates
 ```
 Developer adds comments/questions → AI suggests answers →
 Founder reviews suggestions, answers remaining questions →
@@ -610,18 +749,27 @@ Founder clicks "Update Specification" → AI proposes additional improvements �
 Review all changes → Approve → New spec version created
 ```
 
-### Flow 4: Export Spec for AI Coding
+### Flow 5: Export Spec for AI Coding
 ```
 Open feature → Specification tab → Click "Generate Prompt" →
 Review generated markdown (includes accepted AI recommendations) →
 Copy to clipboard → Paste into Claude/Cursor/Copilot
 ```
 
-### Flow 5: Configure Product Context
+### Flow 6: Configure Product Context
 ```
 Settings → Project tab → Edit Product Context →
 Add target audience, user personas, vision →
 Save → AI now uses this context in all conversations
+```
+
+### Flow 7: Track Breakdown Progress
+```
+Dashboard → Breakdowns tab → Click breakdown card →
+View all child features with their status →
+See which features have specs, which are in progress →
+Click any feature to continue its spec conversation →
+Breakdown status auto-updates as features progress
 ```
 
 ---
@@ -631,13 +779,33 @@ Save → AI now uses this context in all conversations
 ```
 SpecFlow
 ├── Dashboard
-│   ├── Tab Filters (All, Draft, Spec Generated, Ready to Build, Completed)
-│   ├── Grid/List View Toggle
-│   └── Feature Cards (with AI insights indicator)
+│   ├── Features Section
+│   │   ├── Tab Filters (All, Draft, Spec Generated, Ready to Build, Completed)
+│   │   ├── Grid/List View Toggle
+│   │   └── Feature Cards (with AI insights indicator, parent breakdown link)
+│   └── Breakdowns Section
+│       ├── Tab Filters (All, In Progress, Completed, Partially Specified, Fully Specified)
+│       ├── Grid/List View Toggle
+│       └── Breakdown Cards (with progress indicator)
+├── Breakdown Detail (NEW)
+│   ├── Overview Tab
+│   │   ├── Vision & Context
+│   │   ├── Status
+│   │   └── Quick Actions
+│   ├── Features Tab
+│   │   ├── Feature List with Dependencies
+│   │   ├── Progress Overview
+│   │   └── "Add Feature" button
+│   └── Activity Tab
+├── Breakdown Conversation (NEW)
+│   ├── AI Chat Interface
+│   ├── Proposed Feature List (interactive)
+│   └── "Create All Features" action
 ├── Feature Detail
 │   ├── Overview Tab
 │   │   ├── Status & Assignment
 │   │   ├── AI Insights Summary
+│   │   ├── Parent Breakdown Link (if applicable)
 │   │   └── Quick Actions
 │   ├── Specification Tab
 │   │   ├── Spec Sections (editable)
@@ -651,6 +819,9 @@ SpecFlow
 ├── New Feature
 │   ├── Title & Context Form
 │   └── AI Conversation Interface (enhanced)
+├── New Breakdown (NEW)
+│   ├── Title & Vision Form
+│   └── AI Breakdown Conversation Interface
 └── Settings
     ├── Profile
     ├── Notifications
@@ -685,6 +856,10 @@ draft → spec_generated → ready_to_build → completed
 | Capability | Description |
 |------------|-------------|
 | **Product Context Awareness** | Knows your target audience, personas, vision, and existing features |
+| **Idea Decomposition** | Breaks down raw product ideas into well-scoped feature requests |
+| **Dependency Mapping** | Identifies which features must be built first and suggests build order |
+| **Complexity Estimation** | Provides rough sizing (S/M/L) based on typical patterns |
+| **MVP Guidance** | Suggests what to include in v1 vs. defer to later phases |
 | **Intelligent Discovery** | Asks targeted questions based on your specific product |
 | **UX Suggestions** | Proposes better user experiences based on best practices and your design principles |
 | **Alternative Solutions** | Offers multiple approaches with recommendations |
@@ -750,6 +925,13 @@ draft → spec_generated → ready_to_build → completed
 - [x] Integration placeholders (Slack, GitHub, Jira, Linear)
 
 ### Future Enhancements
+- [ ] **Task Breakdown feature** (Product Idea → Feature Requests)
+  - [ ] Breakdown creation form and conversation
+  - [ ] AI-powered decomposition with dependency mapping
+  - [ ] Priority and complexity estimation
+  - [ ] Batch feature creation from breakdown
+  - [ ] Breakdown progress tracking
+  - [ ] Dashboard breakdowns section
 - [ ] Email notifications
 - [ ] Slack integration (real)
 - [ ] Linear/Jira integration (create tickets from specs)

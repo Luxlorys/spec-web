@@ -16,6 +16,7 @@ export interface IUserWithOrganization {
   lastLoginAt: string | null;
   role: UserRole;
   isFounder: boolean;
+  onboardingCompletedAt: string | null;
   organization: IOrganization;
 }
 

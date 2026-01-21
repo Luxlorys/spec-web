@@ -3,12 +3,15 @@ import { useAuthStore } from 'shared/store';
 
 import {
   IAuthResponse,
+  ICompleteOnboardingRequest,
+  ICompleteOnboardingResponse,
   IFounderSignupRequest,
   IInviteCodeValidation,
   ILoginRequest,
   IMemberSignupRequest,
   ISuccessResponse,
   ITokenRefreshResponse,
+  IUser,
 } from './types';
 
 export const authApi = {
@@ -132,6 +135,21 @@ export const authApi = {
    */
   logout: (): void => {
     useAuthStore.getState().clearAuth();
+  },
+
+  /**
+   * Complete onboarding and save product context (founder only)
+   * POST /api/auth/onboarding/complete
+   */
+  completeOnboarding: async (
+    data: ICompleteOnboardingRequest,
+  ): Promise<IUser> => {
+    const { data: response } = await api.post<ICompleteOnboardingResponse>(
+      '/auth/onboarding/complete',
+      data,
+    );
+
+    return response.user;
   },
 };
 

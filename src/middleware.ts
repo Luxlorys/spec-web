@@ -9,6 +9,7 @@ const PROTECTED_PATHS = [
   '/settings',
   '/team',
   '/documentation',
+  '/onboarding',
 ];
 
 export const middleware = (request: NextRequest) => {
