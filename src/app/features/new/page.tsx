@@ -9,17 +9,22 @@ import { useMutation } from '@tanstack/react-query';
 import { Lightbulb, Loader2, Plus, Send, X } from 'lucide-react';
 import { Controller, useForm } from 'react-hook-form';
 
+import { BreakdownSuggestionBanner } from 'features/breakdown';
 import {
+  ContextFeatureDialog,
   CreateFeatureInput,
   createFeatureSchema,
   StatusBadge,
   useContextFeatures,
 } from 'features/feature-requests';
-import { featureRequestsApi, IContextFeature } from 'shared/api';
+import {
+  featureRequestsApi,
+  IAnalyzeFeatureTextResponse,
+  IContextFeature,
+} from 'shared/api';
 import { QueryKeys } from 'shared/constants';
 import { cn, queryClient } from 'shared/lib';
-
-import { ContextFeatureDialog } from './context-feature-dialog';
+import { useBreakdownStore } from 'shared/store';
 
 export default function NewFeaturePage() {
   const router = useRouter();
@@ -27,6 +32,13 @@ export default function NewFeaturePage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  const [analysisResult, setAnalysisResult] =
+    useState<IAnalyzeFeatureTextResponse | null>(null);
+  const [showSuggestion, setShowSuggestion] = useState(false);
+  const [submittedValues, setSubmittedValues] =
+    useState<CreateFeatureInput | null>(null);
+
+  const { startBreakdown } = useBreakdownStore();
   const { data: features = [] } = useContextFeatures();
 
   const {
@@ -44,12 +56,15 @@ export default function NewFeaturePage() {
     },
   });
 
-  const ideaValue = watch('idea');
   const contextFeatureId = watch('contextFeatureId');
 
   const selectedFeature: IContextFeature | undefined = features.find(
     f => f.id === contextFeatureId,
   );
+
+  const analyzeMutation = useMutation({
+    mutationFn: (text: string) => featureRequestsApi.analyzeText({ text }),
+  });
 
   const createMutation = useMutation({
     mutationFn: featureRequestsApi.create,
@@ -64,18 +79,48 @@ export default function NewFeaturePage() {
 
   const onSubmit = async (values: CreateFeatureInput) => {
     setError('');
-    await createMutation.mutateAsync(values);
+
+    const analysis = await analyzeMutation.mutateAsync(values.idea);
+
+    if (analysis.isMultipleFeatures) {
+      setSubmittedValues(values);
+      setAnalysisResult(analysis);
+      setShowSuggestion(true);
+    } else {
+      await createMutation.mutateAsync(values);
+    }
+  };
+
+  const handleBreakdownAccept = () => {
+    if (!submittedValues || !analysisResult) {
+      return;
+    }
+
+    startBreakdown(submittedValues.idea, analysisResult);
+    router.push('/breakdown/new');
+  };
+
+  const handleBreakdownDecline = async () => {
+    if (!submittedValues) {
+      return;
+    }
+
+    setShowSuggestion(false);
+    setAnalysisResult(null);
+
+    await createMutation.mutateAsync(submittedValues);
+    setSubmittedValues(null);
   };
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const textarea = e.target;
 
     textarea.style.height = 'auto';
-    textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`;
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 220)}px`;
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey && !showSuggestion && !isLoading) {
       e.preventDefault();
       handleSubmit(onSubmit)();
     }
@@ -85,7 +130,10 @@ export default function NewFeaturePage() {
     setValue('contextFeatureId', undefined);
   };
 
-  const canSubmit = ideaValue.trim().length >= 20 && !createMutation.isPending;
+  const isAnalyzing = analyzeMutation.isPending;
+  const isLoading = createMutation.isPending || isAnalyzing;
+
+  const canSubmit = !isLoading && !showSuggestion;
 
   return (
     <main className="flex h-[calc(100vh-2rem)] flex-col">
@@ -100,7 +148,7 @@ export default function NewFeaturePage() {
               New Feature Request
             </h2>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Start with your idea and let AI help shape it into a spec
+              Describe a single feature or a bigger idea to break down
             </p>
           </div>
         </div>
@@ -114,10 +162,10 @@ export default function NewFeaturePage() {
         >
           <div className="text-center">
             <h1 className="mb-2 text-2xl font-semibold text-gray-900 dark:text-gray-100">
-              What&apos;s your idea?
+              What do you want to build?
             </h1>
             <p className="text-gray-600 dark:text-gray-400">
-              Describe your feature idea and the AI will help you refine it
+              Describe your idea — a single feature or a bigger vision
             </p>
           </div>
 
@@ -183,32 +231,57 @@ export default function NewFeaturePage() {
                 ).current = e;
               }}
               onKeyDown={handleKeyPress}
-              placeholder="Describe your feature idea... What problem does it solve? Who is it for? (min 20 characters)"
+              placeholder="Describe your idea... What do you want to build? What problem does it solve?"
               rows={1}
-              disabled={createMutation.isPending}
-              className="max-h-[200px] min-h-[36px] flex-1 resize-none bg-transparent py-2 text-sm leading-relaxed text-gray-900 outline-none placeholder:text-gray-400 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-100 dark:placeholder:text-gray-500"
+              disabled={isLoading}
+              className="max-h-[300px] min-h-[36px] flex-1 resize-none bg-transparent py-2 text-sm leading-relaxed text-gray-900 outline-none placeholder:text-gray-400 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-100 dark:placeholder:text-gray-500"
             />
 
-            {/* Send button */}
-            <button
-              type="submit"
-              disabled={!canSubmit}
-              className={cn(
-                'flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors',
-                canSubmit
-                  ? 'bg-primary text-white hover:bg-primary/90'
-                  : 'bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500',
-                'disabled:cursor-not-allowed',
-              )}
-              aria-label="Start conversation"
-            >
-              {createMutation.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
-            </button>
+            {/* Send button - only show when suggestion is not visible */}
+            {!showSuggestion && (
+              <button
+                type="submit"
+                disabled={!canSubmit}
+                className={cn(
+                  'flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors',
+                  canSubmit
+                    ? 'bg-primary text-white hover:bg-primary/90'
+                    : 'bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500',
+                  'disabled:cursor-not-allowed',
+                )}
+                aria-label="Start conversation"
+              >
+                {isLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </button>
+            )}
           </div>
+
+          {/* Analyzing state */}
+          {isAnalyzing && (
+            <div className="flex items-center justify-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 dark:border-blue-800 dark:bg-blue-900/20">
+              <Loader2 className="h-4 w-4 animate-spin text-blue-600 dark:text-blue-400" />
+              <span className="text-sm text-blue-800 dark:text-blue-200">
+                Analyzing your idea...
+              </span>
+            </div>
+          )}
+
+          {/* Breakdown suggestion banner (shown after analysis detects multiple features) */}
+          {showSuggestion && analysisResult && (
+            <BreakdownSuggestionBanner
+              analysis={analysisResult}
+              onAccept={handleBreakdownAccept}
+              onDecline={handleBreakdownDecline}
+              onDismiss={() => {
+                setShowSuggestion(false);
+                setAnalysisResult(null);
+              }}
+            />
+          )}
 
           {/* Error messages */}
           {errors.idea && (
@@ -224,7 +297,9 @@ export default function NewFeaturePage() {
           )}
 
           <p className="text-center text-xs text-gray-500 dark:text-gray-400">
-            Press Enter to start, Shift+Enter for new line
+            {showSuggestion
+              ? 'Choose an option above, or edit your description'
+              : 'Press Enter to continue, Shift+Enter for new line'}
           </p>
         </form>
       </div>
@@ -237,10 +312,16 @@ export default function NewFeaturePage() {
               What happens next?
             </h3>
             <ul className="space-y-1 text-sm text-blue-800 dark:text-blue-200">
-              <li>• The AI will ask you questions to understand the feature</li>
-              <li>• It will help identify edge cases and requirements</li>
-              <li>• A comprehensive spec document will be generated</li>
-              <li>• Your team can review and add comments</li>
+              <li>
+                • <strong>Single feature:</strong> AI conversation to refine
+                your idea into a spec
+              </li>
+              <li>
+                • <strong>Bigger idea:</strong> AI breaks it down into separate
+                features you can work on
+              </li>
+              <li>• Your team can review and add comments to specs</li>
+              <li>• Export specs as prompts for AI coding assistants</li>
             </ul>
           </div>
         </div>

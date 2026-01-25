@@ -104,12 +104,12 @@ const FeaturesList = ({
 const DashboardContent = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  const { data, isLoading } = useQuery({
+  const { data: featuresData, isLoading: isLoadingFeatures } = useQuery({
     queryKey: [QueryKeys.FEATURE_REQUESTS],
     queryFn: () => featureRequestsApi.getAll({}),
   });
 
-  const features = data?.features ?? [];
+  const features = featuresData?.features ?? [];
 
   const getFilteredFeatures = (tab: TabFilter) => {
     if (!features) {
@@ -136,17 +136,14 @@ const DashboardContent = () => {
             <Home className="h-6 w-6 text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">
-              Feature Requests
-            </h1>
+            <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
             <p className="text-sm text-muted-foreground">
-              Manage and track all your feature specifications
+              Manage your features
             </p>
           </div>
         </div>
       </div>
 
-      {/* Tabs and View Toggle */}
       <TabsRoot defaultValue="all">
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <TabsList>
@@ -207,12 +204,11 @@ const DashboardContent = () => {
           </div>
         </div>
 
-        {/* Tab Contents */}
         <TabsContent value="all">
           <FeaturesList
             features={getFilteredFeatures('all')}
             viewMode={viewMode}
-            isLoading={isLoading}
+            isLoading={isLoadingFeatures}
             showCreateButton
           />
         </TabsContent>
@@ -221,7 +217,7 @@ const DashboardContent = () => {
           <FeaturesList
             features={getFilteredFeatures('DRAFT')}
             viewMode={viewMode}
-            isLoading={isLoading}
+            isLoading={isLoadingFeatures}
             showCreateButton={false}
           />
         </TabsContent>
@@ -230,7 +226,7 @@ const DashboardContent = () => {
           <FeaturesList
             features={getFilteredFeatures('SPEC_GENERATED')}
             viewMode={viewMode}
-            isLoading={isLoading}
+            isLoading={isLoadingFeatures}
             showCreateButton={false}
           />
         </TabsContent>
@@ -239,7 +235,7 @@ const DashboardContent = () => {
           <FeaturesList
             features={getFilteredFeatures('READY_TO_BUILD')}
             viewMode={viewMode}
-            isLoading={isLoading}
+            isLoading={isLoadingFeatures}
             showCreateButton={false}
           />
         </TabsContent>
@@ -248,7 +244,7 @@ const DashboardContent = () => {
           <FeaturesList
             features={getFilteredFeatures('COMPLETED')}
             viewMode={viewMode}
-            isLoading={isLoading}
+            isLoading={isLoadingFeatures}
             showCreateButton={false}
           />
         </TabsContent>

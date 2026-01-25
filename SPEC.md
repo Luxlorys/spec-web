@@ -131,9 +131,65 @@ SpecFlow provides an AI Product Manager that:
 - Revoke active codes from Settings → Team
 
 #### Protected Routes
-Middleware protects: `/dashboard`, `/features/*`, `/settings`, 
+Middleware protects: `/dashboard`, `/features/*`, `/settings`, `/onboarding`
 
 Public routes: `/`, `/login`, `/signup`
+
+---
+
+### Feature 1.5: Founder Onboarding Wizard
+
+**Description:** A guided 4-step onboarding flow for founders that collects product context to improve AI suggestions from the start. This ensures the AI has essential context before the founder creates their first feature request.
+
+**Route:** `/onboarding`
+
+**Why This Matters:**
+- First impressions matter — founders should feel guided, not dumped into an empty dashboard
+- AI suggestions are only as good as the context provided — collecting this upfront dramatically improves quality
+- Reduces friction later — founders don't need to dig through settings to configure their product
+- Sets expectations — shows founders what kind of information SpecFlow uses to help them
+
+#### Step 1: Product Identity
+**Goal:** Establish the core product context
+
+- **Project name** (required): The name of the product being built
+- **One-sentence description** (optional, max 200 chars): What the product does
+- Character counter shows remaining length
+
+#### Step 2: Target Users
+**Goal:** Understand who the product serves
+
+- **Target user types** (multi-select chips): Developers, Designers, Product Managers, Founders/CEOs, Executives, Marketing Teams, Sales Teams, Operations, End Users
+- **Company size** (optional dropdown): Solo/Individual, Startup (1-50), SMB (50-500), Enterprise (500+)
+
+#### Step 3: Product Stage & Problem
+**Goal:** Calibrate AI suggestions to the product's maturity
+
+- **Product stage** (dropdown): Idea stage, MVP/Beta, Early traction, Growth phase, Scaling
+- **Problem statement** (optional textarea): What problem the product solves
+
+#### Step 4: Quick Start (Optional Extras)
+**Goal:** Allow power users to provide additional context without requiring it
+
+- **User personas**: Add detailed user personas with name and description
+  - Displayed as chips after adding (compact view)
+  - Smooth expand/collapse animations
+  - Only one section can be expanded at a time (accordion behavior)
+- **Tech stack**: Free-form text for technologies used
+
+#### Navigation & UX
+- Step indicator shows progress (Step X of 4)
+- "Continue" button advances to next step
+- "Skip for now" skips current step
+- "Skip setup entirely" bypasses all steps and goes to dashboard
+- "Back" button returns to previous step
+- "Start building" on final step completes onboarding
+
+#### Data Flow
+- All collected data populates the Project Context (Feature 2)
+- User personas are stored in the project settings
+- Tech stack is saved for AI reference
+- Onboarding completion is tracked per user
 
 ---
 
@@ -713,6 +769,16 @@ When regenerating, AI may:
 
 ## User Flows
 
+### Flow 0: New Founder Onboarding
+```
+Signup (Create Project) → Redirect to /onboarding →
+Step 1: Enter project name & description →
+Step 2: Select target users & company size →
+Step 3: Choose product stage & describe problem →
+Step 4: (Optional) Add user personas & tech stack →
+"Start building" → Redirect to Dashboard with context populated
+```
+
 ### Flow 1: Founder Breaks Down Product Idea (NEW)
 ```
 Dashboard → "New Breakdown" button → Enter idea title & vision →
@@ -778,6 +844,11 @@ Breakdown status auto-updates as features progress
 
 ```
 SpecFlow
+├── Onboarding (for new founders)
+│   ├── Step 1: Product Identity (name, description)
+│   ├── Step 2: Target Users (user types, company size)
+│   ├── Step 3: Product Stage (stage, problem statement)
+│   └── Step 4: Quick Start (user personas, tech stack)
 ├── Dashboard
 │   ├── Features Section
 │   │   ├── Tab Filters (All, Draft, Spec Generated, Ready to Build, Completed)
@@ -899,6 +970,7 @@ draft → spec_generated → ready_to_build → completed
 - [x] Role-based access control
 - [x] Invite code team management
 - [x] Organization/workspace setup
+- [x] **Founder onboarding wizard** (4-step guided setup)
 - [x] **Product context configuration**
 - [x] **User personas management**
 - [x] Feature request creation

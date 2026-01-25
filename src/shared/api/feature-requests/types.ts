@@ -302,3 +302,74 @@ export type IActivity =
 export interface IGetActivitiesResponse {
   activities: IActivity[];
 }
+
+// ============================================================================
+// Feature Breakdown API Types
+// ============================================================================
+
+/**
+ * Request for analyzing text to detect multiple features
+ * POST /api/features/analyze
+ */
+export interface IAnalyzeFeatureTextRequest {
+  text: string;
+}
+
+/**
+ * Response from analyze endpoint
+ */
+export interface IAnalyzeFeatureTextResponse {
+  isMultipleFeatures: boolean;
+  confidence: number;
+  suggestedFeatureCount: number;
+  reasoning: string;
+}
+
+/**
+ * Request for generating feature breakdown from vision
+ * POST /api/features/generate-breakdown
+ */
+export interface IGenerateBreakdownRequest {
+  vision: string;
+}
+
+/**
+ * A proposed feature from breakdown generation
+ */
+export interface IBreakdownFeatureItem {
+  id: string;
+  title: string;
+  description: string;
+  hasEnoughContext: boolean;
+}
+
+/**
+ * Response from generate-breakdown endpoint
+ */
+export interface IGenerateBreakdownResponse {
+  features: IBreakdownFeatureItem[];
+}
+
+/**
+ * Single feature input for batch creation
+ */
+export interface IBatchFeatureInput {
+  title: string;
+  description: string;
+  contextFeatureId?: number;
+}
+
+/**
+ * Request for batch creating features
+ * POST /api/features/batch
+ */
+export interface IBatchCreateFeaturesRequest {
+  features: IBatchFeatureInput[];
+}
+
+/**
+ * Response from batch create endpoint
+ */
+export interface IBatchCreateFeaturesResponse {
+  features: IFeatureRequest[];
+}
