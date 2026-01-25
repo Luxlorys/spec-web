@@ -1,7 +1,5 @@
 'use client';
 
-import { useState } from 'react';
-
 import { Plus } from 'lucide-react';
 
 import { IBreakdownFeature } from 'shared/api';
@@ -19,40 +17,24 @@ import {
   Textarea,
 } from 'shared/ui';
 
+import { useAddFeatureForm } from '../hooks';
+
 interface AddFeatureDialogProps {
   onAdd: (feature: Omit<IBreakdownFeature, 'id'>) => void;
 }
 
 export const AddFeatureDialog = ({ onAdd }: AddFeatureDialogProps) => {
-  const [open, setOpen] = useState(false);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+  const { form, open, onSubmit, handleOpenChange } = useAddFeatureForm({
+    onAdd,
+  });
 
-  const handleAdd = () => {
-    if (!title.trim()) {
-      return;
-    }
-
-    onAdd({
-      title: title.trim(),
-      description: description.trim(),
-      priority: 'P1',
-      complexity: 'M',
-      dependencies: [],
-      isSelected: true,
-      hasEnoughContext: false,
-    });
-
-    // Reset form
-    setTitle('');
-    setDescription('');
-    setOpen(false);
-  };
-
-  const canAdd = title.trim().length > 0;
+  const {
+    register,
+    formState: { errors, isDirty },
+  } = form;
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
+    <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetTrigger asChild>
         <Button variant="outline" className="gap-2">
           <Plus className="h-4 w-4" />
@@ -67,14 +49,14 @@ export const AddFeatureDialog = ({ onAdd }: AddFeatureDialogProps) => {
           </SheetDescription>
         </SheetHeader>
 
-        <div className="space-y-4 py-6">
+        <form onSubmit={onSubmit} className="space-y-4 py-6">
           <div className="space-y-2">
             <Label htmlFor="title">Title</Label>
             <Input
               id="title"
-              value={title}
-              onChange={e => setTitle(e.target.value)}
+              {...register('title')}
               placeholder="Feature title"
+              error={errors.title?.message}
             />
           </div>
 
@@ -82,22 +64,25 @@ export const AddFeatureDialog = ({ onAdd }: AddFeatureDialogProps) => {
             <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
-              value={description}
-              onChange={e => setDescription(e.target.value)}
+              {...register('description')}
               placeholder="What does this feature do?"
               rows={3}
             />
           </div>
-        </div>
 
-        <SheetFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleAdd} disabled={!canAdd}>
-            Add Feature
-          </Button>
-        </SheetFooter>
+          <SheetFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleOpenChange(false)}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={!isDirty}>
+              Add Feature
+            </Button>
+          </SheetFooter>
+        </form>
       </SheetContent>
     </Sheet>
   );

@@ -13,6 +13,8 @@ import { IBreakdownFeature } from 'shared/api';
 import { cn } from 'shared/lib';
 import { Badge, Button, Input, Textarea } from 'shared/ui';
 
+import { useEditFeatureForm } from '../hooks';
+
 interface BreakdownFeatureCardProps {
   feature: IBreakdownFeature;
   index: number;
@@ -26,31 +28,18 @@ export const BreakdownFeatureCard = ({
   onUpdate,
   onToggleSelect,
 }: BreakdownFeatureCardProps) => {
-  const [isEditing, setIsEditing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [editTitle, setEditTitle] = useState(feature.title);
-  const [editDescription, setEditDescription] = useState(feature.description);
   const [contextDialogOpen, setContextDialogOpen] = useState(false);
+
+  const { form, isEditing, handleSave, handleCancel, handleStartEditing } =
+    useEditFeatureForm({ feature, onUpdate });
+
+  const { register } = form;
 
   const { data: contextFeatures = [] } = useContextFeatures();
   const selectedContextFeature = contextFeatures.find(
     f => f.id === feature.contextFeatureId,
   );
-
-  const handleSave = () => {
-    onUpdate({
-      ...feature,
-      title: editTitle,
-      description: editDescription,
-    });
-    setIsEditing(false);
-  };
-
-  const handleCancel = () => {
-    setEditTitle(feature.title);
-    setEditDescription(feature.description);
-    setIsEditing(false);
-  };
 
   const handleContextSelect = (featureId: number | undefined) => {
     onUpdate({ ...feature, contextFeatureId: featureId });
@@ -88,28 +77,31 @@ export const BreakdownFeatureCard = ({
         {/* Content */}
         <div className="min-w-0 flex-1">
           {isEditing ? (
-            <div className="space-y-3">
+            <form onSubmit={handleSave} className="space-y-3">
               <Input
-                value={editTitle}
-                onChange={e => setEditTitle(e.target.value)}
+                {...register('title')}
                 placeholder="Feature title"
                 className="font-medium"
               />
               <Textarea
-                value={editDescription}
-                onChange={e => setEditDescription(e.target.value)}
+                {...register('description')}
                 placeholder="Feature description"
                 rows={2}
               />
               <div className="flex gap-2">
-                <Button size="sm" onClick={handleSave}>
+                <Button type="submit" size="sm">
                   Save
                 </Button>
-                <Button size="sm" variant="outline" onClick={handleCancel}>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={handleCancel}
+                >
                   Cancel
                 </Button>
               </div>
-            </div>
+            </form>
           ) : (
             <>
               <div className="flex items-start justify-between gap-2">
@@ -153,7 +145,7 @@ export const BreakdownFeatureCard = ({
                 <div className="flex shrink-0 items-center gap-1 transition-opacity">
                   <button
                     type="button"
-                    onClick={() => setIsEditing(true)}
+                    onClick={handleStartEditing}
                     className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
                     aria-label="Edit feature"
                   >

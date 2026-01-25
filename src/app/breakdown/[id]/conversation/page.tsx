@@ -51,18 +51,20 @@ export default function BreakdownConversationPage() {
 
   // Generate features on mount if none exist
   useEffect(() => {
+    const generateFeatures = async () => {
+      const generatedFeatures = await generateMutation.mutateAsync(breakdownId);
+
+      setFeatures(generatedFeatures);
+      setHasGenerated(true);
+    };
+
     if (
       breakdown &&
       breakdown.features.length === 0 &&
       !hasGenerated &&
       !generateMutation.isPending
     ) {
-      generateMutation.mutate(breakdownId, {
-        onSuccess: generatedFeatures => {
-          setFeatures(generatedFeatures);
-          setHasGenerated(true);
-        },
-      });
+      generateFeatures();
     }
   }, [breakdown, breakdownId, generateMutation, hasGenerated]);
 
