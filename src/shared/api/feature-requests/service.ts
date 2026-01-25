@@ -2,12 +2,18 @@ import { api } from 'shared/lib';
 
 import {
   IActivity,
+  IAnalyzeFeatureTextRequest,
+  IAnalyzeFeatureTextResponse,
+  IBatchCreateFeaturesRequest,
+  IBatchCreateFeaturesResponse,
   ICreateFeatureRequest,
   ICreateFeatureResponse,
   IDeleteFeatureResponse,
   IFeatureListResponse,
   IFeatureRequest,
   IFeatureRequestFilters,
+  IGenerateBreakdownRequest,
+  IGenerateBreakdownResponse,
   IGetActivitiesResponse,
   IGetFeatureResponse,
   IUpdateContextFeatureRequest,
@@ -110,5 +116,50 @@ export const featureRequestsApi = {
     );
 
     return data.feature;
+  },
+
+  /**
+   * Analyze text to detect if it contains multiple features
+   * POST /features/analyze
+   */
+  analyzeText: async (
+    request: IAnalyzeFeatureTextRequest,
+  ): Promise<IAnalyzeFeatureTextResponse> => {
+    const { data } = await api.post<IAnalyzeFeatureTextResponse>(
+      '/features/analyze',
+      request,
+    );
+
+    return data;
+  },
+
+  /**
+   * Generate feature breakdown from vision text
+   * POST /features/generate-breakdown
+   */
+  generateBreakdown: async (
+    request: IGenerateBreakdownRequest,
+  ): Promise<IGenerateBreakdownResponse> => {
+    const { data } = await api.post<IGenerateBreakdownResponse>(
+      '/features/generate-breakdown',
+      request,
+    );
+
+    return data;
+  },
+
+  /**
+   * Batch create multiple features at once
+   * POST /features/batch
+   */
+  batchCreate: async (
+    request: IBatchCreateFeaturesRequest,
+  ): Promise<IBatchCreateFeaturesResponse> => {
+    const { data } = await api.post<IBatchCreateFeaturesResponse>(
+      '/features/batch',
+      request,
+    );
+
+    return data;
   },
 };

@@ -1,40 +1,65 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Check, ChevronDown, ChevronUp, Pencil, Plus, X } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 
 import {
   ContextFeatureDialog,
   StatusBadge,
   useContextFeatures,
 } from 'features/feature-requests';
-import { IBreakdownFeature } from 'shared/api';
 import { cn } from 'shared/lib';
-import { Badge, Button, Input, Textarea } from 'shared/ui';
+import { IBreakdownFeatureWithSelection } from 'shared/store';
+import { Button, Input, Textarea } from 'shared/ui';
 
-import { useEditFeatureForm } from '../hooks';
+const editFeatureSchema = z.object({
+  title: z.string().min(1, 'Title is required'),
+  description: z.string().optional(),
+});
 
-interface BreakdownFeatureCardProps {
-  feature: IBreakdownFeature;
+type EditFeatureFormData = z.infer<typeof editFeatureSchema>;
+
+interface NewBreakdownFeatureCardProps {
+  feature: IBreakdownFeatureWithSelection;
   index: number;
-  onUpdate: (feature: IBreakdownFeature) => void;
+  onUpdate: (
+    id: string,
+    updates: Partial<IBreakdownFeatureWithSelection>,
+  ) => void;
   onToggleSelect: () => void;
 }
 
-export const BreakdownFeatureCard = ({
+export const NewBreakdownFeatureCard = ({
   feature,
   index,
   onUpdate,
   onToggleSelect,
-}: BreakdownFeatureCardProps) => {
+}: NewBreakdownFeatureCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [contextDialogOpen, setContextDialogOpen] = useState(false);
 
-  const { form, isEditing, handleSave, handleCancel, handleStartEditing } =
-    useEditFeatureForm({ feature, onUpdate });
+  const form = useForm<EditFeatureFormData>({
+    resolver: zodResolver(editFeatureSchema),
+    defaultValues: {
+      title: feature.title,
+      description: feature.description,
+    },
+  });
 
-  const { register } = form;
+  const { register, reset, handleSubmit } = form;
+
+  // Sync form when feature prop changes
+  useEffect(() => {
+    reset({
+      title: feature.title,
+      description: feature.description,
+    });
+  }, [feature.title, feature.description, reset]);
 
   const { data: contextFeatures = [] } = useContextFeatures();
   const selectedContextFeature = contextFeatures.find(
@@ -42,8 +67,28 @@ export const BreakdownFeatureCard = ({
   );
 
   const handleContextSelect = (featureId: number | undefined) => {
-    onUpdate({ ...feature, contextFeatureId: featureId });
+    onUpdate(feature.id, { contextFeatureId: featureId });
   };
+
+  const handleSave = handleSubmit((data: EditFeatureFormData) => {
+    onUpdate(feature.id, {
+      title: data.title,
+      description: data.description || '',
+    });
+    setIsEditing(false);
+  });
+
+  const handleCancel = useCallback(() => {
+    reset({
+      title: feature.title,
+      description: feature.description,
+    });
+    setIsEditing(false);
+  }, [reset, feature.title, feature.description]);
+
+  const handleStartEditing = useCallback(() => {
+    setIsEditing(true);
+  }, []);
 
   return (
     <div
@@ -189,15 +234,6 @@ export const BreakdownFeatureCard = ({
                   </ContextFeatureDialog>
                 )}
               </div>
-
-              {/* Badge */}
-              {feature.hasEnoughContext && (
-                <div className="mt-2">
-                  <Badge variant="success" size="sm">
-                    Ready for spec
-                  </Badge>
-                </div>
-              )}
             </>
           )}
         </div>

@@ -9,10 +9,7 @@ import { useMutation } from '@tanstack/react-query';
 import { Lightbulb, Loader2, Plus, Send, X } from 'lucide-react';
 import { Controller, useForm } from 'react-hook-form';
 
-import {
-  BreakdownSuggestionBanner,
-  useCreateBreakdown,
-} from 'features/breakdown';
+import { BreakdownSuggestionBanner } from 'features/breakdown';
 import {
   ContextFeatureDialog,
   CreateFeatureInput,
@@ -21,13 +18,13 @@ import {
   useContextFeatures,
 } from 'features/feature-requests';
 import {
-  breakdownsApi,
   featureRequestsApi,
-  IAnalyzeTextResponse,
+  IAnalyzeFeatureTextResponse,
   IContextFeature,
 } from 'shared/api';
 import { QueryKeys } from 'shared/constants';
 import { cn, queryClient } from 'shared/lib';
+import { useBreakdownStore } from 'shared/store';
 
 export default function NewFeaturePage() {
   const router = useRouter();
@@ -35,13 +32,13 @@ export default function NewFeaturePage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Analysis state (on-submit detection)
   const [analysisResult, setAnalysisResult] =
-    useState<IAnalyzeTextResponse | null>(null);
+    useState<IAnalyzeFeatureTextResponse | null>(null);
   const [showSuggestion, setShowSuggestion] = useState(false);
   const [submittedValues, setSubmittedValues] =
     useState<CreateFeatureInput | null>(null);
 
+  const { startBreakdown } = useBreakdownStore();
   const { data: features = [] } = useContextFeatures();
 
   const {
@@ -59,19 +56,16 @@ export default function NewFeaturePage() {
     },
   });
 
-  // Only watch contextFeatureId for displaying selected feature (changes rarely)
   const contextFeatureId = watch('contextFeatureId');
 
   const selectedFeature: IContextFeature | undefined = features.find(
     f => f.id === contextFeatureId,
   );
 
-  // Analyze text mutation
   const analyzeMutation = useMutation({
-    mutationFn: (text: string) => breakdownsApi.analyze({ text }),
+    mutationFn: (text: string) => featureRequestsApi.analyzeText({ text }),
   });
 
-  // Create single feature mutation
   const createMutation = useMutation({
     mutationFn: featureRequestsApi.create,
     onSuccess: feature => {
@@ -83,48 +77,29 @@ export default function NewFeaturePage() {
     },
   });
 
-  // Create breakdown mutation
-  const createBreakdownMutation = useCreateBreakdown();
-
-  // On submit: analyze first, then decide path
   const onSubmit = async (values: CreateFeatureInput) => {
     setError('');
 
-    // Analyze the text first
     const analysis = await analyzeMutation.mutateAsync(values.idea);
 
     if (analysis.isMultipleFeatures) {
-      // Store submitted values and show suggestion UI for user to decide
       setSubmittedValues(values);
       setAnalysisResult(analysis);
       setShowSuggestion(true);
     } else {
-      // Single feature - proceed directly to conversation
       await createMutation.mutateAsync(values);
     }
   };
 
-  // User chose to break down into multiple features
-  const handleBreakdownAccept = async () => {
-    if (!submittedValues) {
+  const handleBreakdownAccept = () => {
+    if (!submittedValues || !analysisResult) {
       return;
     }
 
-    setError('');
-    try {
-      const breakdown = await createBreakdownMutation.mutateAsync({
-        vision: submittedValues.idea,
-      });
-
-      router.push(`/breakdown/${breakdown.id}/conversation`);
-    } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      }
-    }
+    startBreakdown(submittedValues.idea, analysisResult);
+    router.push('/breakdown/new');
   };
 
-  // User chose to keep as single feature
   const handleBreakdownDecline = async () => {
     if (!submittedValues) {
       return;
@@ -133,7 +108,6 @@ export default function NewFeaturePage() {
     setShowSuggestion(false);
     setAnalysisResult(null);
 
-    // Create single feature and redirect
     await createMutation.mutateAsync(submittedValues);
     setSubmittedValues(null);
   };
@@ -142,11 +116,10 @@ export default function NewFeaturePage() {
     const textarea = e.target;
 
     textarea.style.height = 'auto';
-    textarea.style.height = `${Math.min(textarea.scrollHeight, 300)}px`;
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 220)}px`;
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    // Don't submit on Enter if suggestion is showing (user needs to choose)
     if (e.key === 'Enter' && !e.shiftKey && !showSuggestion && !isLoading) {
       e.preventDefault();
       handleSubmit(onSubmit)();
@@ -158,14 +131,8 @@ export default function NewFeaturePage() {
   };
 
   const isAnalyzing = analyzeMutation.isPending;
+  const isLoading = createMutation.isPending || isAnalyzing;
 
-  const isLoading =
-    createMutation.isPending ||
-    createBreakdownMutation.isPending ||
-    isAnalyzing;
-
-  // Button is disabled only when loading or showing suggestion
-  // Form validation (min 20 chars) is handled by zod schema on submit
   const canSubmit = !isLoading && !showSuggestion;
 
   return (

@@ -2,142 +2,144 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 import {
   ArrowLeft,
   ChevronDown,
   ChevronUp,
   Loader2,
-  Sparkles,
+  RefreshCw,
 } from 'lucide-react';
 
 import {
-  AddFeatureDialog,
-  BreakdownFeatureCard,
-  useBreakdown,
-  useCreateFeaturesFromBreakdown,
-  useGenerateBreakdownFeatures,
-  useUpdateBreakdownFeatures,
+  useBatchCreateFeatures,
+  useGenerateBreakdown,
 } from 'features/breakdown';
-import { IBreakdownFeature } from 'shared/api';
+import {
+  IBreakdownFeatureWithSelection,
+  useBreakdownStore,
+} from 'shared/store';
 import { Button } from 'shared/ui';
 
-export default function BreakdownConversationPage() {
-  const params = useParams();
+import { NewAddFeatureDialog } from './add-feature-dialog';
+import { NewBreakdownFeatureCard } from './feature-card';
+
+export default function NewBreakdownPage() {
   const router = useRouter();
-  const breakdownId = Number(params.id);
 
-  const { data: breakdown, isLoading: isLoadingBreakdown } =
-    useBreakdown(breakdownId);
-  const generateMutation = useGenerateBreakdownFeatures();
-  const updateMutation = useUpdateBreakdownFeatures();
-  const createFeaturesMutation = useCreateFeaturesFromBreakdown();
+  const {
+    vision,
+    features,
+    setFeatures,
+    updateFeature,
+    toggleFeatureSelection,
+    addFeature,
+    clearBreakdown,
+  } = useBreakdownStore();
 
-  // Local state for features (optimistic updates)
-  const [features, setFeatures] = useState<IBreakdownFeature[]>([]);
-  const [hasGenerated, setHasGenerated] = useState(false);
+  const generateMutation = useGenerateBreakdown();
+  const batchCreateMutation = useBatchCreateFeatures();
+
   const [isVisionExpanded, setIsVisionExpanded] = useState(false);
+  const [hasGenerated, setHasGenerated] = useState(false);
 
-  // Sync features from server
   useEffect(() => {
-    if (breakdown?.features) {
-      setFeatures(breakdown.features);
-      if (breakdown.features.length > 0) {
-        setHasGenerated(true);
-      }
+    if (!vision) {
+      router.replace('/features/new');
     }
-  }, [breakdown?.features]);
+  }, [vision, router]);
 
-  // Generate features on mount if none exist
   useEffect(() => {
     const generateFeatures = async () => {
-      const generatedFeatures = await generateMutation.mutateAsync(breakdownId);
+      if (!vision) {
+        return;
+      }
 
-      setFeatures(generatedFeatures);
-      setHasGenerated(true);
+      try {
+        const response = await generateMutation.mutateAsync({ vision });
+
+        setFeatures(response.features);
+        setHasGenerated(true);
+      } catch {
+        // Error is handled by mutation state
+        setHasGenerated(true);
+      }
     };
 
-    if (
-      breakdown &&
-      breakdown.features.length === 0 &&
-      !hasGenerated &&
-      !generateMutation.isPending
-    ) {
+    if (vision && !hasGenerated && !generateMutation.isPending) {
       generateFeatures();
     }
-  }, [breakdown, breakdownId, generateMutation, hasGenerated]);
+  }, [vision, hasGenerated, generateMutation, setFeatures]);
 
-  const handleUpdateFeature = useCallback(
-    (updatedFeature: IBreakdownFeature) => {
-      setFeatures(prev =>
-        prev.map(f => (f.id === updatedFeature.id ? updatedFeature : f)),
-      );
-    },
-    [],
-  );
-
-  const handleToggleSelect = useCallback((featureId: string) => {
-    setFeatures(prev =>
-      prev.map(f =>
-        f.id === featureId ? { ...f, isSelected: !f.isSelected } : f,
-      ),
-    );
-  }, []);
-
-  const handleAddFeature = useCallback(
-    (feature: Omit<IBreakdownFeature, 'id'>) => {
-      const newFeature: IBreakdownFeature = {
-        ...feature,
-        id: Math.random().toString(36).substring(2, 9),
-      };
-
-      setFeatures(prev => [...prev, newFeature]);
-    },
-    [],
-  );
-
-  const handleCreateFeatures = async () => {
-    const selectedFeatureIds = features
-      .filter(f => f.isSelected)
-      .map(f => f.id);
-
-    if (selectedFeatureIds.length === 0) {
+  const handleRetryGenerate = async () => {
+    if (!vision) {
       return;
     }
 
-    // First save the current state
-    await updateMutation.mutateAsync({
-      breakdownId,
-      features,
-    });
+    try {
+      const response = await generateMutation.mutateAsync({ vision });
 
-    // Then create features
-    await createFeaturesMutation.mutateAsync({
-      breakdownId,
-      featureIds: selectedFeatureIds,
-    });
+      setFeatures(response.features);
+    } catch {
+      // Error handled by mutation state
+    }
+  };
 
-    // Navigate to breakdown detail page
-    router.push(`/breakdown/${breakdownId}`);
+  const handleUpdateFeature = useCallback(
+    (id: string, updates: Partial<IBreakdownFeatureWithSelection>) => {
+      updateFeature(id, updates);
+    },
+    [updateFeature],
+  );
+
+  const handleToggleSelect = useCallback(
+    (featureId: string) => {
+      toggleFeatureSelection(featureId);
+    },
+    [toggleFeatureSelection],
+  );
+
+  const handleAddFeature = useCallback(
+    (feature: Omit<IBreakdownFeatureWithSelection, 'id'>) => {
+      addFeature(feature);
+    },
+    [addFeature],
+  );
+
+  const handleCreateFeatures = async () => {
+    const selectedFeatures = features.filter(f => f.isSelected);
+
+    if (selectedFeatures.length === 0) {
+      return;
+    }
+
+    try {
+      await batchCreateMutation.mutateAsync({
+        features: selectedFeatures.map(
+          ({ title, description, contextFeatureId }) => ({
+            title,
+            description,
+            contextFeatureId,
+          }),
+        ),
+      });
+
+      clearBreakdown();
+      router.push('/dashboard');
+    } catch {
+      // Error handled by mutation state
+    }
   };
 
   const selectedCount = features.filter(f => f.isSelected).length;
-  const isCreating =
-    createFeaturesMutation.isPending || updateMutation.isPending;
+  const isCreating = batchCreateMutation.isPending;
 
-  if (isLoadingBreakdown) {
+  // Show loading while redirecting or if no vision
+  if (!vision) {
     return (
       <div className="flex h-[calc(100vh-2rem)] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (!breakdown) {
-    return (
-      <div className="flex h-[calc(100vh-2rem)] items-center justify-center">
-        <p className="text-gray-500 dark:text-gray-400">Breakdown not found</p>
       </div>
     );
   }
@@ -149,11 +151,14 @@ export default function BreakdownConversationPage() {
         <div className="mx-auto">
           <button
             type="button"
-            onClick={() => router.push('/dashboard')}
+            onClick={() => {
+              clearBreakdown();
+              router.push('/features/new');
+            }}
             className="mb-2 flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
+            Start Over
           </button>
           <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
             Break Down Your Idea
@@ -181,7 +186,7 @@ export default function BreakdownConversationPage() {
                   }`}
                 >
                   <p className="whitespace-pre-wrap text-sm text-gray-600 dark:text-gray-400">
-                    {breakdown.vision}
+                    {vision}
                   </p>
                 </div>
                 <button
@@ -209,7 +214,7 @@ export default function BreakdownConversationPage() {
             {generateMutation.isPending && (
               <div className="flex flex-col items-center gap-4 py-12">
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-                  <Sparkles className="h-8 w-8 animate-pulse text-primary" />
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </div>
                 <div className="text-center">
                   <p className="font-medium text-gray-900 dark:text-gray-100">
@@ -222,6 +227,28 @@ export default function BreakdownConversationPage() {
               </div>
             )}
 
+            {/* Error state */}
+            {generateMutation.isError && features.length === 0 && (
+              <div className="flex flex-col items-center gap-4 py-12">
+                <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center dark:border-red-800 dark:bg-red-900/20">
+                  <p className="font-medium text-red-800 dark:text-red-200">
+                    Failed to generate features
+                  </p>
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    AI service is temporarily unavailable. Please try again.
+                  </p>
+                  <Button
+                    onClick={handleRetryGenerate}
+                    variant="outline"
+                    className="mt-4 gap-2"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                    Try Again
+                  </Button>
+                </div>
+              </div>
+            )}
+
             {/* Features list */}
             {!generateMutation.isPending && features.length > 0 && (
               <>
@@ -229,12 +256,12 @@ export default function BreakdownConversationPage() {
                   <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
                     Proposed Features ({features.length})
                   </h2>
-                  <AddFeatureDialog onAdd={handleAddFeature} />
+                  <NewAddFeatureDialog onAdd={handleAddFeature} />
                 </div>
 
                 <div className="space-y-3">
                   {features.map((feature, index) => (
-                    <BreakdownFeatureCard
+                    <NewBreakdownFeatureCard
                       key={feature.id}
                       feature={feature}
                       index={index}
@@ -243,6 +270,13 @@ export default function BreakdownConversationPage() {
                     />
                   ))}
                 </div>
+
+                {/* Batch create error */}
+                {batchCreateMutation.isError && (
+                  <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-center text-sm text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
+                    Failed to create features. Please try again.
+                  </div>
+                )}
 
                 {/* Summary and create button */}
                 <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 dark:bg-primary/10">

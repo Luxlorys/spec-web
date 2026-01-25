@@ -2,12 +2,12 @@
 
 import { Lightbulb, X } from 'lucide-react';
 
-import { IAnalyzeTextResponse } from 'shared/api';
+import { IAnalyzeFeatureTextResponse } from 'shared/api';
 import { cn } from 'shared/lib';
 import { Button } from 'shared/ui';
 
 interface BreakdownSuggestionBannerProps {
-  analysis: IAnalyzeTextResponse;
+  analysis: IAnalyzeFeatureTextResponse;
   onAccept: () => void;
   onDecline: () => void;
   onDismiss: () => void;
