@@ -7,6 +7,10 @@ export enum QueryKeys {
   ORGANIZATION_BY_ID = 'organizationById',
   ORGANIZATION_MEMBERS = 'organizationMembers',
 
+  // Breakdowns
+  BREAKDOWNS = 'breakdowns',
+  BREAKDOWN_BY_ID = 'breakdownById',
+
   // Feature Requests
   FEATURE_REQUESTS = 'featureRequests',
   FEATURE_REQUEST_BY_ID = 'featureRequestById',

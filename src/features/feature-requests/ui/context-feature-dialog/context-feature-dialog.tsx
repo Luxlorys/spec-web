@@ -4,10 +4,11 @@ import { FC, useMemo, useState } from 'react';
 
 import { Check, Search, X } from 'lucide-react';
 
-import { useContextFeatures } from 'features/feature-requests';
 import { cn } from 'shared/lib';
 import { FeatureStatus } from 'shared/types';
 import { Badge, Popover, PopoverContent, PopoverTrigger } from 'shared/ui';
+
+import { useContextFeatures } from '../../api';
 
 interface IProps {
   open: boolean;

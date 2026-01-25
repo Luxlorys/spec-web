@@ -1,5 +1,6 @@
 // Real API services (organized in folders with types)
 export * from './auth';
+export * from './breakdowns';
 export * from './comments';
 export * from './conversations';
 export * from './documentation';
